@@ -1,0 +1,394 @@
+import ScreenWrapper from "@/components/screen-wrapper";
+import { CText } from "@/components/text";
+import useTheme from "@/hooks/useTheme";
+import { Ionicons } from "@expo/vector-icons";
+import { Image, TouchableOpacity, View } from "react-native";
+
+import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
+import { useRef } from "react";
+
+type ModuleItem = {
+  iconName: React.ComponentProps<typeof Ionicons>["name"];
+  title: string;
+  badgeVal?: string;
+  onPress?: () => void;
+};
+export default function Index() {
+  const { toggleDarkMode, colors } = useTheme();
+
+  const modules: ModuleItem[] = [
+    {
+      iconName: "document-text-outline",
+      title: "Purchase Request",
+    },
+    {
+      iconName: "cart-outline",
+      title: "Purchase Order",
+      badgeVal: "5",
+    },
+    {
+      iconName: "cube-outline",
+      title: "Delivery Notes",
+    },
+    {
+      iconName: "cube-outline",
+      title: "Delivery Notes",
+    },
+  ];
+
+  const bottomSheetRef = useRef<BottomSheetRef>(null);
+
+  return (
+    <ScreenWrapper>
+      <View
+        className="pt-5 px-4"
+      >
+        <Image
+          className="absolute -top-10 -right-[60] w-[300] h-[300]"
+          source={require("../../assets/images/splash-icon.png")}
+          style={{
+            opacity: colors.opacity,
+          }}
+          resizeMode="contain"
+        />
+
+        {/* HEADER */}
+        <View className="flex-row items-center justify-between">
+
+          {/* Profile Section */}
+          <TouchableOpacity onPress={() => bottomSheetRef.current?.open()}>
+            <View
+              className="ps-1.5 pe-4 py-1.5 flex-row items-center border rounded-full"
+              style={{
+                borderColor: colors.border
+              }}
+            >
+              <View
+                className="w-10 h-10 bg-slate-700 rounded-full items-center justify-center"
+              >
+                <Ionicons name="person" size={18} color="white" />
+              </View>
+
+              <View className="ml-2">
+                <CText
+                  className="font-regular leading-5"
+                >
+                  Hello...
+                </CText>
+
+                <CText
+                  className="font-medium leading-5 text-lg mt-1"
+                >
+                  David
+                </CText>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* Notification */}
+          <TouchableOpacity
+            onPress={toggleDarkMode}
+            className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
+          >
+            <Ionicons name="notifications-outline" size={22} color="white" />
+
+            {/* Badge */}
+            <View
+              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full items-center justify-center"
+            >
+              <CText
+                className="font-medium text-white text-sm"
+                style={{ color: '#ffffff' }}
+              >
+                3
+              </CText>
+            </View>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* HERO TEXT */}
+        <View className="mt-7 rounded-3xl flex-1 justify-center">
+          <View className="p-4 bg-gray-400/10 rounded-xl border border-gray-400/20">
+            <CText className="font-regular text-2xl">
+              Welcome to,
+            </CText>
+
+            <CText
+              className="font-semibold text-3xl mt-2"
+            >
+              PAJM Warehouse Mobile
+            </CText>
+
+            <CText
+              className="font-regular text-lg mt-2"
+            >
+              Your login as Admin!
+            </CText>
+          </View>
+        </View>
+
+        {/* Statistics */}
+        <View className="mt-8">
+          <View>
+            <CText
+              className="font-medium text-lg leading-none"
+            >
+              Your Statistics
+            </CText>
+            <CText className="font-regular">
+              This summary data's is belongs to you!
+            </CText>
+          </View>
+
+          <View className="flex-row flex-wrap justify-between mt-2">
+            <View
+              className="w-[48.5%] mb-[3%] rounded-xl p-2.5"
+              style={{
+                backgroundColor: colors.bg_success
+              }}
+            >
+              <View className="flex-row justify-between">
+                <View
+                  className="w-10 h-10 bg-green-600/30 rounded-xl items-center justify-center"
+                >
+                  <Ionicons name="document-text-outline" size={20} color="white" />
+                </View>
+
+
+                <View className="items-end">
+                  <CText
+                    className="font-regular leading-none"
+                    style={{ color: colors.textMuted }}
+                  >
+                    Total Data
+                  </CText>
+
+                  <CText className="text-2xl font-semibold">
+                    1456
+                  </CText>
+                </View>
+
+              </View>
+
+              {/* Module */}
+              <CText
+                className="font-regular text-lg mt-2.5"
+              >
+                Purchase Request
+              </CText>
+
+              {/* Divider */}
+              <View className="h-px bg-gray-400 my-2" />
+
+              {/* Status */}
+              <View className="gap-1">
+
+                <View className="flex-row justify-between">
+                  <CText
+                    className="font-regular leading-5"
+                    style={{ color: colors.textMuted }}>
+                    Waiting Action
+                  </CText>
+                  <CText className="font-medium leading-5">
+                    123
+                  </CText>
+                </View>
+
+                <View className="flex-row justify-between">
+                  <CText
+                    className="font-regular leading-5"
+                    style={{ color: colors.textMuted }}>
+                    Done
+                  </CText>
+                  <CText className="font-medium leading-5">
+                    456
+                  </CText>
+                </View>
+
+              </View>
+            </View>
+
+            <View
+              className="w-[48.5%] mb-[3%] rounded-xl p-2.5"
+              style={{ backgroundColor: colors.bg_warning }}
+            >
+              {/* Header */}
+              <View className="flex-row justify-between">
+
+                <View className="w-10 h-10 bg-orange-600/30 rounded-xl items-center justify-center">
+                  <Ionicons name="cart-outline" size={20} color="white" />
+                </View>
+
+                <View className="items-end">
+                  <CText
+                    className="font-regular leading-none"
+                    style={{ color: colors.textMuted }}
+                  >
+                    Total Data
+                  </CText>
+
+                  <CText className="text-2xl font-semibold">
+                    1456
+                  </CText>
+                </View>
+
+              </View>
+
+              {/* Module */}
+              <CText
+                className="font-regular text-lg mt-2.5"
+              >
+                Purchase Order
+              </CText>
+
+              {/* Divider */}
+              <View className="h-px bg-gray-400 my-2" />
+
+              {/* Status */}
+              <View className="gap-1">
+
+                <View className="flex-row justify-between">
+                  <CText
+                    className="font-regular leading-5"
+                    style={{ color: colors.textMuted }}>
+                    Waiting Action
+                  </CText>
+                  <CText className="font-medium leading-5">
+                    123
+                  </CText>
+                </View>
+
+                <View className="flex-row justify-between">
+                  <CText
+                    className="font-regular leading-5"
+                    style={{ color: colors.textMuted }}>
+                    Done
+                  </CText>
+                  <CText className="font-medium leading-5">
+                    456
+                  </CText>
+                </View>
+
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* MODULE HEADER */}
+        <View
+          className="mt-2 flex-row items-center justify-between"
+        >
+          <CText
+            className="font-medium text-lg"
+          >
+            Modules
+          </CText>
+
+          <TouchableOpacity>
+            <CText
+              className="underline text-lg font-regular"
+            >
+              See all
+            </CText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View className="px-4 mt-2">
+        <View
+          className="flex-row flex-wrap justify-between"
+        >
+          {modules.map((item, index) => (
+            <ModuleButton
+              key={index}
+              iconName={item.iconName}
+              title={item.title}
+              badgeVal={item.badgeVal}
+              onPress={item.onPress}
+            />
+          ))}
+        </View>
+      </View>
+
+      <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["35%", "45%"]} enableGesture={true}>
+        <TouchableOpacity className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
+          <View className="w-10 h-10 rounded-xl bg-indigo-600 items-center justify-center mr-3">
+            <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
+          </View>
+
+          <View className="flex-1">
+            <CText className="font-medium text-lg">johndoe</CText>
+            <CText className="opacity-60">john@email.com</CText>
+          </View>
+
+          <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />
+        </TouchableOpacity>
+
+        <TouchableOpacity className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
+          <View className="w-10 h-10 rounded-xl bg-violet-600 items-center justify-center mr-3">
+            <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
+          </View>
+
+          <View className="flex-1">
+            <CText className="font-medium text-lg">janedoe</CText>
+            <CText className="opacity-60">jane@email.com</CText>
+          </View>
+
+          <Ionicons name="ellipse-outline" size={23} color="#9CA3AF" />
+        </TouchableOpacity>
+
+        <View className="h-[1px] bg-gray-300 mb-4" />
+
+        <TouchableOpacity className="flex-row items-center justify-center py-2 rounded-xl border border-blue-500 mb-1">
+          <Ionicons name="add" size={24} color="#3b82f6" />
+          <CText className="ml-2 text-lg font-medium" style={{ color: "#3b82f6" }}>Add Account</CText>
+        </TouchableOpacity>
+      </AppBottomSheet>
+    </ScreenWrapper>
+  );
+};
+
+type ModuleButtonProps = {
+  iconName: React.ComponentProps<typeof Ionicons>["name"];
+  title: string;
+  badgeVal?: string;
+  onPress?: () => void;
+};
+function ModuleButton({ iconName, title, badgeVal, onPress }: ModuleButtonProps) {
+  const { colors } = useTheme();
+
+  return <TouchableOpacity
+    onPress={onPress}
+    className="h-24 px-4 w-[31.5%] mb-[3%] border rounded-2xl items-center justify-center"
+    style={{
+      borderColor: colors.border + "44",
+      backgroundColor: colors.bg + "66"
+    }}
+  >
+    {
+      badgeVal !== undefined && <View
+        className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+      >
+        <CText
+          className="font-medium text-sm"
+          style={{ color: '#ffffff' }}
+        >
+          {badgeVal}
+        </CText>
+      </View>
+    }
+
+    <Ionicons
+      name={iconName}
+      size={30}
+      color={colors.primary}
+    />
+
+    <CText
+      className="text-base mt-0.5 font-regular text-center"
+    >
+      {title}
+    </CText>
+  </TouchableOpacity>;
+};
