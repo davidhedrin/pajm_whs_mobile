@@ -1,10 +1,12 @@
 import ScreenWrapper from "@/components/screen-wrapper";
 import { CText } from "@/components/text";
-import useTheme from "@/hooks/useTheme";
+import useTheme from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
+import { useAuthStore } from "@/hooks/zustand";
+import { useRouter } from "expo-router";
 import { useRef } from "react";
 
 type ModuleItem = {
@@ -16,6 +18,9 @@ type ModuleItem = {
 export default function Index() {
   const { toggleDarkMode, colors } = useTheme();
 
+  const { logout } = useAuthStore();
+  const router = useRouter();
+
   const modules: ModuleItem[] = [
     {
       iconName: "document-text-outline",
@@ -25,10 +30,6 @@ export default function Index() {
       iconName: "cart-outline",
       title: "Purchase Order",
       badgeVal: "5",
-    },
-    {
-      iconName: "cube-outline",
-      title: "Delivery Notes",
     },
     {
       iconName: "cube-outline",
@@ -87,7 +88,12 @@ export default function Index() {
 
           {/* Notification */}
           <TouchableOpacity
-            onPress={toggleDarkMode}
+            onPress={async () => {
+              // ClearAllStorage();
+              // CheckAllStorage();
+
+              toggleDarkMode();
+            }}
             className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
           >
             <Ionicons name="notifications-outline" size={22} color="white" />
@@ -104,28 +110,34 @@ export default function Index() {
               </CText>
             </View>
           </TouchableOpacity>
-
+          <TouchableOpacity
+            onPress={async () => {
+              await logout();
+              router.replace("/(auth)/login");
+            }}
+            className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
+          >
+            <Ionicons name="log-out-outline" size={22} color="white" />
+          </TouchableOpacity>
         </View>
 
         {/* HERO TEXT */}
-        <View className="mt-7 rounded-3xl flex-1 justify-center">
-          <View className="p-4 bg-gray-400/10 rounded-xl border border-gray-400/20">
-            <CText className="font-regular text-2xl">
-              Welcome to,
-            </CText>
+        <View className="mt-7 p-4 bg-gray-400/10 rounded-xl border border-gray-400/20">
+          <CText className="font-regular text-2xl">
+            Welcome to,
+          </CText>
 
-            <CText
-              className="font-semibold text-3xl mt-2"
-            >
-              PAJM Warehouse Mobile
-            </CText>
+          <CText
+            className="font-semibold text-3xl mt-2"
+          >
+            <Text className="font-semibold text-red-500">PAJM</Text> Warehouse Mobile
+          </CText>
 
-            <CText
-              className="font-regular text-lg mt-2"
-            >
-              Your login as Admin!
-            </CText>
-          </View>
+          <CText
+            className="font-regular text-lg mt-2"
+          >
+            Your login as Admin!
+          </CText>
         </View>
 
         {/* Statistics */}
@@ -134,7 +146,7 @@ export default function Index() {
             <CText
               className="font-medium text-lg leading-none"
             >
-              Your Statistics
+              Statistics
             </CText>
             <CText className="font-regular">
               This summary data's is belongs to you!

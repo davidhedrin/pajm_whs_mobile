@@ -1,4 +1,4 @@
-import useTheme from "@/hooks/useTheme";
+import useTheme from "@/hooks/use-theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { ReactNode } from "react";
 import { ScrollView } from "react-native";
