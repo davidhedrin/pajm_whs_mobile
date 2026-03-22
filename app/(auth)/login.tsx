@@ -3,10 +3,9 @@ import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import Select from '@/components/select';
 import { CText } from '@/components/text';
-import { useAuthStore } from '@/hooks/zustand';
-import { callApi } from '@/utils/api-fatch';
-import { ExecuteMinDelay } from '@/utils/common';
-import { UserAuthData } from '@/utils/model-type';
+import { LoginApi, useAuthStore } from '@/hooks/zustand';
+import { UserAuthData } from '@/lib/model-type';
+import { ExecuteMinDelay } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Image, View } from 'react-native';
 
@@ -23,17 +22,11 @@ const AuthLogin = () => {
   const fatchData = async () => {
     try {
       setIsLoading(true);
-      const createReq = callApi({
-        isCredentian: false,
-        endpoint: "Login",
-        params: {
-          username,
-          password
-        }
-      });
-      const req = await ExecuteMinDelay(createReq, 2000)
-      const res = req.Data as UserAuthData;
-      await setAuth(res);
+      const createReq = LoginApi<UserAuthData>(username, password);
+      const req = await ExecuteMinDelay(createReq, 2000);
+      console.log(req)
+      const res = req.Data;
+      if(res) await setAuth(res);
     } catch (error: any) {
       console.error(error.message);
     }

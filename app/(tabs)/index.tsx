@@ -6,6 +6,7 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import { useAuthStore } from "@/hooks/zustand";
+import { CheckAllStorage } from "@/lib/utils";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 
@@ -90,7 +91,7 @@ export default function Index() {
           <TouchableOpacity
             onPress={async () => {
               // ClearAllStorage();
-              // CheckAllStorage();
+              CheckAllStorage();
 
               toggleDarkMode();
             }}
@@ -127,9 +128,7 @@ export default function Index() {
             Welcome to,
           </CText>
 
-          <CText
-            className="font-semibold text-3xl mt-2"
-          >
+          <CText className="font-semibold text-3xl mt-2">
             <Text className="font-semibold text-red-500">PAJM</Text> Warehouse Mobile
           </CText>
 

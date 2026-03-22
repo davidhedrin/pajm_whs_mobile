@@ -1,3 +1,10 @@
+export type ApiResponse<T> = {
+  Status: number;
+  Success: boolean;
+  Message: string;
+  Data?: T;
+};
+
 export type UserAuthData = {
   Token: string;
   ExpiredAt: string;

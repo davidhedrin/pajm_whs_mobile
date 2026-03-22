@@ -1,13 +1,6 @@
 import { useAuthStore } from "@/hooks/zustand";
-
-const BASE_URL = "https://poetastrical-kory-salamanderlike.ngrok-free.dev";
-
-type ApiResponse<T> = {
-  Status: number;
-  Success: boolean;
-  Message: string;
-  Data?: T;
-};
+import { BASE_URL } from "./config";
+import { ApiResponse } from "./model-type";
 
 type CallApiOptions = {
   endpoint: string;
@@ -25,7 +18,8 @@ export async function callApi<T>({
   isCredentian = true,
 }: CallApiOptions): Promise<ApiResponse<T>> {
   try {
-    const { token, username } = useAuthStore.getState();
+    const { authData } = useAuthStore.getState();
+
     const finalHeaders: Record<string, string> = {
       Accept: "application/json",
       "Content-Type": "application/json",
@@ -34,10 +28,11 @@ export async function callApi<T>({
 
     const ENDPOINT_URL = `${BASE_URL}/${isCredentian ? "WebServices" : "WebServicesNoCred"}/MobileJsonWebService.asmx`;
     if (isCredentian) {
-      if (token === null) throw new Error("Credential is not found!");
-      finalHeaders["Cookie"] = `.ASPXFORMSAUTH_WPAJM=${token}`;
+      if (authData === null) throw new Error("Credential is not found!");
+      if (authData.Token === null) throw new Error("Credential is not found!");
+      finalHeaders["Cookie"] = `.ASPXFORMSAUTH_WPAJM=${authData.Token}`;
 
-      params = { ...params, username };
+      params = { ...params, username: authData.Username };
     }
 
     const res = await fetch(`${ENDPOINT_URL}/${endpoint}`, {
@@ -49,7 +44,10 @@ export async function callApi<T>({
     const raw = await res.json();
     const resJson: ApiResponse<T> = { ...raw.d, Status: res.status };
 
-    if (!resJson.Success) throw new Error(resJson.Message);
+    if (!resJson.Success)
+      throw new Error(
+        resJson.Message === undefined ? raw["Message"] : resJson.Message,
+      );
     return resJson;
   } catch (error) {
     throw error;
