@@ -3,6 +3,7 @@ import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import Select from '@/components/select';
 import { CText } from '@/components/text';
+import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
 import { ExecuteMinDelay } from '@/lib/utils';
@@ -10,6 +11,7 @@ import React, { useState } from 'react';
 import { Image, View } from 'react-native';
 
 const AuthLogin = () => {
+  const { colors } = useTheme();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [username, setUsername] = useState<string>("david");
@@ -88,7 +90,7 @@ const AuthLogin = () => {
 
         }} title='Test' className='mb-10' /> */}
 
-        <CText className='font-regular text-lg w-[70%] text-center'>
+        <CText className='font-regular text-lg w-[70%] text-center' style={{ color: colors.textMuted }}>
           Enter your account credential login to continue explore!
         </CText>
       </View>

@@ -50,15 +50,6 @@ export default function Index() {
       <View
         className="pt-5 px-4"
       >
-        <Image
-          className="absolute -top-10 -right-[60] w-[300] h-[300]"
-          source={require("../../assets/images/splash-icon.png")}
-          style={{
-            opacity: colors.opacity,
-          }}
-          resizeMode="contain"
-        />
-
         {/* HEADER */}
         <View className="flex-row items-center justify-between">
 
@@ -125,20 +116,32 @@ export default function Index() {
         </View>
 
         {/* HERO TEXT */}
-        <View className="mt-7 p-4 bg-gray-400/10 rounded-xl border border-gray-400/20">
-          <CText className="font-regular text-2xl">
-            Welcome to,
-          </CText>
+        <View className="mt-7 p-4 flex-row justify-between items-center rounded-xl"
+          style={{
+            backgroundColor: colors.bg_primary
+          }}>
+          <View>
+            <CText className="font-regular text-2xl">
+              Welcome to,
+            </CText>
 
-          <CText className="font-semibold text-3xl mt-2">
-            <Text className="font-semibold text-red-500">PAJM</Text> Warehouse Mobile
-          </CText>
+            <CText className="font-semibold text-3xl mt-3">
+              <Text className="font-semibold text-red-500">PAJM</Text> Warehouse
+            </CText>
 
-          <CText
-            className="font-regular text-lg mt-2"
-          >
-            Your login as {authData?.Role ?? "Guest"}!
-          </CText>
+            <CText
+              className="font-regular text-lg mt-3"
+            >
+              Your login as {authData?.Role ?? "Guest"}!
+            </CText>
+          </View>
+          <View>
+            <Image
+              className="w-20 h-20"
+              source={require("../../assets/images/splash-icon.png")}
+              resizeMode="contain"
+            />
+          </View>
         </View>
 
         {/* Statistics */}
