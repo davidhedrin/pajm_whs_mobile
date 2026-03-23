@@ -49,7 +49,7 @@ const Select: React.FC<SelectProps> = ({
 
       {/* PREFIX GROUP */}
       {prefixGroup && (
-        <View className="justify-center px-3 bg-gray-200 rounded-l-lg border border-gray-300/80 border-e-0">
+        <View className="justify-center px-3 bg-gray-200 rounded-l-xl border border-gray-300/80 border-e-0">
           {typeof prefixGroup === 'string' ? (
             <Text className="text-gray-700">{prefixGroup}</Text>
           ) : (
@@ -64,7 +64,7 @@ const Select: React.FC<SelectProps> = ({
         {/* Select Box */}
         <Pressable
           onPress={() => setVisible(true)}
-          className={`flex-row items-center justify-between px-3 py-3.5 border-gray-300/80 bg-[#f1f4ff] ${visible ? 'border-2' : 'border'} ${!prefixGroup ? 'rounded-l-lg' : ''} ${!suffixGroup ? 'rounded-r-lg' : ''}`}
+          className={`flex-row items-center justify-between px-3 py-3.5 border-gray-300/80 bg-[#f1f4ff] ${visible ? 'border-2' : 'border'} ${!prefixGroup ? 'rounded-l-xl' : ''} ${!suffixGroup ? 'rounded-r-xl' : ''}`}
         >
           <View className="flex-row items-center flex-1">
 
@@ -122,7 +122,7 @@ const Select: React.FC<SelectProps> = ({
                       return (
                         <TouchableOpacity
                           disabled={isDisabled}
-                          className={`mx-2 px-3 py-3.5 rounded-lg ${isSelected ? 'bg-blue-50' : '' } ${isDisabled ? 'opacity-50' : ''}`}
+                          className={`mx-2 px-3 py-3.5 rounded-xl ${isSelected ? 'bg-blue-50' : '' } ${isDisabled ? 'opacity-50' : ''}`}
                           onPress={() => {
                             if (isDisabled) return;
 
@@ -150,7 +150,7 @@ const Select: React.FC<SelectProps> = ({
 
       {/* SUFFIX GROUP */}
       {suffixGroup && (
-        <View className="justify-center px-3 bg-gray-200 rounded-r-lg border border-gray-300/80">
+        <View className="justify-center px-3 bg-gray-200 rounded-r-xl border border-gray-300/80">
           {typeof suffixGroup === 'string' ? (
             <Text className="text-gray-700">{suffixGroup}</Text>
           ) : (

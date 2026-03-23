@@ -40,7 +40,7 @@ const Input: React.FC<InputProps> = ({
 
       {/* PREFIX GROUP */}
       {prefixGroup && (
-        <View className="justify-center px-3 bg-gray-200 rounded-l-lg border border-gray-300/80 focus:border-2 border-e-0">
+        <View className="justify-center px-3 bg-gray-200 rounded-l-xl border border-gray-300/80 focus:border-2 border-e-0">
           {typeof prefixGroup === 'string' ? (
             <Text className="text-gray-700">{prefixGroup}</Text>
           ) : (
@@ -51,7 +51,7 @@ const Input: React.FC<InputProps> = ({
 
       {/* MAIN INPUT CONTAINER */}
       <View
-        className={`flex-1 flex-row items-center ps-2 pe-3 border border-gray-300/80 focus:border-2 ${!prefixGroup ? 'rounded-l-lg' : ''} ${!suffixGroup ? 'rounded-r-lg' : ''}`}
+        className={`flex-1 flex-row items-center ps-2 pe-3 border border-gray-300/80 focus:border-2 ${!prefixGroup ? 'rounded-l-xl' : ''} ${!suffixGroup ? 'rounded-r-xl' : ''}`}
         style={{ backgroundColor: '#f1f4ff' }}
       >
         {/* PREFIX ICON */}
@@ -89,7 +89,7 @@ const Input: React.FC<InputProps> = ({
 
       {/* SUFFIX GROUP */}
       {suffixGroup && (
-        <View className="justify-center px-3 bg-gray-200 rounded-r-lg border border-gray-300/80 focus:border-2 border-s-0">
+        <View className="justify-center px-3 bg-gray-200 rounded-r-xl border border-gray-300/80 focus:border-2 border-s-0">
           {typeof suffixGroup === 'string' ? (
             <Text className="text-gray-700">{suffixGroup}</Text>
           ) : (

@@ -24,9 +24,8 @@ const AuthLogin = () => {
       setIsLoading(true);
       const createReq = LoginApi<UserAuthData>(username, password);
       const req = await ExecuteMinDelay(createReq, 2000);
-      console.log(req)
       const res = req.Data;
-      if(res) await setAuth(res);
+      if (res) await setAuth(res);
     } catch (error: any) {
       console.error(error.message);
     }
@@ -82,6 +81,12 @@ const AuthLogin = () => {
         </View>
 
         <Button onPress={fatchData} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='mb-10' />
+        {/* <Button onPress={async () => {
+
+          ClearAllStorage();
+          CheckAllStorage();
+
+        }} title='Test' className='mb-10' /> */}
 
         <CText className='font-regular text-lg w-[70%] text-center'>
           Enter your account credential login to continue explore!

@@ -5,8 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
+import Button from "@/components/button";
 import { useAuthStore } from "@/hooks/zustand";
-import { CheckAllStorage } from "@/lib/utils";
+import { UserAuthData } from "@/lib/model-type";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 
@@ -17,6 +18,7 @@ type ModuleItem = {
   onPress?: () => void;
 };
 export default function Index() {
+  const { authData, accounts, switchAccount } = useAuthStore();
   const { toggleDarkMode, colors } = useTheme();
 
   const { logout } = useAuthStore();
@@ -26,6 +28,9 @@ export default function Index() {
     {
       iconName: "document-text-outline",
       title: "Purchase Request",
+      onPress: () => {
+        router.push("/pages/purchase_request");
+      }
     },
     {
       iconName: "cart-outline",
@@ -81,7 +86,7 @@ export default function Index() {
                 <CText
                   className="font-medium leading-5 text-lg mt-1"
                 >
-                  David
+                  {authData?.Fullname ?? "Guest"}
                 </CText>
               </View>
             </View>
@@ -90,9 +95,6 @@ export default function Index() {
           {/* Notification */}
           <TouchableOpacity
             onPress={async () => {
-              // ClearAllStorage();
-              CheckAllStorage();
-
               toggleDarkMode();
             }}
             className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
@@ -135,7 +137,7 @@ export default function Index() {
           <CText
             className="font-regular text-lg mt-2"
           >
-            Your login as Admin!
+            Your login as {authData?.Role ?? "Guest"}!
           </CText>
         </View>
 
@@ -293,7 +295,7 @@ export default function Index() {
           <CText
             className="font-medium text-lg"
           >
-            Modules
+            Menus
           </CText>
 
           <TouchableOpacity>
@@ -322,39 +324,30 @@ export default function Index() {
         </View>
       </View>
 
-      <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["35%", "45%"]} enableGesture={true}>
-        <TouchableOpacity className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
-          <View className="w-10 h-10 rounded-xl bg-indigo-600 items-center justify-center mr-3">
-            <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
-          </View>
+      <View className="px-4">
+        <CText
+          className="mt-2 font-medium text-lg"
+        >
+          Recently Viewed
+        </CText>
+      </View>
 
-          <View className="flex-1">
-            <CText className="font-medium text-lg">johndoe</CText>
-            <CText className="opacity-60">john@email.com</CText>
-          </View>
+      <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["30%", "40%"]} enableGesture={true}>
+        {
+          accounts.map((x, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={async () => {
+                await switchAccount(x.Username);
+                bottomSheetRef.current?.close();
+              }}
+            >
+              <Accounts data={x} activeUser={authData?.Username ?? ""} />
+            </TouchableOpacity>
+          ))
+        }
 
-          <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />
-        </TouchableOpacity>
-
-        <TouchableOpacity className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
-          <View className="w-10 h-10 rounded-xl bg-violet-600 items-center justify-center mr-3">
-            <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
-          </View>
-
-          <View className="flex-1">
-            <CText className="font-medium text-lg">janedoe</CText>
-            <CText className="opacity-60">jane@email.com</CText>
-          </View>
-
-          <Ionicons name="ellipse-outline" size={23} color="#9CA3AF" />
-        </TouchableOpacity>
-
-        <View className="h-[1px] bg-gray-300 mb-4" />
-
-        <TouchableOpacity className="flex-row items-center justify-center py-2 rounded-xl border border-blue-500 mb-1">
-          <Ionicons name="add" size={24} color="#3b82f6" />
-          <CText className="ml-2 text-lg font-medium" style={{ color: "#3b82f6" }}>Add Account</CText>
-        </TouchableOpacity>
+        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className='mb-10' />
       </AppBottomSheet>
     </ScreenWrapper>
   );
@@ -371,10 +364,10 @@ function ModuleButton({ iconName, title, badgeVal, onPress }: ModuleButtonProps)
 
   return <TouchableOpacity
     onPress={onPress}
-    className="h-24 px-4 w-[31.5%] mb-[3%] border rounded-2xl items-center justify-center"
+    className="h-24 px-4 w-[31.5%] mb-[3%] border rounded-xl items-center justify-center"
     style={{
       borderColor: colors.border + "44",
-      backgroundColor: colors.bg + "66"
+      backgroundColor: colors.bg + "77"
     }}
   >
     {
@@ -403,3 +396,18 @@ function ModuleButton({ iconName, title, badgeVal, onPress }: ModuleButtonProps)
     </CText>
   </TouchableOpacity>;
 };
+
+function Accounts({ data, activeUser }: { data: UserAuthData, activeUser: string }) {
+  return <View className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
+    <View className="w-10 h-10 rounded-xl bg-indigo-600 items-center justify-center mr-3">
+      <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
+    </View>
+
+    <View className="flex-1">
+      <CText className="font-medium text-lg">{data.Fullname}</CText>
+      <CText className="opacity-60">{data.Role}</CText>
+    </View>
+
+    <Ionicons name={activeUser == data.Username ? "checkmark-circle" : "ellipse-outline"} size={24} color={activeUser == data.Username ? "#3b82f6" : "#9CA3AF"} />
+  </View>
+}

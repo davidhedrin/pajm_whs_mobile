@@ -39,7 +39,6 @@ export default function RootLayout() {
         router.replace("/(tabs)");
       }
 
-      // 🔥 baru tampilkan UI
       setIsReady(true);
       await SplashScreen.hideAsync();
     }
