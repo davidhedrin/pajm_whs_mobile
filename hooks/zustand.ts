@@ -99,6 +99,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async (username?: string) => {
     try {
+      console.log(123);
+
       const { accounts, authData } = get();
 
       // logout semua account
@@ -138,8 +140,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (e) {
       throw e;
-    } finally {
-      set({ isAuthLoaded: false });
     }
   },
 

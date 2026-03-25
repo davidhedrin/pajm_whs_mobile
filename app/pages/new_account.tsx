@@ -7,25 +7,42 @@ import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
 import { ExecuteMinDelay } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { Controller, useForm } from "react-hook-form";
 import { Image, TouchableOpacity, View } from 'react-native';
+import { z } from "zod";
 
 const NewAccount = () => {
   const { colors } = useTheme();
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
   const [togglePass, setTogglePass] = useState(true);
+  const regSchema = z.object({
+    username: z.string().nonempty("Please enter your username"),
+    password: z.string().nonempty("Please enter your password").min(8, "Password must be at least 8 char"),
+  });
+
+  type RegFormData = z.infer<typeof regSchema>;
+
+  const { control, handleSubmit, formState: { errors } } = useForm<RegFormData>({
+    resolver: zodResolver(regSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      username: "",
+      password: ""
+    }
+  });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const fatchData = async () => {
+  const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = LoginApi<UserAuthData>(username, password);
+      const createReq = LoginApi<UserAuthData>(data.username, data.password);
       const req = await ExecuteMinDelay(createReq, 2000);
       const res = req.Data;
       if (res) await setAuth(res);
@@ -50,7 +67,7 @@ const NewAccount = () => {
 
       <ScreenWrapper>
         <TouchableOpacity onPress={() => router.back()} className='ps-4 pt-3'>
-          <Ionicons name='arrow-back' size={22} color={colors.text} />
+          <Ionicons name='arrow-back' size={24} color={colors.text} />
         </TouchableOpacity>
         <View className='flex-1 justify-center items-center px-5 -mt-10'>
           <Image
@@ -67,23 +84,55 @@ const NewAccount = () => {
           </CText>
 
           <View className='w-full mb-8'>
-            <Input
-              value={username}
-              onChangeText={(e) => setUsername(e)}
-              className='mb-3'
-              placeholder="Enter the username"
-            />
-            <Input
-              value={password}
-              onChangeText={(e) => setPassword(e)}
-              secureTextEntry={togglePass}
-              suffixIcon={togglePass ? "eye-off-outline" : "eye-outline"}
-              onPressSuffixIcon={() => setTogglePass((prev) => !prev)}
-              placeholder="Enter the password"
-            />
+            <View className='mb-3'>
+              <Controller
+                control={control}
+                name="username"
+                render={({ field: { onChange, value } }) => (
+                  <>
+                    <Input
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder="Enter account username"
+                    />
+
+                    {errors.username && (
+                      <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
+                        {errors.username.message}
+                      </CText>
+                    )}
+                  </>
+                )}
+              />
+            </View>
+
+            <View>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <>
+                    <Input
+                      value={value}
+                      onChangeText={onChange}
+                      secureTextEntry={togglePass}
+                      suffixIcon={togglePass ? "eye-off-outline" : "eye-outline"}
+                      onPressSuffixIcon={() => setTogglePass((prev) => !prev)}
+                      placeholder="Enter account password"
+                    />
+
+                    {errors.password && (
+                      <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
+                        {errors.password.message}
+                      </CText>
+                    )}
+                  </>
+                )}
+              />
+            </View>
           </View>
 
-          <Button onPress={fatchData} title='Add Account' isLoading={isLoading} loadingTitle='Adding...' className='mb-10' />
+          <Button onPress={handleSubmit(fatchData)} title='Add Account' isLoading={isLoading} loadingTitle='Adding...' className='mb-10' />
 
           <CText className='font-regular text-lg w-[70%] text-center' style={{ color: colors.textMuted }}>
             Add new account credential to make it easier your access!

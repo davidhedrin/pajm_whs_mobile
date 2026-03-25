@@ -77,7 +77,7 @@ export default function Index() {
                 <CText
                   className="font-medium leading-5 text-lg mt-1"
                 >
-                  {authData?.Fullname ?? "Guest"}
+                  {authData?.Fullname ? authData.Fullname.trim().split(" ")[0] : "Guest"}
                 </CText>
               </View>
             </View>
@@ -106,7 +106,7 @@ export default function Index() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={async () => {
-              await logout();
+              await logout(authData?.Username ?? "");
               router.replace("/(auth)/login");
             }}
             className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
@@ -116,12 +116,12 @@ export default function Index() {
         </View>
 
         {/* HERO TEXT */}
-        <View className="mt-7 p-4 flex-row justify-between items-center rounded-xl"
+        <View className="mt-7 p-4 flex-row justify-between rounded-tl-3xl rounded-br-full"
           style={{
             backgroundColor: colors.bg_primary
           }}>
           <View>
-            <CText className="font-regular text-2xl">
+            <CText className="font-regular text-xl">
               Welcome to,
             </CText>
 
@@ -135,7 +135,7 @@ export default function Index() {
               Your login as {authData?.Role ?? "Guest"}!
             </CText>
           </View>
-          <View>
+          <View className="pe-5">
             <Image
               className="w-20 h-20"
               source={require("../../assets/images/splash-icon.png")}
@@ -145,7 +145,7 @@ export default function Index() {
         </View>
 
         {/* Statistics */}
-        <View className="mt-8">
+        <View className="mt-7">
           <View>
             <CText
               className="font-medium text-lg leading-none"
@@ -408,7 +408,7 @@ function Accounts({ data, activeUser }: { data: UserAuthData, activeUser: string
 
     <View className="flex-1">
       <CText className="font-medium text-lg">{data.Fullname}</CText>
-      <CText className="opacity-60">{data.Role}</CText>
+      <CText className="opacity-60">{data.Email ? data.Email.trim() !== "" ? data.Email : "Email not registered" : "Email not registered"}</CText>
     </View>
 
     <Ionicons name={activeUser == data.Username ? "checkmark-circle" : "ellipse-outline"} size={24} color={activeUser == data.Username ? "#3b82f6" : "#9CA3AF"} />

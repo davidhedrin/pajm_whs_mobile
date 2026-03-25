@@ -13,4 +13,5 @@ export type UserAuthData = {
   Fullname: string;
   Role: string;
   RoleId: number;
+  Email: string;
 };

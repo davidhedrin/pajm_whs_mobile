@@ -7,24 +7,43 @@ import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
 import { ExecuteMinDelay } from '@/lib/utils';
+import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from 'react';
+import { Controller, useForm } from "react-hook-form";
 import { Image, View } from 'react-native';
+import { z } from "zod";
 
 const AuthLogin = () => {
   const { colors } = useTheme();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [username, setUsername] = useState<string>("david");
-  const [password, setPassword] = useState<string>("Jeis0304!");
   const [togglePass, setTogglePass] = useState(true);
-  const [orgs, setOrgs] = useState<string>("Jeis0304!");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const fatchData = async () => {
+  const regSchema = z.object({
+    username: z.string().nonempty("Please enter your username"),
+    password: z.string().nonempty("Please enter your password").min(8, "Password must be at least 8 char"),
+    organization: z.string().nonempty("Please select organization"),
+  });
+
+  type RegFormData = z.infer<typeof regSchema>;
+
+  const { control, handleSubmit, formState: { errors } } = useForm<RegFormData>({
+    resolver: zodResolver(regSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      username: "",
+      password: "",
+      organization: "",
+    }
+  });
+
+  const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = LoginApi<UserAuthData>(username, password);
+      const createReq = LoginApi<UserAuthData>(data.username, data.password);
       const req = await ExecuteMinDelay(createReq, 2000);
       const res = req.Data;
       if (res) await setAuth(res);
@@ -56,33 +75,79 @@ const AuthLogin = () => {
         </CText>
 
         <View className='w-full mb-8'>
-          <Input
-            value={username}
-            onChangeText={(e) => setUsername(e)}
-            className='mb-3'
-            placeholder="Enter your username"
-          />
-          <Input
-            value={password}
-            onChangeText={(e) => setPassword(e)}
-            secureTextEntry={togglePass}
-            suffixIcon={togglePass ? "eye-off-outline" : "eye-outline"}
-            onPressSuffixIcon={() => setTogglePass((prev) => !prev)}
-            className='mb-3'
-            placeholder="Enter your password"
-          />
-          <Select
-            options={[
-              { label: 'PAJM - Pemalang Aji Jaya Maritimindo', value: 'PAJM' },
-              { label: 'LCS - Lentera Cipta Samudra', value: 'LCS', disabled: true },
-            ]}
-            value={"PAJM"}
-            onChange={setOrgs}
-            placeholder="Select your organization"
-          />
+          <View className='mb-3'>
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Input
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Enter your username"
+                  />
+
+                  {errors.username && (
+                    <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
+                      {errors.username.message}
+                    </CText>
+                  )}
+                </>
+              )}
+            />
+          </View>
+          <View className='mb-3'>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Input
+                    value={value}
+                    onChangeText={onChange}
+                    secureTextEntry={togglePass}
+                    suffixIcon={togglePass ? "eye-off-outline" : "eye-outline"}
+                    onPressSuffixIcon={() => setTogglePass((prev) => !prev)}
+                    placeholder="Enter your password"
+                  />
+
+                  {errors.password && (
+                    <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
+                      {errors.password.message}
+                    </CText>
+                  )}
+                </>
+              )}
+            />
+          </View>
+          <View>
+            <Controller
+              control={control}
+              name="organization"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Select
+                    options={[
+                      { label: 'PAJM - Pemalang Aji Jaya Maritimindo', value: 'PAJM' },
+                      { label: 'LCS - Lentera Cipta Samudra', value: 'LCS', disabled: true },
+                    ]}
+                    value={value}
+                    onChange={onChange}
+                    placeholder="Select your organization"
+                  />
+
+                  {errors.organization && (
+                    <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
+                      {errors.organization.message}
+                    </CText>
+                  )}
+                </>
+              )}
+            />
+          </View>
         </View>
 
-        <Button onPress={fatchData} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='mb-10' />
+        <Button onPress={handleSubmit(fatchData)} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='mb-10' />
         {/* <Button onPress={async () => {
 
           ClearAllStorage();
