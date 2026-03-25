@@ -5,10 +5,109 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { GlobalConfirmModal } from "@/components/confirm-alert";
 import { useAuthStore } from "@/hooks/zustand";
+import { Ionicons } from "@expo/vector-icons";
+import Toast, {
+  BaseToast,
+  BaseToastProps,
+  ErrorToast,
+  ToastConfig,
+} from 'react-native-toast-message';
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
+const toastConfig: ToastConfig = {
+  success: (props: BaseToastProps) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: '#34D399',
+        borderRadius: 10,
+        alignItems: "center"
+      }}
+      contentContainerStyle={{
+        paddingHorizontal: 12,
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+      }}
+      text2Style={{
+        fontSize: 15,
+        color: '#6B7280',
+      }}
+      renderTrailingIcon={() => (
+        <Ionicons
+          name="checkmark-circle-outline"
+          size={28}
+          color="#34D399"
+          style={{ marginRight: 12 }}
+        />
+      )}
+    />
+  ),
+
+  info: (props: BaseToastProps) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: '#3B82F6',
+        borderRadius: 10,
+        alignItems: 'center',
+      }}
+      contentContainerStyle={{
+        paddingHorizontal: 12,
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+      }}
+      text2Style={{
+        fontSize: 15,
+        color: '#6B7280',
+      }}
+      renderTrailingIcon={() => (
+        <Ionicons
+          name="information-circle-outline"
+          size={28}
+          color="#3B82F6"
+          style={{ marginRight: 12 }}
+        />
+      )}
+    />
+  ),
+
+  error: (props: BaseToastProps) => (
+    <ErrorToast
+      {...props}
+      style={{
+        borderLeftColor: '#F87171',
+        borderRadius: 12,
+        alignItems: "center"
+      }}
+      contentContainerStyle={{
+        paddingHorizontal: 10,
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+      }}
+      text2Style={{
+        fontSize: 15,
+        color: '#6B7280',
+      }}
+      renderTrailingIcon={() => (
+        <Ionicons
+          name="warning-outline"
+          size={28}
+          color="#F87171"
+          style={{ marginRight: 12 }}
+        />
+      )}
+    />
+  ),
+};
 
 export default function RootLayout() {
   const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
@@ -51,6 +150,9 @@ export default function RootLayout() {
   return <ThemeProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }} />
+
+      <Toast config={toastConfig} />
+      <GlobalConfirmModal />
     </GestureHandlerRootView>
   </ThemeProvider>;
 }

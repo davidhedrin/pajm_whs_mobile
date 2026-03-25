@@ -5,7 +5,7 @@ import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
-import { ExecuteMinDelay } from '@/lib/utils';
+import { ExecuteMinDelay, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Stack, useRouter } from 'expo-router';
@@ -47,8 +47,17 @@ const NewAccount = () => {
       const res = req.Data;
       if (res) await setAuth(res);
       router.back();
+      showToast({
+        type: "success",
+        title: "Success Added",
+        message: "The new account added successfully."
+      });
     } catch (error: any) {
-      console.error(error.message);
+      showToast({
+        type: "error",
+        title: "Login Failed",
+        message: error.message
+      });
     }
     setIsLoading(false);
   };

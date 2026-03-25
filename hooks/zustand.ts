@@ -1,5 +1,6 @@
 import { BASE_URL } from "@/lib/config";
 import { ApiResponse, UserAuthData } from "@/lib/model-type";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 
@@ -306,3 +307,37 @@ export async function LoginApi<T>(
     throw error;
   }
 }
+
+type ConfirmParams = {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+};
+
+type ConfirmStore = {
+  visible: boolean;
+  params: ConfirmParams | null;
+  resolver: ((value: boolean) => void) | null;
+  showConfirm: (params: ConfirmParams) => Promise<boolean>;
+  closeConfirm: (val: boolean) => void;
+};
+
+export const useConfirmStore = create<ConfirmStore>((set, get) => ({
+  visible: false,
+  params: null,
+  resolver: null,
+
+  showConfirm: (params) => {
+    return new Promise<boolean>((resolve) => {
+      set({ visible: true, params, resolver: resolve });
+    });
+  },
+
+  closeConfirm: (val) => {
+    const { resolver } = get();
+    if (resolver) resolver(val);
+    set({ visible: false, params: null, resolver: null });
+  },
+}));

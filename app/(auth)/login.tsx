@@ -6,7 +6,7 @@ import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
-import { ExecuteMinDelay } from '@/lib/utils';
+import { ExecuteMinDelay, showToast } from '@/lib/utils';
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
@@ -47,8 +47,17 @@ const AuthLogin = () => {
       const req = await ExecuteMinDelay(createReq, 2000);
       const res = req.Data;
       if (res) await setAuth(res);
+      showToast({
+        type: "success",
+        title: "Success Login",
+        message: "You have logged in successfully."
+      });
     } catch (error: any) {
-      console.error(error.message);
+      showToast({
+        type: "error",
+        title: "Login Failed",
+        message: error.message
+      });
     }
     setIsLoading(false);
   };
@@ -147,7 +156,7 @@ const AuthLogin = () => {
           </View>
         </View>
 
-        <Button onPress={handleSubmit(fatchData)} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='mb-10' />
+        <Button onPress={(handleSubmit(fatchData))} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='mb-10' />
         {/* <Button onPress={async () => {
 
           ClearAllStorage();

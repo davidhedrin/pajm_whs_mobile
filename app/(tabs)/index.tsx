@@ -6,7 +6,7 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from "@/components/button";
-import { useAuthStore } from "@/hooks/zustand";
+import { useAuthStore, useConfirmStore } from "@/hooks/zustand";
 import { UserAuthData } from "@/lib/model-type";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
@@ -20,6 +20,7 @@ type ModuleItem = {
 export default function Index() {
   const { authData, accounts, switchAccount } = useAuthStore();
   const { toggleDarkMode, colors } = useTheme();
+  const { showConfirm } = useConfirmStore();
 
   const { logout } = useAuthStore();
   const router = useRouter();
@@ -44,6 +45,21 @@ export default function Index() {
   ];
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
+
+  const confirmLogout = async () => {
+    const confirmed = await showConfirm({
+      title: "Confirm Logout!",
+      message: "Are you sure you want to log out of your account?",
+      confirmText: "Yes, Logout",
+      cancelText: "Cancel",
+      icon: 'log-out-outline'
+    });
+
+    if (confirmed) {
+      await logout(authData?.Username ?? "");
+      router.replace("/(auth)/login");
+    }
+  }
 
   return (
     <ScreenWrapper>
@@ -105,10 +121,7 @@ export default function Index() {
             </View>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={async () => {
-              await logout(authData?.Username ?? "");
-              router.replace("/(auth)/login");
-            }}
+            onPress={confirmLogout}
             className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
           >
             <Ionicons name="log-out-outline" size={22} color="white" />
@@ -333,6 +346,20 @@ export default function Index() {
         >
           Recently Viewed
         </CText>
+
+        <View className="mt-2 px-5 py-6 rounded-xl items-center justify-center shadow-md" style={{
+          backgroundColor: colors.surface
+        }}>
+          <Ionicons name="folder-open-outline" size={45} color="#9CA3AF" className="mb-3" />
+
+          <CText className="font-medium text-gray-500 text-center text-lg">
+            You haven't any history yet.
+          </CText>
+
+          <CText className="font-regular text-center" style={{ color: colors.textMuted }}>
+            Start explore and they will appear here.
+          </CText>
+        </View>
       </View>
 
       <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["30%", "40%"]} enableGesture={true}>
