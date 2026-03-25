@@ -148,7 +148,7 @@ export default function Index() {
               Your login as {authData?.Role ?? "Guest"}!
             </CText>
           </View>
-          <View className="pe-5">
+          <View className="pe-6">
             <Image
               className="w-20 h-20"
               source={require("../../assets/images/splash-icon.png")}
@@ -179,15 +179,15 @@ export default function Index() {
             >
               <View className="flex-row justify-between">
                 <View
-                  className="w-10 h-10 bg-green-600/30 rounded-xl items-center justify-center"
+                  className="bg-green-600/30 rounded-xl items-center justify-center"
                 >
-                  <Ionicons name="document-text-outline" size={20} color="white" />
+                  <Ionicons name="document-text-outline" size={28} color="white" className="p-2.5" />
                 </View>
 
 
                 <View className="items-end">
                   <CText
-                    className="font-regular leading-none"
+                    className="font-regular"
                     style={{ color: colors.textMuted }}
                   >
                     Total Data
@@ -245,13 +245,13 @@ export default function Index() {
               {/* Header */}
               <View className="flex-row justify-between">
 
-                <View className="w-10 h-10 bg-orange-600/30 rounded-xl items-center justify-center">
-                  <Ionicons name="cart-outline" size={20} color="white" />
+                <View className="bg-orange-600/30 rounded-xl items-center justify-center">
+                  <Ionicons name="cart-outline" size={28} color="white" className="p-2.5" />
                 </View>
 
                 <View className="items-end">
                   <CText
-                    className="font-regular leading-none"
+                    className="font-regular"
                     style={{ color: colors.textMuted }}
                   >
                     Total Data

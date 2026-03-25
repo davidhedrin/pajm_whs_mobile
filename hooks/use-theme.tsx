@@ -65,7 +65,7 @@ const lightColors: ColorScheme = {
   },
   statusBarStyle: "dark-content" as const,
 
-  bg_primary: "#3b82f644",
+  bg_primary: "#3b82f633",
   bg_success: "#22c55e33",
   bg_warning: "#f59e0b33",
   bg_danger: "#ef444433",
