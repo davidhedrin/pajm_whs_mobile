@@ -6,7 +6,7 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from "@/components/button";
-import { useAuthStore, useConfirmStore } from "@/hooks/zustand";
+import { useAuthStore } from "@/hooks/zustand";
 import { UserAuthData } from "@/lib/model-type";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
@@ -19,10 +19,7 @@ type ModuleItem = {
 };
 export default function Index() {
   const { authData, accounts, switchAccount } = useAuthStore();
-  const { toggleDarkMode, colors } = useTheme();
-  const { showConfirm } = useConfirmStore();
-
-  const { logout } = useAuthStore();
+  const { colors } = useTheme();
   const router = useRouter();
 
   const modules: ModuleItem[] = [
@@ -48,9 +45,7 @@ export default function Index() {
 
   return (
     <ScreenWrapper>
-      <View
-        className="pt-5 px-4"
-      >
+      <View className="pt-5 px-4">
         {/* HEADER */}
         <View className="flex-row items-center justify-between">
 

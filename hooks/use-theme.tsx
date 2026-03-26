@@ -25,6 +25,7 @@ export interface ColorScheme {
   };
   backgrounds: {
     input: string;
+    placeholder: string;
     editInput: string;
   };
   statusBarStyle: "light-content" | "dark-content";
@@ -50,7 +51,7 @@ const lightColors: ColorScheme = {
   danger: "#ef4444",
   shadow: "#000000",
   gradients: {
-    background: ["#ffffff", "#d0daf2"],
+    background: ["#EBEBEB", "#3b82f644"],
     surface: ["#ffffff", "#f8fafc"],
     primary: ["#3b82f6", "#1d4ed8"],
     success: ["#22c55e33", "#22c55e0D"],
@@ -61,6 +62,7 @@ const lightColors: ColorScheme = {
   },
   backgrounds: {
     input: "#ffffff",
+    placeholder: "#9ca3af",
     editInput: "#ffffff",
   },
   statusBarStyle: "dark-content" as const,
@@ -74,8 +76,8 @@ const lightColors: ColorScheme = {
 };
 
 const darkColors: ColorScheme = {
-  bg: "#303847",
-  surface: "#303847",
+  bg: "#394059",
+  surface: "#394059",
   text: "#f1f5f9",
   textMuted: "#94a3b8",
   border: "#3a495e",
@@ -85,8 +87,8 @@ const darkColors: ColorScheme = {
   danger: "#f87171",
   shadow: "#000000",
   gradients: {
-    background: ["#303847", "#131821"],
-    surface: ["#303847", "#3a495e"],
+    background: ["#262A38", "#0a0f17"],
+    surface: ["#394059", "#3a495e"],
     primary: ["#3b82f6", "#1d4ed8"],
     success: ["#16a34a66", "#16a34a1A"],
     warning: ["#f59e0b", "#d97706"],
@@ -96,7 +98,8 @@ const darkColors: ColorScheme = {
   },
   backgrounds: {
     input: "#131821",
-    editInput: "#303847",
+    placeholder: "#9ca3af",
+    editInput: "#394059",
   },
   statusBarStyle: "light-content" as const,
 
