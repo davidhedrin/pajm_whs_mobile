@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
+import { ActivityIndicator, ColorValue, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 import { CText } from './text';
 
 type Props = TouchableOpacityProps & {
   title: string;
+  titleColor?: ColorValue | undefined;
   className?: string;
   isLoading?: boolean;
   loadingTitle?: string;
@@ -16,6 +17,7 @@ type Props = TouchableOpacityProps & {
 
 const Button = ({
   title,
+  titleColor = "#fff",
   className,
   isLoading = false,
   loadingTitle = "Loading...",
@@ -31,8 +33,7 @@ const Button = ({
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      className={`px-4 py-3.5 rounded-xl w-full ${isDisabled ? 'bg-blue-300' : 'bg-blue-500'
-        } ${className ?? ''}`}
+      className={`${className ?? ''} px-4 py-3.5 rounded-xl w-full ${isDisabled ? 'bg-blue-300' : 'bg-blue-500' }`}
       disabled={isDisabled}
       {...props}
     >
@@ -42,10 +43,10 @@ const Button = ({
           <ActivityIndicator size="small" color="#fff" />
         )}
 
-        {prefixIcon && <Ionicons name={prefixIcon} size={20} color="#fff" />}
+        {prefixIcon && <Ionicons name={prefixIcon} size={20} color={titleColor} />}
         <CText
-          className="font-semibold text-center text-lg"
-          style={{ color: '#fff' }}
+          className="font-regular text-center text-lg"
+          style={{ color: titleColor }}
         >
           {isLoading ? loadingTitle : title}
         </CText>

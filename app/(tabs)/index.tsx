@@ -46,21 +46,6 @@ export default function Index() {
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
-  const confirmLogout = async () => {
-    const confirmed = await showConfirm({
-      title: "Confirm Logout!",
-      message: "Are you sure you want to log out of your account?",
-      confirmText: "Yes, Logout",
-      cancelText: "Cancel",
-      icon: 'log-out-outline'
-    });
-
-    if (confirmed) {
-      await logout(authData?.Username ?? "");
-      router.replace("/(auth)/login");
-    }
-  }
-
   return (
     <ScreenWrapper>
       <View
@@ -101,9 +86,6 @@ export default function Index() {
 
           {/* Notification */}
           <TouchableOpacity
-            onPress={async () => {
-              toggleDarkMode();
-            }}
             className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
           >
             <Ionicons name="notifications-outline" size={22} color="white" />
@@ -119,12 +101,6 @@ export default function Index() {
                 3
               </CText>
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={confirmLogout}
-            className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
-          >
-            <Ionicons name="log-out-outline" size={22} color="white" />
           </TouchableOpacity>
         </View>
 
@@ -427,7 +403,7 @@ function ModuleButton({ iconName, title, badgeVal, onPress }: ModuleButtonProps)
   </TouchableOpacity>;
 };
 
-function Accounts({ data, activeUser }: { data: UserAuthData, activeUser: string }) {
+export function Accounts({ data, activeUser }: { data: UserAuthData, activeUser: string }) {
   return <View className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
     <View className="w-10 h-10 rounded-xl bg-indigo-600 items-center justify-center mr-3">
       <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
@@ -435,7 +411,7 @@ function Accounts({ data, activeUser }: { data: UserAuthData, activeUser: string
 
     <View className="flex-1">
       <CText className="font-medium text-lg">{data.Fullname}</CText>
-      <CText className="opacity-60">{data.Email ? data.Email.trim() !== "" ? data.Email : "Email not registered" : "Email not registered"}</CText>
+      <CText className="opacity-60">{data.Email ? (data.Email.trim() !== "" ? data.Email : "Email not registered") : "Email not registered"}</CText>
     </View>
 
     <Ionicons name={activeUser == data.Username ? "checkmark-circle" : "ellipse-outline"} size={24} color={activeUser == data.Username ? "#3b82f6" : "#9CA3AF"} />

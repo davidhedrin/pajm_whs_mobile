@@ -110,7 +110,7 @@ const darkColors: ColorScheme = {
 
 interface ThemeContextType {
   isDarkMode: boolean;
-  toggleDarkMode: () => void;
+  toggleDarkMode: (value: boolean) => void;
   colors: ColorScheme;
 };
 
@@ -126,10 +126,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const toggleDarkMode = async () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    await AsyncStorage.setItem("darkMode", JSON.stringify(newMode));
+  const toggleDarkMode = async (value: boolean) => {
+    setIsDarkMode(value);
+    await AsyncStorage.setItem("darkMode", JSON.stringify(value));
   };
 
   const colors = isDarkMode ? darkColors : lightColors;

@@ -66,7 +66,7 @@ const AuthLogin = () => {
     <ScreenWrapper>
       <View className='flex-1 justify-center items-center px-5'>
         <Image
-          className="w-[80] h-[80] mb-10"
+          className="w-20 h-20 mb-10"
           source={require("../../assets/images/splash-icon.png")}
           resizeMode="contain"
         />
