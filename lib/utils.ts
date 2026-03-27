@@ -44,3 +44,30 @@ export const showToast = ({
     visibilityTime: visTime,
   });
 };
+
+export function formatDate(
+  dateString: string | Date | null | undefined,
+  dtStyle?: "short" | "full" | "long" | "medium",
+  tmStyle?: "short" | "full" | "long" | "medium",
+) {
+  if (!dateString) return "Invalid Format";
+
+  const date = new Date(
+    typeof dateString === "string" ? dateString.replace(" ", "T") : dateString,
+  );
+
+  if (isNaN(date.getTime())) return "Invalid Format";
+
+  const dateFormatter = dtStyle
+    ? new Intl.DateTimeFormat("id-ID", { dateStyle: dtStyle })
+    : null;
+
+  const timeFormatter = tmStyle
+    ? new Intl.DateTimeFormat("id-ID", { timeStyle: tmStyle })
+    : null;
+
+  const formattedDate = dateFormatter ? dateFormatter.format(date) : "";
+  const formattedTime = timeFormatter ? `, ${timeFormatter.format(date)}` : "";
+
+  return tmStyle ? `${formattedDate}${formattedTime}` : formattedDate;
+}

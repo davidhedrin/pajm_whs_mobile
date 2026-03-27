@@ -2,118 +2,16 @@ import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
+import { callApi } from '@/lib/api-fatch';
+import { ApproverLevel, PrProps } from '@/lib/model-type';
+import { formatDate } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList, LayoutAnimation, TouchableOpacity,
   View
 } from "react-native";
-
-type ApprovalStatus = "WAITING" | "APPROVED" | "REJECTED";
-
-type Approval = {
-  step: string;
-  name: string;
-  status: ApprovalStatus;
-  date: string;
-};
-
-type PO = {
-  id: string;
-  number: string;
-  vendor: string;
-  date: string;
-  status: ApprovalStatus;
-  app_at: string;
-  appr_data: Approval[];
-};
-
-const DATA: PO[] = [
-  {
-    id: "1",
-    number: "PR/PAJM/1033/2/2026",
-    vendor: "Diana Vega Yuliningtyas",
-    date: "10:38 AM - 22 Feb 2026",
-    status: "WAITING",
-    app_at: "1",
-    appr_data: [
-      {
-        step: "Approval 1",
-        name: "John Doe",
-        status: "APPROVED",
-        date: "12 Mar 2026, 10:20 AM",
-      },
-      {
-        step: "Approval 2",
-        name: "Jane Smith",
-        status: "WAITING",
-        date: "-",
-      },
-      {
-        step: "Approval 3",
-        name: "Michael Lee",
-        status: "REJECTED",
-        date: "-",
-      },
-    ]
-  },
-  {
-    id: "2",
-    number: "PR/PAJM/1078/3/2026",
-    vendor: "Iqbal Caesario Haryadi",
-    date: "13:33 PM - 16 Jan 2025",
-    status: "APPROVED",
-    app_at: "3",
-    appr_data: [
-      {
-        step: "Approval 1",
-        name: "John Doe",
-        status: "APPROVED",
-        date: "12 Mar 2026, 10:20 AM",
-      },
-      {
-        step: "Approval 2",
-        name: "Jane Smith",
-        status: "WAITING",
-        date: "-",
-      },
-      {
-        step: "Approval 3",
-        name: "Michael Lee",
-        status: "REJECTED",
-        date: "-",
-      },
-    ]
-  },
-  {
-    id: "3",
-    number: "PR/PAJM/1080/3/2026",
-    vendor: "Sofia Wijayanti",
-    date: "09:26 AM - 08 Mar 2024",
-    status: "REJECTED",
-    app_at: "2",
-    appr_data: [
-      {
-        step: "Approval 1",
-        name: "John Doe",
-        status: "APPROVED",
-        date: "12 Mar 2026, 10:20 AM",
-      },
-      {
-        step: "Approval 2",
-        name: "Jane Smith",
-        status: "WAITING",
-        date: "-",
-      },
-      {
-        step: "Approval 3",
-        name: "Michael Lee",
-        status: "REJECTED",
-        date: "-",
-      },
-    ]
-  },
-];
 
 type SummaryCardProps = {
   title: string;
@@ -161,168 +59,258 @@ const PurchaseRequest: React.FC = () => {
     );
   };
 
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (id: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedId(prev => (prev === id ? null : id));
   };
-  const renderItem = ({ item }: { item: PO }) => {
-    const isExpanded = expandedId === item.id;
-    return <TouchableOpacity className="rounded-xl px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: colors.surface }}>
-      <View className="flex-row justify-between items-center mb-2">
-        <CText className="font-semibold text-gray-900 text-lg">
-          {item.number}
-        </CText>
 
-        <View className="flex-row items-center">
-          <CText
-            className="px-2 py-1 rounded-full text-sm font-regular mr-2"
-            style={getStatusStyle(item.status)}
-          >
-            {item.status}
-          </CText>
+  const [startData, setStartData] = useState(0);
+  const [startLimit] = useState(15);
+  const [data, setData] = useState<PrProps[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const fatchDatas = async () => {
+    if (loading) return;
 
-          {/* 🔽 ICON TOGGLE */}
-          <TouchableOpacity onPress={() => toggleExpand(item.id)}>
-            <Ionicons
-              name={isExpanded ? "chevron-up" : "chevron-down"}
-              size={22}
-              color={colors.text}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+    setLoading(true);
 
-      {/* 🔹 MAIN CONTENT */}
-      <View className="flex-row justify-between items-end">
-        <View>
-          <CText className="font-regular text-lg">
-            Req By: {item.vendor}
-          </CText>
-          <CText style={{ color: colors.textMuted }}>{item.date}</CText>
-        </View>
+    const createReq = await callApi<any[]>({
+      endpoint: "PoPaging",
+      params: {
+        start: startData,
+        limit: startLimit,
+        sort: "Id",
+        dir: "ASC",
+        gridfilters: "",
+        option2: "ShowAllData",
+      }
+    });
 
-        <View>
-          <CText className="font-medium" style={{ color: colors.textMuted }}>
-            Approval At - {item.app_at}
-          </CText>
-        </View>
-      </View>
+    setTotal(createReq.TotalRecord ?? 0);
 
-      {isExpanded && (
-        <View className="mt-4 pt-3 border-t border-gray-200">
-          {/* APPROVAL LIST */}
-          {item.appr_data.map((a, index) => {
-            const style = getStatusStyle(a.status);
+    console.log(createReq);
+    let resData: PrProps[] = [];
+    if (createReq.Data !== undefined) resData = createReq.Data.map(MappingPr);
+    // setData(resData);
+    setData(prev => [...prev, ...resData]);
+    console.log(resData);
 
-            return (
-              <View key={index} className="flex-row items-start mb-4">
-                <View
-                  className="w-2 h-2 mt-2 rounded-full mr-3"
-                  style={{ backgroundColor: style.color }}
-                />
-
-                <View className="flex-1">
-                  <View className="flex-row justify-between items-start">
-                    <View>
-                      <CText className="font-medium">
-                        {a.step}
-                      </CText>
-
-                      <CText className="text-sm font-regular">
-                        {a.name}
-                      </CText>
-                    </View>
-
-                    <View className="items-end">
-                      <CText
-                        className="px-2 py-0.5 rounded-full text-sm"
-                        style={style}
-                      >
-                        {a.status}
-                      </CText>
-
-                      <CText className="text-sm font-regular mt-1">
-                        {a.date}
-                      </CText>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      )}
-    </TouchableOpacity>
+    setStartData(prev => prev + startLimit);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    fatchDatas();
+  }, []);
 
   return (
     <ScreenWrapper scrollable={false} edges={['bottom']}>
+      <View className="pt-5 pb-3 px-4">
+        <View className='mb-2'>
+          <CText
+            className="font-medium text-lg leading-none"
+          >
+            Statistics
+          </CText>
+          <CText className="font-regular">
+            This summary data's is belongs to you!
+          </CText>
+        </View>
+        <View className="flex-row flex-wrap justify-between mb-2">
+          <SummaryCard
+            title="Total PO"
+            count={1234}
+            color={colors.bg_primary}
+            icon="document-text-outline"
+          />
+          <SummaryCard
+            title="Waiting"
+            count={3456}
+            color={colors.bg_warning}
+            icon="time-outline"
+          />
+          <SummaryCard
+            title="Done"
+            count={7890}
+            color={colors.bg_success}
+            icon="checkmark-done-outline"
+          />
+        </View>
+
+        <View className="flex-row justify-between mb-3">
+          <TouchableOpacity className="flex-row items-center px-3 py-2 rounded-xl" style={{ backgroundColor: colors.surface }}>
+            <Ionicons name="filter-outline" size={18} color={colors.text} />
+            <CText className="ml-2 font-regular text-lg">Filter</CText>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center px-3 py-2 rounded-xl" style={{ backgroundColor: colors.surface }}>
+            <Ionicons name="swap-vertical-outline" size={18} color={colors.text} />
+            <CText className="ml-2 font-regular text-lg">Sort</CText>
+          </TouchableOpacity>
+        </View>
+
+        <Input
+          prefixIcon='search-outline'
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search purchase order..."
+        />
+      </View>
+
       <FlatList
-        data={DATA}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        data={data}
+        keyExtractor={(item) => item.Id.toString()}
         showsVerticalScrollIndicator={false}
-        className='pt-5 px-4'
-
-        ListHeaderComponent={
-          <View className="mb-2">
-            <View className='mb-2'>
-              <CText
-                className="font-medium text-lg leading-none"
+        className='pt-2 px-4'
+        onEndReached={() => {
+          if (data.length >= total) return;
+          if (data.length < total) fatchDatas();
+        }}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={
+          loading ? <View className='mb-5 flex-row justify-center items-center'>
+            <ActivityIndicator size="small" />
+            <CText className='font-medium text-lg ms-2'>Loading...</CText>
+          </View> : null
+        }
+        ListEmptyComponent={
+          <View>
+            {
+              !loading && <View className="px-5 py-6 rounded-xl items-center justify-center shadow-md"
+                style={{
+                  backgroundColor: colors.surface
+                }}
               >
-                Statistics
-              </CText>
-              <CText className="font-regular">
-                This summary data's is belongs to you!
-              </CText>
-            </View>
-            <View className="flex-row flex-wrap justify-between mb-2">
-              <SummaryCard
-                title="Total PO"
-                count={1234}
-                color={colors.bg_primary}
-                icon="document-text-outline"
-              />
-              <SummaryCard
-                title="Waiting"
-                count={3456}
-                color={colors.bg_warning}
-                icon="time-outline"
-              />
-              <SummaryCard
-                title="Done"
-                count={7890}
-                color={colors.bg_success}
-                icon="checkmark-done-outline"
-              />
-            </View>
+                <Ionicons name="folder-open-outline" size={45} color="#9CA3AF" className="mb-3" />
 
-            <View className="flex-row justify-between mb-3">
-              <TouchableOpacity className="flex-row items-center px-3 py-2 rounded-xl" style={{ backgroundColor: colors.surface }}>
-                <Ionicons name="filter-outline" size={18} color={colors.text} />
-                <CText className="ml-2 font-regular text-lg">Filter</CText>
-              </TouchableOpacity>
+                <CText className="font-medium text-gray-500 text-center text-lg">
+                  No Data Found!
+                </CText>
 
-              <TouchableOpacity className="flex-row items-center px-3 py-2 rounded-xl" style={{ backgroundColor: colors.surface }}>
-                <Ionicons name="swap-vertical-outline" size={18} color={colors.text} />
-                <CText className="ml-2 font-regular text-lg">Sort</CText>
-              </TouchableOpacity>
-            </View>
+                <CText className="font-regular text-center" style={{ color: colors.textMuted }}>
+                  No data results or, Try adjusting filters.
+                </CText>
+              </View>
+            }
 
-            <Input
-              prefixIcon='search-outline'
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search purchase order..."
-              className='mb-3'
-            />
           </View>
         }
+        renderItem={({ item }: { item: PrProps }) => {
+          const isExpanded = expandedId === item.Id;
+          return <TouchableOpacity className="rounded-xl px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: colors.surface }}>
+            <View className="flex-row justify-between items-center mb-2">
+              <CText className="font-semibold text-gray-900 text-lg">
+                {item.PrNo}
+              </CText>
+
+              <CText
+                className="px-2 py-1.5 rounded-full font-regular leading-none text-sm"
+                style={getStatusStyle(item.Status)}
+              >
+                {item.Status === 'APPROVED' ? "DONE" : "WAITING"}
+              </CText>
+            </View>
+
+            <CText className="font-regular text-lg mb-1">
+              Req By: {item.User1Name}
+            </CText>
+
+            {/* 🔹 MAIN CONTENT */}
+            <View className='flex-row justify-between items-end'>
+              <CText style={{ color: colors.textMuted }}>Submit At: {item.DtmSubmit ? formatDate(item.DtmSubmit, 'medium', 'short') : "-"}</CText>
+
+              <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
+                <CText>{isExpanded ? "Dismiss" : "Expand"}</CText>
+                <Ionicons
+                  name={isExpanded ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color={colors.text}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {isExpanded && (
+              <View className="mt-4 pt-3 border-t-2 border-gray-200">
+                {/* APPROVAL LIST */}
+                {item.Approvers.map((a, index) => {
+                  const style = getStatusStyle(a.UserResponse);
+
+                  return (
+                    <View key={index} className="flex-row items-start mb-3">
+                      <View
+                        className="w-2 h-2 mt-2 rounded-full mr-3"
+                        style={{ backgroundColor: colors.textMuted }}
+                      />
+
+                      <View className="flex-1">
+                        <View className="flex-row justify-between items-center">
+                          <CText className="font-medium text-lg">
+                            Approval - {a.Level}
+                          </CText>
+
+                          <CText
+                            className="px-2 py-0.5 rounded-full text-sm"
+                            style={style}
+                          >
+                            {a.UserResponse === '' ? "WAITING" : a.UserResponse}
+                          </CText>
+                        </View>
+
+                        <View className="flex-row justify-between items-center">
+                          <CText className="font-regular">
+                            {a.UserName}
+                          </CText>
+
+                          <CText className="font-regular">
+                            {a.DtmResponse ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+                          </CText>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </TouchableOpacity>
+        }}
       />
     </ScreenWrapper>
   );
 };
 
 export default PurchaseRequest;
+
+function MappingPr(raw: any): PrProps {
+  return {
+    Id: raw.Id,
+    PrNo: raw.PrNo,
+    DtmSubmit: new Date(raw.DtmSubmit),
+    User1Name: raw.User1Name,
+    Approvers: MapApprovers({ raw, start_idx: 2 }),
+    Status: (raw.DtmResponse2 && raw.DtmResponse3 && raw.DtmResponse4) ? "APPROVED" : ""
+  };
+};
+
+function MapApprovers({ raw, start_idx = 1 }: { raw: any; start_idx: number; }): ApproverLevel[] {
+  const result: ApproverLevel[] = [];
+
+  let i = start_idx;
+  while (raw[`User${i}Name`]) {
+    result.push({
+      Level: i,
+      UserApproved: raw[`User${i}Approved`],
+      UserName: raw[`User${i}Name`],
+      UserResponse: raw[`User${i}Response`],
+      DtmResponse: raw[`DtmResponse${i}`]
+        ? raw[`DtmResponse${i}`].toString().trim() !== ""
+          ? new Date(raw[`DtmResponse${i}`].replace(" ", "T"))
+          : null
+        : null,
+    });
+    i++;
+  }
+
+  return result;
+};

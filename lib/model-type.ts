@@ -3,6 +3,7 @@ export type ApiResponse<T> = {
   Success: boolean;
   Message: string;
   Data?: T;
+  TotalRecord?: number;
 };
 
 export type UserAuthData = {
@@ -14,4 +15,25 @@ export type UserAuthData = {
   Role: string;
   RoleId: number;
   Email: string;
+};
+
+export type StatusPrPo = "" | "APPROVED" | "REJECTED";
+
+export type ApproverLevel = {
+  Level: number;
+  UserApproved: boolean;
+  UserName: string;
+  UserResponse: StatusPrPo;
+  DtmResponse: Date | null;
+};
+
+export type PrProps = {
+  Id: number;
+  PrNo: string;
+
+  DtmSubmit: Date;
+  User1Name: string;
+
+  Status: StatusPrPo;
+  Approvers: ApproverLevel[];
 };
