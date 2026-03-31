@@ -1,4 +1,5 @@
 import Button from '@/components/button';
+import ErrorLable from '@/components/error-lable';
 import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import Select from '@/components/select';
@@ -6,6 +7,7 @@ import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
+import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, showToast } from '@/lib/utils';
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from 'react';
@@ -14,11 +16,10 @@ import { Image, View } from 'react-native';
 import { z } from "zod";
 
 const AuthLogin = () => {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const setAuth = useAuthStore((s) => s.setAuth);
-
   const [togglePass, setTogglePass] = useState(true);
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const regSchema = z.object({
@@ -66,15 +67,29 @@ const AuthLogin = () => {
     <ScreenWrapper>
       <View className='flex-1 justify-center items-center px-5'>
         <Image
-          className="w-20 h-20 mb-10"
           source={require("../../assets/images/splash-icon.png")}
           resizeMode="contain"
+          style={{
+            width: rw(80),
+            height: rh(80),
+            marginBottom: rpm(30)
+          }}
         />
 
-        <CText className='font-semibold text-4xl mb-2 leading-tight text-blue-950'>
+        <CText className='font-semibold leading-tight text-blue-950'
+          style={{
+            fontSize: rf(25),
+            marginBottom: rpm(6)
+          }}
+        >
           Login Here!
         </CText>
-        <CText className='font-medium text-xl mb-10 w-full text-center'>
+        <CText className='font-medium w-full text-center'
+          style={{
+            fontSize: rf(14),
+            marginBottom: rpm(30)
+          }}
+        >
           Welcome to
           <CText className='font-semibold'>
             <CText className='font-semibold' style={{ color: "#ef4444" }}> PAJM </CText>
@@ -83,8 +98,8 @@ const AuthLogin = () => {
           Mobile App!
         </CText>
 
-        <View className='w-full mb-8'>
-          <View className='mb-3'>
+        <View className='w-full' style={{ marginBottom: rpm(26) }}>
+          <View style={{ marginBottom: rpm(10) }}>
             <Controller
               control={control}
               name="username"
@@ -96,16 +111,12 @@ const AuthLogin = () => {
                     placeholder="Enter your username"
                   />
 
-                  {errors.username && (
-                    <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
-                      {errors.username.message}
-                    </CText>
-                  )}
+                  {errors.username && <ErrorLable err_msg={errors.username.message} />}
                 </>
               )}
             />
           </View>
-          <View className='mb-3'>
+          <View style={{ marginBottom: rpm(10) }}>
             <Controller
               control={control}
               name="password"
@@ -120,11 +131,7 @@ const AuthLogin = () => {
                     placeholder="Enter your password"
                   />
 
-                  {errors.password && (
-                    <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
-                      {errors.password.message}
-                    </CText>
-                  )}
+                  {errors.password && <ErrorLable err_msg={errors.password.message} />}
                 </>
               )}
             />
@@ -144,19 +151,19 @@ const AuthLogin = () => {
                     onChange={onChange}
                     placeholder="Select your organization"
                   />
-
-                  {errors.organization && (
-                    <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
-                      {errors.organization.message}
-                    </CText>
-                  )}
+                  
+                  {errors.organization && <ErrorLable err_msg={errors.organization.message} />}
                 </>
               )}
             />
           </View>
         </View>
 
-        <Button onPress={(handleSubmit(fatchData))} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='mb-10' />
+        <Button onPress={(handleSubmit(fatchData))} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...'
+          style={{
+            marginBottom: rpm(30)
+          }}
+        />
         {/* <Button onPress={async () => {
 
           ClearAllStorage();
@@ -164,7 +171,12 @@ const AuthLogin = () => {
 
         }} title='Test' className='mb-10' /> */}
 
-        <CText className='font-regular text-lg w-[70%] text-center' style={{ color: colors.textMuted }}>
+        <CText className='font-regular w-[70%] text-center'
+          style={{
+            fontSize: rf(13),
+            color: colors.textMuted
+          }}
+        >
           Enter your account credential login to continue explore!
         </CText>
       </View>

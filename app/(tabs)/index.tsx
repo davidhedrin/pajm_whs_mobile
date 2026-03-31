@@ -7,7 +7,8 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from "@/components/button";
 import { useAuthStore } from "@/hooks/zustand";
-import { UserAuthData } from "@/lib/model-type";
+import { ResponsiveScale, UserAuthData } from "@/lib/model-type";
+import { useResposiveScale } from "@/lib/resposive";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 
@@ -18,6 +19,7 @@ type ModuleItem = {
   onPress?: () => void;
 };
 export default function Index() {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const { authData, accounts, switchAccount } = useAuthStore();
   const { colors } = useTheme();
   const router = useRouter();
@@ -45,33 +47,42 @@ export default function Index() {
 
   return (
     <ScreenWrapper>
-      <View className="pt-5 px-4">
+      <View style={{ paddingTop: rpm(16), paddingHorizontal: rpm(12) }}>
         {/* HEADER */}
         <View className="flex-row items-center justify-between">
 
           {/* Profile Section */}
           <TouchableOpacity onPress={() => bottomSheetRef.current?.open()}>
             <View
-              className="ps-1.5 pe-4 py-1.5 flex-row items-center border rounded-full"
+              className="flex-row items-center border rounded-full"
               style={{
+                paddingStart: rpm(5),
+                paddingEnd: rpm(13),
+                paddingVertical: rpm(4),
                 borderColor: colors.border
               }}
             >
               <View
-                className="w-10 h-10 bg-slate-700 rounded-full items-center justify-center"
+                className="bg-slate-700 rounded-full items-center justify-center"
+                style={{
+                  width: rw(31),
+                  height: rh(31)
+                }}
               >
-                <Ionicons name="person" size={18} color="white" />
+                <Ionicons name="person" size={rf(16)} color="white" />
               </View>
 
-              <View className="ml-2">
+              <View style={{ marginLeft: rpm(6) }}>
                 <CText
-                  className="font-regular leading-5"
+                  className="font-regular"
+                  style={{ fontSize: rf(12), lineHeight: rpm(16) }}
                 >
                   Hello...
                 </CText>
 
                 <CText
-                  className="font-medium leading-5 text-lg mt-1"
+                  className="font-medium"
+                  style={{ fontSize: rf(13), marginTop: rpm(2), lineHeight: rpm(16) }}
                 >
                   {authData?.Fullname ? authData.Fullname.trim().split(" ")[0] : "Guest"}
                 </CText>
@@ -81,17 +92,27 @@ export default function Index() {
 
           {/* Notification */}
           <TouchableOpacity
-            className="w-12 h-12 bg-slate-800 rounded-full items-center justify-center"
+            className="bg-slate-800 rounded-full items-center justify-center"
+            style={{
+              width: rw(36),
+              height: rh(36),
+            }}
           >
-            <Ionicons name="notifications-outline" size={22} color="white" />
+            <Ionicons name="notifications-outline" size={rf(20)} color="white" />
 
             {/* Badge */}
             <View
-              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full items-center justify-center"
+              className="absolute bg-red-500 rounded-full items-center justify-center"
+              style={{
+                top: rpm(-3),
+                right: rpm(-3),
+                width: rw(15),
+                height: rh(15)
+              }}
             >
               <CText
-                className="font-medium text-white text-sm"
-                style={{ color: '#ffffff' }}
+                className="font-medium text-white"
+                style={{ color: '#ffffff', fontSize: rf(11) }}
               >
                 3
               </CText>
@@ -100,39 +121,48 @@ export default function Index() {
         </View>
 
         {/* HERO TEXT */}
-        <View className="mt-7 p-4 flex-row justify-between rounded-tl-3xl rounded-br-full"
+        <View className="flex-row justify-between rounded-tl-3xl rounded-br-full"
           style={{
+            marginTop: rpm(24),
+            padding: rpm(12),
             backgroundColor: colors.bg_primary
           }}>
           <View>
-            <CText className="font-regular text-xl">
+            <CText className="font-regular" style={{ fontSize: rf(14) }}>
               Welcome to,
             </CText>
 
-            <CText className="font-semibold text-3xl mt-3">
+            <CText className="font-semibold" style={{ fontSize: rf(21), marginTop: rpm(4) }}>
               <Text className="font-semibold text-red-500">PAJM</Text> Warehouse
             </CText>
 
             <CText
-              className="font-regular text-lg mt-3"
+              className="font-regular"
+              style={{ fontSize: rf(13), marginTop: rpm(4) }}
             >
               Your login as {authData?.Role ?? "Guest"}!
             </CText>
           </View>
-          <View className="pe-6">
+          <View style={{ paddingEnd: rpm(20) }}>
             <Image
-              className="w-20 h-20"
               source={require("../../assets/images/splash-icon.png")}
               resizeMode="contain"
+              style={{
+                width: rw(60),
+                height: rh(60)
+              }}
             />
           </View>
         </View>
 
         {/* Statistics */}
-        <View className="mt-7">
+        <View style={{ paddingTop: rpm(20) }}>
           <View>
             <CText
-              className="font-medium text-lg leading-none"
+              className="font-medium leading-none"
+              style={{
+                fontSize: rf(13)
+              }}
             >
               Statistics
             </CText>
@@ -141,30 +171,33 @@ export default function Index() {
             </CText>
           </View>
 
-          <View className="flex-row flex-wrap justify-between mt-2">
+          <View className="flex-row flex-wrap justify-between mt-2" style={{ marginTop: rpm(6) }}>
             <View
-              className="w-[48.5%] mb-[3%] rounded-xl p-2.5"
+              className="w-[48.5%] mb-[3%]"
               style={{
+                borderRadius: rpm(10),
+                padding: rpm(8),
                 backgroundColor: colors.bg_success
               }}
             >
               <View className="flex-row justify-between">
                 <View
-                  className="bg-green-600/30 rounded-xl items-center justify-center"
+                  className="bg-green-600/30 items-center justify-center"
+                  style={{ borderRadius: rpm(10) }}
                 >
-                  <Ionicons name="document-text-outline" size={28} color="white" className="p-2.5" />
+                  <Ionicons name="document-text-outline" size={rf(24)} color="white" style={{ padding: rpm(8) }} />
                 </View>
 
 
                 <View className="items-end">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted }}
+                    style={{ color: colors.textMuted, fontSize: rf(12) }}
                   >
                     Total Data
                   </CText>
 
-                  <CText className="text-2xl font-semibold">
+                  <CText className="font-semibold" style={{ fontSize: rf(17) }}>
                     1456
                   </CText>
                 </View>
@@ -173,35 +206,41 @@ export default function Index() {
 
               {/* Module */}
               <CText
-                className="font-regular text-lg mt-2.5"
+                className="font-regular"
+                style={{
+                  fontSize: rf(13),
+                  marginTop: rpm(8)
+                }}
               >
                 Purchase Request
               </CText>
 
               {/* Divider */}
-              <View className="h-px bg-gray-400 my-2" />
+              <View className="h-px bg-gray-400" style={{ marginVertical: rpm(6) }} />
 
               {/* Status */}
               <View className="gap-1">
 
                 <View className="flex-row justify-between">
                   <CText
-                    className="font-regular leading-5"
-                    style={{ color: colors.textMuted }}>
-                    Waiting Action
+                    className="font-regular"
+                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                  >
+                    On Progress
                   </CText>
-                  <CText className="font-medium leading-5">
+                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
                     123
                   </CText>
                 </View>
 
                 <View className="flex-row justify-between">
                   <CText
-                    className="font-regular leading-5"
-                    style={{ color: colors.textMuted }}>
-                    Done
+                    className="font-regular"
+                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                  >
+                    Finish
                   </CText>
-                  <CText className="font-medium leading-5">
+                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
                     456
                   </CText>
                 </View>
@@ -210,25 +249,31 @@ export default function Index() {
             </View>
 
             <View
-              className="w-[48.5%] mb-[3%] rounded-xl p-2.5"
-              style={{ backgroundColor: colors.bg_warning }}
+              className="w-[48.5%] mb-[3%]"
+              style={{
+                borderRadius: rpm(10),
+                padding: rpm(8),
+                backgroundColor: colors.bg_warning
+              }}
             >
               {/* Header */}
               <View className="flex-row justify-between">
-
-                <View className="bg-orange-600/30 rounded-xl items-center justify-center">
-                  <Ionicons name="cart-outline" size={28} color="white" className="p-2.5" />
+                <View
+                  className="bg-orange-600/30 items-center justify-center"
+                  style={{ borderRadius: rpm(10) }}
+                >
+                  <Ionicons name="cart-outline" size={rf(24)} color="white" style={{ padding: rpm(8) }} />
                 </View>
 
                 <View className="items-end">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted }}
+                    style={{ color: colors.textMuted, fontSize: rf(12) }}
                   >
                     Total Data
                   </CText>
 
-                  <CText className="text-2xl font-semibold">
+                  <CText className="font-semibold" style={{ fontSize: rf(17) }}>
                     1456
                   </CText>
                 </View>
@@ -237,35 +282,41 @@ export default function Index() {
 
               {/* Module */}
               <CText
-                className="font-regular text-lg mt-2.5"
+                className="font-regular"
+                style={{
+                  fontSize: rf(13),
+                  marginTop: rpm(8)
+                }}
               >
                 Purchase Order
               </CText>
 
               {/* Divider */}
-              <View className="h-px bg-gray-400 my-2" />
+              <View className="h-px bg-gray-400" style={{ marginVertical: rpm(6) }} />
 
               {/* Status */}
               <View className="gap-1">
 
                 <View className="flex-row justify-between">
                   <CText
-                    className="font-regular leading-5"
-                    style={{ color: colors.textMuted }}>
-                    Waiting Action
+                    className="font-regular"
+                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                  >
+                    On Progress
                   </CText>
-                  <CText className="font-medium leading-5">
+                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
                     123
                   </CText>
                 </View>
 
                 <View className="flex-row justify-between">
                   <CText
-                    className="font-regular leading-5"
-                    style={{ color: colors.textMuted }}>
-                    Done
+                    className="font-regular"
+                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                  >
+                    Finish
                   </CText>
-                  <CText className="font-medium leading-5">
+                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
                     456
                   </CText>
                 </View>
@@ -277,17 +328,22 @@ export default function Index() {
 
         {/* MODULE HEADER */}
         <View
-          className="mt-2 flex-row items-center justify-between"
+          className="flex-row items-center justify-between"
+          style={{
+            marginTop: rpm(6)
+          }}
         >
           <CText
-            className="font-medium text-lg"
+            className="font-medium"
+            style={{ fontSize: rf(13) }}
           >
             Menus
           </CText>
 
           <TouchableOpacity>
             <CText
-              className="underline text-lg font-regular"
+              className="underline font-regular"
+              style={{ fontSize: rf(13) }}
             >
               See all
             </CText>
@@ -295,7 +351,7 @@ export default function Index() {
         </View>
       </View>
 
-      <View className="px-4 mt-2">
+      <View style={{ paddingHorizontal: rpm(12), marginTop: rpm(6) }}>
         <View
           className="flex-row flex-wrap justify-between"
         >
@@ -306,28 +362,40 @@ export default function Index() {
               title={item.title}
               badgeVal={item.badgeVal}
               onPress={item.onPress}
+
+              scales={useResposiveScale()}
             />
           ))}
         </View>
       </View>
 
-      <View className="px-4">
+      <View style={{ paddingHorizontal: rpm(14) }}>
         <CText
-          className="mt-2 font-medium text-lg"
+          className="font-medium"
+          style={{
+            marginTop: rpm(6),
+            fontSize: rf(13)
+          }}
         >
           Recently Viewed
         </CText>
 
-        <View className="mt-2 px-5 py-6 rounded-xl items-center justify-center shadow-md" style={{
-          backgroundColor: colors.surface
-        }}>
-          <Ionicons name="folder-open-outline" size={45} color="#9CA3AF" className="mb-3" />
+        <View className="items-center justify-center shadow-md"
+          style={{
+            marginTop: rpm(6),
+            paddingHorizontal: rpm(16),
+            paddingVertical: rpm(20),
+            borderRadius: rpm(10),
+            backgroundColor: colors.surface
+          }}
+        >
+          <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
 
-          <CText className="font-medium text-gray-500 text-center text-lg">
+          <CText className="font-medium text-gray-500 text-center" style={{ fontSize: rf(13) }}>
             You haven't any history yet.
           </CText>
 
-          <CText className="font-regular text-center" style={{ color: colors.textMuted }}>
+          <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(12) }}>
             Start explore and they will appear here.
           </CText>
         </View>
@@ -343,12 +411,12 @@ export default function Index() {
                 bottomSheetRef.current?.close();
               }}
             >
-              <Accounts data={x} activeUser={authData?.Username ?? ""} />
+              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={useResposiveScale()} />
             </TouchableOpacity>
           ))
         }
 
-        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className='mb-10' />
+        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" style={{ marginBottom: rpm(30) }} />
       </AppBottomSheet>
     </ScreenWrapper>
   );
@@ -357,27 +425,38 @@ export default function Index() {
 type ModuleButtonProps = {
   iconName: React.ComponentProps<typeof Ionicons>["name"];
   title: string;
+  scales: ResponsiveScale;
   badgeVal?: string;
   onPress?: () => void;
 };
-function ModuleButton({ iconName, title, badgeVal, onPress }: ModuleButtonProps) {
+function ModuleButton({ iconName, title, badgeVal, onPress, scales }: ModuleButtonProps) {
+  const { rw, rh, rpm, rf } = scales;
   const { colors } = useTheme();
 
   return <TouchableOpacity
     onPress={onPress}
-    className="h-24 px-4 w-[31.5%] mb-[3%] border rounded-xl items-center justify-center"
+    className="w-[31.5%] mb-[3%] border items-center justify-center"
     style={{
+      height: rh(76),
+      paddingHorizontal: rpm(14),
+      borderRadius: rpm(10),
       borderColor: colors.border + "44",
       backgroundColor: colors.bg + "77"
     }}
   >
     {
       badgeVal !== undefined && <View
-        className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+        className="absolute bg-red-500 rounded-full items-center justify-center"
+        style={{
+          top: rpm(6),
+          right: rpm(6),
+          width: rw(18),
+          height: rh(18)
+        }}
       >
         <CText
-          className="font-medium text-sm"
-          style={{ color: '#ffffff' }}
+          className="font-medium"
+          style={{ color: '#ffffff', fontSize: rf(11) }}
         >
           {badgeVal}
         </CText>
@@ -386,29 +465,48 @@ function ModuleButton({ iconName, title, badgeVal, onPress }: ModuleButtonProps)
 
     <Ionicons
       name={iconName}
-      size={30}
+      size={rf(25)}
       color={colors.primary}
     />
 
     <CText
-      className="text-base mt-0.5 font-regular text-center"
+      className="font-regular text-center"
+      style={{
+        fontSize: rf(12),
+        marginTop: rpm(1)
+      }}
     >
       {title}
     </CText>
   </TouchableOpacity>;
 };
 
-export function Accounts({ data, activeUser }: { data: UserAuthData, activeUser: string }) {
-  return <View className="flex-row items-center rounded-xl bg-gray-300/20 border border-gray-400/15 p-3 mb-4">
-    <View className="w-10 h-10 rounded-xl bg-indigo-600 items-center justify-center mr-3">
-      <CText className="text-lg font-semibold" style={{ color: "#fff" }}>JD</CText>
+export function Accounts({ data, activeUser, scales }: { data: UserAuthData, activeUser: string, scales: ResponsiveScale; }) {
+  const { rw, rh, rpm, rf } = scales;
+
+  return <View className="flex-row items-center bg-gray-300/20 border border-gray-400/15"
+    style={{
+      borderRadius: rpm(10),
+      padding: rpm(9),
+      marginBottom: rpm(14)
+    }}
+  >
+    <View className="bg-indigo-600 items-center justify-center"
+      style={{
+        borderRadius: rpm(10),
+        width: rw(30),
+        height: rh(30),
+        marginRight: rpm(10)
+      }}
+    >
+      <CText className="font-semibold" style={{ color: "#fff", fontSize: rf(13) }}>JD</CText>
     </View>
 
     <View className="flex-1">
-      <CText className="font-medium text-lg">{data.Fullname}</CText>
-      <CText className="opacity-60">{data.Email ? (data.Email.trim() !== "" ? data.Email : "Email not registered") : "Email not registered"}</CText>
+      <CText className="font-medium" style={{ fontSize: rf(13) }}>{data.Fullname}</CText>
+      <CText className="opacity-60" style={{ fontSize: rf(12) }}>{data.Email ? (data.Email.trim() !== "" ? data.Email : "Email not registered") : "Email not registered"}</CText>
     </View>
 
-    <Ionicons name={activeUser == data.Username ? "checkmark-circle" : "ellipse-outline"} size={24} color={activeUser == data.Username ? "#3b82f6" : "#9CA3AF"} />
+    <Ionicons name={activeUser == data.Username ? "checkmark-circle" : "ellipse-outline"} size={rf(21)} color={activeUser == data.Username ? "#3b82f6" : "#9CA3AF"} />
   </View>
 }

@@ -1,6 +1,7 @@
+import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, ColorValue, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
+import { ActivityIndicator, ColorValue, StyleProp, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from 'react-native';
 import { CText } from './text';
 
 type Props = TouchableOpacityProps & {
@@ -13,6 +14,8 @@ type Props = TouchableOpacityProps & {
 
   prefixIcon?: keyof typeof Ionicons.glyphMap;
   suffixIcon?: keyof typeof Ionicons.glyphMap;
+
+  style?: StyleProp<ViewStyle>
 };
 
 const Button = ({
@@ -25,16 +28,27 @@ const Button = ({
 
   prefixIcon,
   suffixIcon,
+  style,
 
   ...props
 }: Props) => {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const isDisabled = disabled || isLoading;
+
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      className={`${className ?? ''} px-4 py-3.5 rounded-xl w-full ${isDisabled ? 'bg-blue-300' : 'bg-blue-500' }`}
+      className={`${className ?? ''} w-full ${isDisabled ? 'bg-blue-300' : 'bg-blue-500'}`}
       disabled={isDisabled}
+      style={[
+        style,
+        {
+          paddingHorizontal: rpm(12),
+          paddingVertical: rpm(11),
+          borderRadius: rpm(10)
+        }
+      ]}
       {...props}
     >
       <View className="flex-row items-center justify-center gap-2">
@@ -43,14 +57,14 @@ const Button = ({
           <ActivityIndicator size="small" color="#fff" />
         )}
 
-        {prefixIcon && <Ionicons name={prefixIcon} size={20} color={titleColor} />}
+        {prefixIcon && <Ionicons name={prefixIcon} size={rf(17)} color={titleColor} />}
         <CText
-          className="font-regular text-center text-lg"
-          style={{ color: titleColor }}
+          className={`font-regular text-center ${(suffixIcon || prefixIcon) ? "top-0.5" : "top-1"}`}
+          style={{ color: titleColor, fontSize: rf(13) }}
         >
           {isLoading ? loadingTitle : title}
         </CText>
-        {suffixIcon && <Ionicons name={suffixIcon} size={20} color="#fff" />}
+        {suffixIcon && <Ionicons name={suffixIcon} size={rf(17)} color="#fff" />}
 
       </View>
     </TouchableOpacity>

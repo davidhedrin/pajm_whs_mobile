@@ -1,4 +1,5 @@
 import useTheme from '@/hooks/use-theme';
+import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -42,6 +43,7 @@ const Select: React.FC<SelectProps> = ({
   prefixIcon,
   onPressPrefixIcon,
 }) => {
+  const { rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
 
@@ -52,9 +54,16 @@ const Select: React.FC<SelectProps> = ({
 
       {/* PREFIX GROUP */}
       {prefixGroup && (
-        <View className="justify-center px-3 rounded-l-xl border border-gray-300/80 border-e-0" style={{ backgroundColor: colors.surface }}>
+        <View className="justify-center border border-gray-300/80 border-e-0"
+          style={{
+            paddingHorizontal: rpm(10),
+            borderTopLeftRadius: rpm(10),
+            borderBottomLeftRadius: rpm(10),
+            backgroundColor: colors.surface
+          }}
+        >
           {typeof prefixGroup === 'string' ? (
-            <Text className="text-gray-700">{prefixGroup}</Text>
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{prefixGroup}</Text>
           ) : (
             prefixGroup
           )}
@@ -67,8 +76,19 @@ const Select: React.FC<SelectProps> = ({
         {/* Select Box */}
         <Pressable
           onPress={() => setVisible(true)}
-          className={`flex-row items-center justify-between px-3 py-3.5 border-gray-300/80 ${visible ? 'border-2' : 'border'} ${!prefixGroup ? 'rounded-l-xl' : ''} ${!suffixGroup ? 'rounded-r-xl' : ''}`}
-          style={{ backgroundColor: colors.surface }}
+          className="flex-row items-center justify-between border-gray-300/80"
+          style={{
+            paddingHorizontal: rpm(10),
+            paddingVertical: rpm(11),
+            borderWidth: visible ? rpm(2) : rpm(1),
+
+            borderTopLeftRadius: !prefixGroup ? 10 : undefined,
+            borderBottomLeftRadius: !prefixGroup ? 10 : undefined,
+            borderTopRightRadius: !suffixGroup ? 10 : undefined,
+            borderBottomRightRadius: !suffixGroup ? 10 : undefined,
+
+            backgroundColor: colors.surface
+          }}
         >
           <View className="flex-row items-center flex-1">
 
@@ -77,15 +97,17 @@ const Select: React.FC<SelectProps> = ({
               <TouchableOpacity
                 onPress={onPressPrefixIcon}
                 disabled={!onPressPrefixIcon}
-                className="mr-2"
+                style={{
+                  marginRight: rpm(6)
+                }}
               >
-                <Ionicons name={prefixIcon} size={20} color={colors.textMuted} />
+                <Ionicons name={prefixIcon} size={rf(17)} color={colors.textMuted} />
               </TouchableOpacity>
             )}
 
             <Text
-              className="text-lg"
               style={{
+                fontSize: rf(13),
                 fontFamily: 'PoppinsMedium',
                 color: selected ? colors.text : colors.backgrounds.placeholder
               }}
@@ -94,30 +116,44 @@ const Select: React.FC<SelectProps> = ({
             </Text>
           </View>
 
-          <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
+          <Ionicons name="chevron-down" size={rf(17)} color={colors.textMuted} />
         </Pressable>
 
         {/* Modal */}
         <Modal transparent visible={visible} animationType="fade">
           <Pressable
-            className="flex-1 bg-black/20 justify-center px-5"
+            className="flex-1 bg-black/20 justify-center"
             onPress={() => setVisible(false)}
+            style={{
+              paddingHorizontal: rpm(17)
+            }}
           >
             <Pressable onPress={(e) => e.stopPropagation()}>
-              <View className="rounded-xl overflow-hidden" style={{ backgroundColor: colors.surface }}>
+              <View className="overflow-hidden"
+                style={{
+                  borderRadius: rpm(10),
+                  backgroundColor: colors.surface
+                }}
+              >
 
                 {/* Header */}
-                <View className="px-4 py-3 border-b border-gray-200">
+                <View className="border-gray-200"
+                  style={{
+                    borderBottomWidth: rpm(1),
+                    paddingHorizontal: rpm(13),
+                    paddingVertical: rpm(10)
+                  }}
+                >
                   <CText
-                    className="text-lg text-gray-700"
-                    style={{ fontFamily: 'PoppinsMedium' }}
+                    className="text-gray-700"
+                    style={{ fontFamily: 'PoppinsMedium', fontSize: rf(13) }}
                   >
                     {placeholder}
                   </CText>
                 </View>
 
                 {/* List */}
-                <View className="py-2 max-h-[250px]">
+                <View style={{ paddingVertical: rpm(6), maxHeight: rh(240) }}>
                   <FlatList
                     data={options}
                     keyExtractor={(item) => item.value}
@@ -128,9 +164,13 @@ const Select: React.FC<SelectProps> = ({
                       return (
                         <TouchableOpacity
                           disabled={isDisabled}
-                          className={`mx-2 px-3 py-3.5 rounded-xl ${isDisabled ? 'opacity-50' : ''}`}
-                          style={isSelected && {
-                            backgroundColor: colors.bg_primary
+                          className={`${isDisabled ? 'opacity-50' : ''}`}
+                          style={{
+                            marginHorizontal: rpm(6),
+                            paddingHorizontal: rpm(10),
+                            paddingVertical: rpm(11),
+                            borderRadius: rpm(10),
+                            backgroundColor: isSelected ? colors.bg_primary : undefined
                           }}
                           onPress={() => {
                             if (isDisabled) return;
@@ -140,8 +180,8 @@ const Select: React.FC<SelectProps> = ({
                           }}
                         >
                           <Text
-                            className="text-lg"
-                            style={{ 
+                            style={{
+                              fontSize: rf(13),
                               fontFamily: 'PoppinsMedium',
                               color: isDisabled ? colors.textMuted : isSelected ? colors.primary : colors.text
                             }}
@@ -162,9 +202,16 @@ const Select: React.FC<SelectProps> = ({
 
       {/* SUFFIX GROUP */}
       {suffixGroup && (
-        <View className="justify-center px-3 rounded-r-xl border border-gray-300/80" style={{ backgroundColor: colors.surface }}>
+        <View className="justify-center border border-gray-300/80"
+          style={{
+            paddingHorizontal: rpm(10),
+            borderTopRightRadius: rpm(10),
+            borderBottomRightRadius: rpm(10),
+            backgroundColor: colors.surface
+          }}
+        >
           {typeof suffixGroup === 'string' ? (
-            <Text className="text-gray-700">{suffixGroup}</Text>
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{suffixGroup}</Text>
           ) : (
             suffixGroup
           )}

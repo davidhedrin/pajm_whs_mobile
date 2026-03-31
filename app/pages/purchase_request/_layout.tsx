@@ -1,10 +1,13 @@
 import useTheme from "@/hooks/use-theme";
+import { useResposiveScale } from "@/lib/resposive";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack } from "expo-router";
+import { Stack, useNavigation } from "expo-router";
 import { TouchableOpacity } from "react-native";
 
 const PurchaseRequestLayout = () => {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
+  const navigation = useNavigation();
 
   return (
     <Stack>
@@ -15,11 +18,21 @@ const PurchaseRequestLayout = () => {
           backgroundColor: colors.surface,
         },
         headerTintColor: colors.text,
+        headerTitleStyle: {
+          fontSize: rf(15),
+        },
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back-outline" size={rf(21)} color={colors.text} />
+          </TouchableOpacity>
+        ),
         headerRight: () => (
           <TouchableOpacity
-            style={{ paddingEnd: 8 }}
+            style={{ paddingEnd: rpm(6) }}
           >
-            <Ionicons name="options-outline" size={25} color={colors.text} />
+            <Ionicons name="options-outline" size={rf(21)} color={colors.text} />
           </TouchableOpacity>
         )
       }} />

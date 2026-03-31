@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { GlobalConfirmModal } from "@/components/confirm-alert";
 import { useAuthStore } from "@/hooks/zustand";
+import { useResposiveScale } from "@/lib/resposive";
 import { Ionicons } from "@expo/vector-icons";
 import Toast, {
   BaseToast,
@@ -17,99 +18,9 @@ import Toast, {
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
-const toastConfig: ToastConfig = {
-  success: (props: BaseToastProps) => (
-    <BaseToast
-      {...props}
-      style={{
-        borderLeftColor: '#34D399',
-        borderRadius: 10,
-        alignItems: "center"
-      }}
-      contentContainerStyle={{
-        paddingHorizontal: 12,
-      }}
-      text1Style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-      }}
-      text2Style={{
-        fontSize: 15,
-        color: '#6B7280',
-      }}
-      renderTrailingIcon={() => (
-        <Ionicons
-          name="checkmark-circle-outline"
-          size={28}
-          color="#34D399"
-          style={{ marginRight: 12 }}
-        />
-      )}
-    />
-  ),
-
-  info: (props: BaseToastProps) => (
-    <BaseToast
-      {...props}
-      style={{
-        borderLeftColor: '#3B82F6',
-        borderRadius: 10,
-        alignItems: 'center',
-      }}
-      contentContainerStyle={{
-        paddingHorizontal: 12,
-      }}
-      text1Style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-      }}
-      text2Style={{
-        fontSize: 15,
-        color: '#6B7280',
-      }}
-      renderTrailingIcon={() => (
-        <Ionicons
-          name="information-circle-outline"
-          size={28}
-          color="#3B82F6"
-          style={{ marginRight: 12 }}
-        />
-      )}
-    />
-  ),
-
-  error: (props: BaseToastProps) => (
-    <ErrorToast
-      {...props}
-      style={{
-        borderLeftColor: '#F87171',
-        borderRadius: 12,
-        alignItems: "center"
-      }}
-      contentContainerStyle={{
-        paddingHorizontal: 10,
-      }}
-      text1Style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-      }}
-      text2Style={{
-        fontSize: 15,
-        color: '#6B7280',
-      }}
-      renderTrailingIcon={() => (
-        <Ionicons
-          name="warning-outline"
-          size={28}
-          color="#F87171"
-          style={{ marginRight: 12 }}
-        />
-      )}
-    />
-  ),
-};
 
 export default function RootLayout() {
+  const { rpm, rf } = useResposiveScale();
   const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
@@ -146,6 +57,99 @@ export default function RootLayout() {
   }, [isAuthLoaded, fontsLoaded, isAuthenticated, segments]);
 
   if (!isReady) return null;
+
+
+  const toastConfig: ToastConfig = {
+    success: (props: BaseToastProps) => (
+      <BaseToast
+        {...props}
+        style={{
+          borderLeftColor: '#34D399',
+          borderRadius: rpm(10),
+          alignItems: "center"
+        }}
+        contentContainerStyle={{
+          paddingHorizontal: rpm(12),
+        }}
+        text1Style={{
+          fontSize: rf(14),
+          fontWeight: 'bold',
+        }}
+        text2Style={{
+          fontSize: rf(13),
+          color: '#6B7280',
+        }}
+        renderTrailingIcon={() => (
+          <Ionicons
+            name="checkmark-circle-outline"
+            size={rf(25)}
+            color="#34D399"
+            style={{ marginRight: rpm(12) }}
+          />
+        )}
+      />
+    ),
+
+    info: (props: BaseToastProps) => (
+      <BaseToast
+        {...props}
+        style={{
+          borderLeftColor: '#3B82F6',
+          borderRadius: rpm(10),
+          alignItems: 'center',
+        }}
+        contentContainerStyle={{
+          paddingHorizontal: rpm(12),
+        }}
+        text1Style={{
+          fontSize: rf(14),
+          fontWeight: 'bold',
+        }}
+        text2Style={{
+          fontSize: rf(13),
+          color: '#6B7280',
+        }}
+        renderTrailingIcon={() => (
+          <Ionicons
+            name="information-circle-outline"
+            size={rf(25)}
+            color="#3B82F6"
+            style={{ marginRight: rpm(12) }}
+          />
+        )}
+      />
+    ),
+
+    error: (props: BaseToastProps) => (
+      <ErrorToast
+        {...props}
+        style={{
+          borderLeftColor: '#F87171',
+          borderRadius: rpm(10),
+          alignItems: "center"
+        }}
+        contentContainerStyle={{
+          paddingHorizontal: rpm(12),
+        }}
+        text1Style={{
+          fontSize: rf(14),
+          fontWeight: 'bold',
+        }}
+        text2Style={{
+          fontSize: rf(13),
+          color: '#6B7280',
+        }}
+        renderTrailingIcon={() => (
+          <Ionicons
+            name="warning-outline"
+            size={rf(25)}
+            color="#F87171"
+            style={{ marginRight: rpm(12) }}
+          />
+        )}
+      />
+    ),
+  };
 
   return <ThemeProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>

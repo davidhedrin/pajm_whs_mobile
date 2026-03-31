@@ -1,3 +1,10 @@
+export type ResponsiveScale = {
+  rw: (size: number) => number;
+  rh: (size: number) => number;
+  rpm: (size: number) => number;
+  rf: (size: number) => number;
+};
+
 export type ApiResponse<T> = {
   Status: number;
   Success: boolean;
@@ -31,7 +38,7 @@ export type PrProps = {
   Id: number;
   PrNo: string;
 
-  DtmSubmit: Date;
+  DtmSubmit: Date | null;
   User1Name: string;
 
   Status: StatusPrPo;

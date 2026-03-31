@@ -1,4 +1,5 @@
 import useTheme from '@/hooks/use-theme';
+import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -34,6 +35,7 @@ const Input: React.FC<InputProps> = ({
   onPressSuffixIcon,
   ...props
 }) => {
+  const { rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
 
@@ -42,9 +44,16 @@ const Input: React.FC<InputProps> = ({
 
       {/* PREFIX GROUP */}
       {prefixGroup && (
-        <View className="justify-center px-3 rounded-l-xl border border-gray-300/80 focus:border-2 border-e-0" style={{ backgroundColor: colors.surface }}>
+        <View className="justify-center border border-gray-300/80 focus:border-2 border-e-0"
+          style={{
+            paddingHorizontal: rpm(10),
+            borderTopLeftRadius: rpm(10),
+            borderBottomLeftRadius: rpm(10),
+            backgroundColor: colors.surface
+          }}
+        >
           {typeof prefixGroup === 'string' ? (
-            <Text className="text-gray-700">{prefixGroup}</Text>
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{prefixGroup}</Text>
           ) : (
             prefixGroup
           )}
@@ -53,28 +62,45 @@ const Input: React.FC<InputProps> = ({
 
       {/* MAIN INPUT CONTAINER */}
       <View
-        className={`flex-1 flex-row items-center ps-2 pe-3 border border-gray-300/80 focus:border-2 ${!prefixGroup ? 'rounded-l-xl' : ''} ${!suffixGroup ? 'rounded-r-xl' : ''}`}
-        style={{ backgroundColor: colors.surface }}
+        className="flex-1 flex-row items-center border border-gray-300/80 focus:border-2"
+        style={{
+          paddingStart: rpm(6),
+          paddingEnd: rpm(10),
+          borderTopLeftRadius: !prefixGroup ? 10 : undefined,
+          borderBottomLeftRadius: !prefixGroup ? 10 : undefined,
+          borderTopRightRadius: !suffixGroup ? 10 : undefined,
+          borderBottomRightRadius: !suffixGroup ? 10 : undefined,
+          backgroundColor: colors.surface
+        }}
       >
         {/* PREFIX ICON */}
         {prefixIcon && (
           <TouchableOpacity
             onPress={onPressPrefixIcon}
             disabled={!onPressPrefixIcon}
-            className="mr-2"
+            style={{
+              marginRight: rpm(6)
+            }}
           >
-            <Ionicons name={prefixIcon} size={20} color={colors.textMuted} />
+            <Ionicons name={prefixIcon} size={rf(17)} color={colors.textMuted} />
           </TouchableOpacity>
         )}
 
         {/* INPUT */}
         <TextInput
           {...props}
-          className={`flex-1 text-lg pt-4 pb-3`}
+          className={`flex-1`}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholderTextColor={colors.backgrounds.placeholder}
-          style={{ fontFamily: 'PoppinsMedium', color: colors.text }}
+          style={{
+            fontFamily: 'PoppinsMedium',
+            color: colors.text,
+            fontSize: rf(13),
+            paddingTop: rpm(13),
+            paddingBottom: rpm(9),
+            minHeight: rpm(42),
+          }}
         />
 
         {/* SUFFIX ICON */}
@@ -82,18 +108,27 @@ const Input: React.FC<InputProps> = ({
           <TouchableOpacity
             onPress={onPressSuffixIcon}
             disabled={!onPressSuffixIcon}
-            className="ml-2"
+            style={{
+              marginLeft: rpm(6)
+            }}
           >
-            <Ionicons name={suffixIcon} size={20} color={colors.textMuted} />
+            <Ionicons name={suffixIcon} size={rf(17)} color={colors.textMuted} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* SUFFIX GROUP */}
       {suffixGroup && (
-        <View className="justify-center px-3 rounded-r-xl border border-gray-300/80 focus:border-2 border-s-0" style={{ backgroundColor: colors.surface }}>
+        <View className="justify-center border border-gray-300/80 focus:border-2 border-s-0"
+          style={{
+            paddingHorizontal: rpm(10),
+            borderTopRightRadius: rpm(10),
+            borderBottomRightRadius: rpm(10),
+            backgroundColor: colors.surface
+          }}
+        >
           {typeof suffixGroup === 'string' ? (
-            <Text className="text-gray-700">{suffixGroup}</Text>
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{suffixGroup}</Text>
           ) : (
             suffixGroup
           )}

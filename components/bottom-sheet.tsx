@@ -1,4 +1,5 @@
 import useTheme from "@/hooks/use-theme";
+import { useResposiveScale } from "@/lib/resposive";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView
@@ -10,7 +11,7 @@ import React, {
   useImperativeHandle,
   useRef
 } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { CText } from "./text";
 
 export type BottomSheetRef = {
@@ -27,6 +28,7 @@ type Props = {
 
 const AppBottomSheet = forwardRef<BottomSheetRef, Props>(
   ({ children, title, snapPoints = ["25%", "50%", "75%"], enableGesture = true }, ref) => {
+    const { rw, rh, rpm, rf } = useResposiveScale();
     const { colors } = useTheme();
     const sheetRef = useRef<BottomSheet>(null);
 
@@ -63,16 +65,19 @@ const AppBottomSheet = forwardRef<BottomSheetRef, Props>(
         enableHandlePanningGesture={enableGesture}
         backgroundStyle={{ backgroundColor: colors.surface }}
       >
-        <View className="px-4 pb-1">
+        <View style={{ paddingHorizontal: rpm(14), paddingBottom: rpm(2) }}>
           {
             title !== undefined && <View>
-              <CText className="text-xl text-center">{title}</CText>
-              <View className="border-b border-gray-300 mt-2 mb-4" />
+              <CText className="text-center" style={{ fontSize: rf(14) }}>{title}</CText>
+              <View className="border-b border-gray-300" style={{ marginTop: rpm(6), marginBottom: rpm(14) }} />
             </View>
           }
         </View>
         <BottomSheetScrollView
-          style={styles.content}
+          style={{
+            flex: 1,
+            paddingHorizontal: rpm(13),
+          }}
         // showsVerticalScrollIndicator={false}
         >
           {children}
@@ -83,10 +88,3 @@ const AppBottomSheet = forwardRef<BottomSheetRef, Props>(
 );
 
 export default AppBottomSheet;
-
-const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-    paddingHorizontal: 15,
-  },
-});

@@ -1,10 +1,12 @@
 import useTheme from '@/hooks/use-theme';
+import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TabsLayout = () => {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -17,14 +19,14 @@ const TabsLayout = () => {
 
       tabBarStyle: {
         backgroundColor: colors.surface,
-        paddingTop: 5,
+        paddingTop: rpm(3),
 
-        height: 60 + insets.bottom,
+        height: rh(50) + insets.bottom,
       },
 
       tabBarLabelStyle: {
-        fontSize: 13,
-        paddingTop: 3,
+        fontSize: rf(11),
+        paddingTop: rpm(2),
         fontWeight: '600',
         fontFamily: "PoppinsMedium"
       },
@@ -34,20 +36,20 @@ const TabsLayout = () => {
         options={{
           title: 'Home',
           tabBarBadge: 2,
-          tabBarIcon: ({ focused, color, size }) => (
+          tabBarIcon: ({ focused, color }) => (
             <View
               style={{
                 backgroundColor: focused ? colors.primary + "25" : "transparent",
                 borderRadius: "100%",
-                height: 36,
-                width: 36,
+                height: rh(30),
+                width: rw(30),
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               <Ionicons
                 name={focused ? "home" : "home-outline"}
-                size={size}
+                size={rf(20)}
                 color={focused ? colors.primary : color}
               />
             </View>
@@ -58,20 +60,20 @@ const TabsLayout = () => {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ focused, color, size }) => (
+          tabBarIcon: ({ focused, color }) => (
             <View
               style={{
                 backgroundColor: focused ? colors.primary + "25" : "transparent",
                 borderRadius: "100%",
-                height: 36,
-                width: 36,
+                height: rh(30),
+                width: rw(30),
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               <Ionicons
                 name={focused ? "settings" : "settings-outline"}
-                size={size}
+                size={rf(20)}
                 color={focused ? colors.primary : color}
               />
             </View>

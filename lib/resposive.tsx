@@ -1,32 +1,27 @@
-import { Dimensions } from "react-native";
+import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
+import { moderateScale, scale, verticalScale } from "react-native-size-matters";
 
-const { width, height } = Dimensions.get("window");
+export const useResposiveScale = () => {
+  return {
+    /**
+     * Responsive Width
+     */
+    rw: (size: number) => scale(size),
 
-/**
- * Base design size
- * biasanya design figma dibuat di 375x812
- */
-const guidelineBaseWidth = 375;
-const guidelineBaseHeight = 812;
+    /**
+     * Responsive Height
+     */
+    rh: (size: number) => verticalScale(size),
 
-/**
- * Responsive Width
- */
-export const rw = (size: number) => {
-  return (width / guidelineBaseWidth) * size;
-};
+    /**
+     * Responsive Padding, Margin and Border Radius
+     */
+    rpm: (size: number) => moderateScale(size),
 
-/**
- * Responsive Height
- */
-export const rh = (size: number) => {
-  return (height / guidelineBaseHeight) * size;
-};
-
-/**
- * Responsive Font
- */
-export const rf = (size: number) => {
-  const scale = width / guidelineBaseWidth;
-  return size * scale;
+    /**
+     * Responsive Font
+     */
+    rf: (size: number) => RFValue(size),
+    rfp: (size: number) => RFPercentage(size),
+  };
 };

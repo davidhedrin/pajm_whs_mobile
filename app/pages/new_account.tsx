@@ -1,10 +1,12 @@
 import Button from '@/components/button';
+import ErrorLable from '@/components/error-lable';
 import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
+import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +17,7 @@ import { Image, TouchableOpacity, View } from 'react-native';
 import { z } from "zod";
 
 const NewAccount = () => {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -75,25 +78,49 @@ const NewAccount = () => {
       }} />
 
       <ScreenWrapper>
-        <TouchableOpacity onPress={() => router.back()} className='ps-4 pt-3'>
-          <Ionicons name='arrow-back' size={24} color={colors.text} />
+        <TouchableOpacity onPress={() => router.back()}
+          style={{
+            paddingStart: rpm(14),
+            paddingTop: rpm(10)
+          }}
+        >
+          <Ionicons name='arrow-back' size={rf(21)} color={colors.text} />
         </TouchableOpacity>
-        <View className='flex-1 justify-center items-center px-5 -mt-10'>
+        <View className='flex-1 justify-center items-center'
+          style={{
+            paddingHorizontal: rpm(16),
+            marginTop: rpm(-35)
+          }}
+        >
           <Image
-            className="w-[80] h-[80] mb-10"
             source={require("../../assets/images/splash-icon.png")}
             resizeMode="contain"
+            style={{
+              width: rw(80),
+              height: rh(80),
+              marginBottom: rpm(30)
+            }}
           />
 
-          <CText className='font-semibold text-4xl mb-2 leading-tight text-blue-950'>
+          <CText className='font-semibold leading-tight text-blue-950'
+            style={{
+              fontSize: rf(25),
+              marginBottom: rpm(6)
+            }}
+          >
             Add Account
           </CText>
-          <CText className='font-medium text-xl mb-10 w-full text-center'>
+          <CText className='font-medium w-full text-center'
+            style={{
+              fontSize: rf(14),
+              marginBottom: rpm(30)
+            }}
+          >
             Here form to adding new account
           </CText>
 
-          <View className='w-full mb-8'>
-            <View className='mb-3'>
+          <View className='w-full' style={{ marginBottom: rpm(26) }}>
+            <View style={{ marginBottom: rpm(10) }}>
               <Controller
                 control={control}
                 name="username"
@@ -105,11 +132,7 @@ const NewAccount = () => {
                       placeholder="Enter account username"
                     />
 
-                    {errors.username && (
-                      <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
-                        {errors.username.message}
-                      </CText>
-                    )}
+                    {errors.username && <ErrorLable err_msg={errors.username.message} />}
                   </>
                 )}
               />
@@ -130,20 +153,25 @@ const NewAccount = () => {
                       placeholder="Enter account password"
                     />
 
-                    {errors.password && (
-                      <CText className='font-regular text-lg ms-0.5 mt-0.5' style={{ color: "red" }}>
-                        {errors.password.message}
-                      </CText>
-                    )}
+                    {errors.password && <ErrorLable err_msg={errors.password.message} />}
                   </>
                 )}
               />
             </View>
           </View>
 
-          <Button onPress={handleSubmit(fatchData)} title='Add Account' isLoading={isLoading} loadingTitle='Adding...' className='mb-10' />
+          <Button onPress={handleSubmit(fatchData)} title='Add Account' isLoading={isLoading} loadingTitle='Adding...'
+            style={{
+              marginBottom: rpm(30)
+            }}
+          />
 
-          <CText className='font-regular text-lg w-[70%] text-center' style={{ color: colors.textMuted }}>
+          <CText className='font-regular w-[70%] text-center'
+            style={{
+              fontSize: rf(13),
+              color: colors.textMuted
+            }}
+          >
             Add new account credential to make it easier your access!
           </CText>
         </View>

@@ -1,9 +1,10 @@
 import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
-import useTheme from '@/hooks/use-theme';
+import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, PrProps } from '@/lib/model-type';
+import { ApproverLevel, PrProps, ResponsiveScale } from '@/lib/model-type';
+import { useResposiveScale } from '@/lib/resposive';
 import { formatDate } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from "react";
@@ -13,14 +14,8 @@ import {
   View
 } from "react-native";
 
-type SummaryCardProps = {
-  title: string;
-  count: number;
-  color: string;
-  icon: keyof typeof Ionicons.glyphMap;
-};
-
 const PurchaseRequest: React.FC = () => {
+  const { rw, rh, rpm, rf } = useResposiveScale();
   const [search, setSearch] = useState("");
   const { colors } = useTheme();
 
@@ -42,21 +37,6 @@ const PurchaseRequest: React.FC = () => {
           color: colors.text,
         };
     }
-  };
-
-  const SummaryCard = ({ title, count, color, icon }: SummaryCardProps) => {
-    return (
-      <View
-        className="w-[31.5%] mb-[3%] rounded-xl p-3 flex-row justify-between items-center"
-        style={{ backgroundColor: color }}
-      >
-        <Ionicons name={icon} size={28} color={colors.text} />
-        <View className='items-end'>
-          <CText className="font-medium">{title}</CText>
-          <CText className="font-bold text-xl">{count}</CText>
-        </View>
-      </View>
-    );
   };
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -107,47 +87,74 @@ const PurchaseRequest: React.FC = () => {
 
   return (
     <ScreenWrapper scrollable={false} edges={['bottom']}>
-      <View className="pt-5 pb-3 px-4">
-        <View className='mb-2'>
+      <View
+        style={{
+          paddingTop: rpm(16),
+          paddingBottom: rpm(10),
+          paddingHorizontal: rpm(12)
+        }}
+      >
+        <View style={{ marginBottom: rpm(8) }}>
           <CText
-            className="font-medium text-lg leading-none"
+            className="font-medium leading-none"
+            style={{ fontSize: rf(13) }}
           >
             Statistics
           </CText>
-          <CText className="font-regular">
+          <CText className="font-regular" style={{ fontSize: rf(12) }}>
             This summary data's is belongs to you!
           </CText>
         </View>
-        <View className="flex-row flex-wrap justify-between mb-2">
+        <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
           <SummaryCard
             title="Total PO"
             count={1234}
             color={colors.bg_primary}
             icon="document-text-outline"
+            color_scheme={colors}
+            scales={useResposiveScale()}
           />
           <SummaryCard
-            title="Waiting"
+            title="On Progress"
             count={3456}
             color={colors.bg_warning}
             icon="time-outline"
+            color_scheme={colors}
+            scales={useResposiveScale()}
           />
           <SummaryCard
-            title="Done"
+            title="Finish"
             count={7890}
             color={colors.bg_success}
             icon="checkmark-done-outline"
+            color_scheme={colors}
+            scales={useResposiveScale()}
           />
         </View>
 
-        <View className="flex-row justify-between mb-3">
-          <TouchableOpacity className="flex-row items-center px-3 py-2 rounded-xl" style={{ backgroundColor: colors.surface }}>
-            <Ionicons name="filter-outline" size={18} color={colors.text} />
-            <CText className="ml-2 font-regular text-lg">Filter</CText>
+        <View className="flex-row justify-between mb-3" style={{ marginBottom: rpm(10) }}>
+          <TouchableOpacity className="flex-row items-center"
+            style={{
+              borderRadius: rpm(10),
+              paddingHorizontal: rpm(10),
+              paddingVertical: rpm(6),
+              backgroundColor: colors.surface
+            }}
+          >
+            <Ionicons name="filter-outline" size={rf(14)} color={colors.text} />
+            <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Filter</CText>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center px-3 py-2 rounded-xl" style={{ backgroundColor: colors.surface }}>
-            <Ionicons name="swap-vertical-outline" size={18} color={colors.text} />
-            <CText className="ml-2 font-regular text-lg">Sort</CText>
+          <TouchableOpacity className="flex-row items-center"
+            style={{
+              borderRadius: rpm(10),
+              paddingHorizontal: rpm(10),
+              paddingVertical: rpm(6),
+              backgroundColor: colors.surface
+            }}
+          >
+            <Ionicons name="swap-vertical-outline" size={rf(14)} color={colors.text} />
+            <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Sort</CText>
           </TouchableOpacity>
         </View>
 
@@ -155,7 +162,7 @@ const PurchaseRequest: React.FC = () => {
           prefixIcon='search-outline'
           value={search}
           onChangeText={setSearch}
-          placeholder="Search purchase order..."
+          placeholder="Search purchase order number..."
         />
       </View>
 
@@ -163,33 +170,41 @@ const PurchaseRequest: React.FC = () => {
         data={data}
         keyExtractor={(item) => item.Id.toString()}
         showsVerticalScrollIndicator={false}
-        className='pt-2 px-4'
+        style={{
+          paddingTop: rpm(6),
+          paddingHorizontal: rpm(14)
+        }}
         onEndReached={() => {
           if (data.length >= total) return;
           if (data.length < total) fatchDatas();
         }}
         onEndReachedThreshold={0.3}
         ListFooterComponent={
-          loading ? <View className='mb-5 flex-row justify-center items-center'>
+          loading ? <View className='flex-row justify-center items-center'
+            style={{ marginBottom: rpm(18) }}
+          >
             <ActivityIndicator size="small" />
-            <CText className='font-medium text-lg ms-2'>Loading...</CText>
+            <CText className='font-medium' style={{ fontSize: rf(13), marginStart: rpm(6) }}>Loading...</CText>
           </View> : null
         }
         ListEmptyComponent={
           <View>
             {
-              !loading && <View className="px-5 py-6 rounded-xl items-center justify-center shadow-md"
+              !loading && <View className="items-center justify-center shadow-md"
                 style={{
+                  paddingHorizontal: rpm(16),
+                  paddingVertical: rpm(20),
+                  borderRadius: rpm(10),
                   backgroundColor: colors.surface
                 }}
               >
-                <Ionicons name="folder-open-outline" size={45} color="#9CA3AF" className="mb-3" />
+                <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
 
-                <CText className="font-medium text-gray-500 text-center text-lg">
+                <CText className="font-medium text-gray-500 text-center" style={{ fontSize: rf(13) }}>
                   No Data Found!
                 </CText>
 
-                <CText className="font-regular text-center" style={{ color: colors.textMuted }}>
+                <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(12) }}>
                   No data results or, Try adjusting filters.
                 </CText>
               </View>
@@ -199,72 +214,113 @@ const PurchaseRequest: React.FC = () => {
         }
         renderItem={({ item }: { item: PrProps }) => {
           const isExpanded = expandedId === item.Id;
-          return <TouchableOpacity className="rounded-xl px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: colors.surface }}>
-            <View className="flex-row justify-between items-center mb-2">
-              <CText className="font-semibold text-gray-900 text-lg">
+          return <TouchableOpacity className="shadow-sm"
+            style={{
+              borderRadius: rpm(10),
+              paddingHorizontal: rpm(12),
+              paddingVertical: rpm(10),
+              marginBottom: rpm(14),
+              backgroundColor: colors.surface
+            }}
+          >
+            <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
+              <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
                 {item.PrNo}
               </CText>
 
-              <CText
-                className="px-2 py-1.5 rounded-full font-regular leading-none text-sm"
-                style={getStatusStyle(item.Status)}
-              >
-                {item.Status === 'APPROVED' ? "DONE" : "WAITING"}
-              </CText>
+              <View
+                className="flex-row items-center rounded-full font-regular leading-none"
+                style={[
+                  {
+                    paddingHorizontal: rpm(6),
+                    paddingVertical: rpm(5),
+                  },
+                  getStatusStyle(item.Status)
+                ]}>
+                <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : "time-outline"} />
+                <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
+                  {item.Status === 'APPROVED' ? "FINISH" : "ON PROGRESS"}
+                </CText>
+              </View>
             </View>
 
-            <CText className="font-regular text-lg mb-1">
+            <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
               Req By: {item.User1Name}
             </CText>
 
             {/* 🔹 MAIN CONTENT */}
             <View className='flex-row justify-between items-end'>
-              <CText style={{ color: colors.textMuted }}>Submit At: {item.DtmSubmit ? formatDate(item.DtmSubmit, 'medium', 'short') : "-"}</CText>
+              {
+                item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
+                  Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
+                </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
+              }
+
 
               <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
-                <CText>{isExpanded ? "Dismiss" : "Expand"}</CText>
+                <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
                 <Ionicons
                   name={isExpanded ? "chevron-up" : "chevron-down"}
-                  size={20}
+                  size={rf(17)}
                   color={colors.text}
                 />
               </TouchableOpacity>
             </View>
 
             {isExpanded && (
-              <View className="mt-4 pt-3 border-t-2 border-gray-200">
+              <View className="border-t-2 border-gray-200"
+                style={{
+                  marginTop: rpm(9),
+                  paddingTop: rpm(9)
+                }}
+              >
                 {/* APPROVAL LIST */}
                 {item.Approvers.map((a, index) => {
                   const style = getStatusStyle(a.UserResponse);
 
                   return (
-                    <View key={index} className="flex-row items-start mb-3">
+                    <View key={index} className="flex-row items-start"
+                      style={{ marginBottom: index !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
+                    >
                       <View
-                        className="w-2 h-2 mt-2 rounded-full mr-3"
-                        style={{ backgroundColor: colors.textMuted }}
+                        className="rounded-full mr-3"
+                        style={{
+                          width: rw(5),
+                          height: rh(5),
+                          marginTop: rpm(7),
+                          marginRight: rpm(8),
+                          backgroundColor: colors.textMuted
+                        }}
                       />
 
                       <View className="flex-1">
                         <View className="flex-row justify-between items-center">
-                          <CText className="font-medium text-lg">
+                          <CText className="font-medium text-lg" style={{ fontSize: rf(13) }}>
                             Approval - {a.Level}
                           </CText>
 
                           <CText
-                            className="px-2 py-0.5 rounded-full text-sm"
-                            style={style}
+                            className="rounded-full"
+                            style={[
+                              {
+                                paddingHorizontal: rpm(6),
+                                paddingVertical: rpm(2),
+                                fontSize: rf(11)
+                              },
+                              style
+                            ]}
                           >
                             {a.UserResponse === '' ? "WAITING" : a.UserResponse}
                           </CText>
                         </View>
 
                         <View className="flex-row justify-between items-center">
-                          <CText className="font-regular">
+                          <CText className="font-regular" style={{ fontSize: rf(12) }}>
                             {a.UserName}
                           </CText>
 
-                          <CText className="font-regular">
-                            {a.DtmResponse ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+                          <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                            {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
                           </CText>
                         </View>
                       </View>
@@ -286,7 +342,7 @@ function MappingPr(raw: any): PrProps {
   return {
     Id: raw.Id,
     PrNo: raw.PrNo,
-    DtmSubmit: new Date(raw.DtmSubmit),
+    DtmSubmit: raw.DtmSubmit ? new Date(raw.DtmSubmit) : null,
     User1Name: raw.User1Name,
     Approvers: MapApprovers({ raw, start_idx: 2 }),
     Status: (raw.DtmResponse2 && raw.DtmResponse3 && raw.DtmResponse4) ? "APPROVED" : ""
@@ -313,4 +369,35 @@ function MapApprovers({ raw, start_idx = 1 }: { raw: any; start_idx: number; }):
   }
 
   return result;
+};
+
+type SummaryCardProps = {
+  title: string;
+  count: number;
+  color: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color_scheme: ColorScheme;
+  scales: ResponsiveScale;
+};
+
+function SummaryCard({ title, count, color, icon, color_scheme, scales }: SummaryCardProps) {
+  const { rpm, rf } = scales;
+
+  return (
+    <View
+      className="w-[31.5%] mb-[3%] flex-row justify-between items-center"
+      style={{
+        borderRadius: rpm(10),
+        paddingVertical: rpm(8),
+        paddingHorizontal: rpm(7),
+        backgroundColor: color
+      }}
+    >
+      <Ionicons name={icon} size={rf(24)} color={color_scheme.text} />
+      <View className='items-end'>
+        <CText className="font-medium" style={{ fontSize: rf(12) }}>{title}</CText>
+        <CText className="font-bold" style={{ fontSize: rf(14) }}>{count}</CText>
+      </View>
+    </View>
+  );
 };
