@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
 import Toast, { ToastType } from "react-native-toast-message";
 
 export async function CheckAllStorage() {
@@ -70,4 +71,12 @@ export function formatDate(
   const formattedTime = timeFormatter ? `, ${timeFormatter.format(date)}` : "";
 
   return tmStyle ? `${formattedDate}${formattedTime}` : formattedDate;
+}
+
+export function useDefaultState<T>(defaultValue: T) {
+  const [state, setState] = useState<T>(defaultValue);
+
+  const reset = () => setState(defaultValue);
+
+  return [state, setState, reset] as const;
 }

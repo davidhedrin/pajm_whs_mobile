@@ -3,6 +3,7 @@ import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
+  ColorValue,
   Text,
   TextInput,
   TextInputProps,
@@ -10,12 +11,17 @@ import {
   View,
 } from 'react-native';
 
+type GroupProps = {
+  content?: React.ReactNode;
+  bgColor?: ColorValue | undefined;
+};
+
 type InputProps = TextInputProps & {
   className?: string;
 
   // group (kotak)
-  prefixGroup?: React.ReactNode;
-  suffixGroup?: React.ReactNode;
+  prefixGroup?: GroupProps;
+  suffixGroup?: GroupProps;
 
   // icon (simple)
   prefixIcon?: keyof typeof Ionicons.glyphMap;
@@ -49,13 +55,13 @@ const Input: React.FC<InputProps> = ({
             paddingHorizontal: rpm(10),
             borderTopLeftRadius: rpm(10),
             borderBottomLeftRadius: rpm(10),
-            backgroundColor: colors.surface
+            backgroundColor: prefixGroup.bgColor ?? colors.surface
           }}
         >
-          {typeof prefixGroup === 'string' ? (
-            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{prefixGroup}</Text>
+          {typeof prefixGroup.content === 'string' ? (
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{prefixGroup.content}</Text>
           ) : (
-            prefixGroup
+            prefixGroup.content
           )}
         </View>
       )}
@@ -124,13 +130,13 @@ const Input: React.FC<InputProps> = ({
             paddingHorizontal: rpm(10),
             borderTopRightRadius: rpm(10),
             borderBottomRightRadius: rpm(10),
-            backgroundColor: colors.surface
+            backgroundColor: suffixGroup.bgColor ?? colors.surface
           }}
         >
-          {typeof suffixGroup === 'string' ? (
-            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{suffixGroup}</Text>
+          {typeof suffixGroup.content === 'string' ? (
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{suffixGroup.content}</Text>
           ) : (
-            suffixGroup
+            suffixGroup.content
           )}
         </View>
       )}

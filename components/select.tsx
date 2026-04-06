@@ -3,6 +3,7 @@ import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
+  ColorValue,
   FlatList,
   Modal,
   Pressable,
@@ -12,22 +13,27 @@ import {
 } from 'react-native';
 import { CText } from './text';
 
-type Option = {
+export type OptionProps = {
   label: string;
   value: string;
   disabled?: boolean;
 };
 
+type GroupProps = {
+  content?: React.ReactNode;
+  bgColor?: ColorValue | undefined;
+};
+
 type SelectProps = {
-  options: Option[];
+  options: OptionProps[];
   value?: string;
   onChange?: (value: string) => void;
   placeholder?: string;
   className?: string;
 
   // ✅ tambahan
-  prefixGroup?: React.ReactNode;
-  suffixGroup?: React.ReactNode;
+  prefixGroup?: GroupProps;
+  suffixGroup?: GroupProps;
   prefixIcon?: keyof typeof Ionicons.glyphMap;
   onPressPrefixIcon?: () => void;
 };
@@ -59,13 +65,13 @@ const Select: React.FC<SelectProps> = ({
             paddingHorizontal: rpm(10),
             borderTopLeftRadius: rpm(10),
             borderBottomLeftRadius: rpm(10),
-            backgroundColor: colors.surface
+            backgroundColor: prefixGroup.bgColor ?? colors.surface
           }}
         >
-          {typeof prefixGroup === 'string' ? (
-            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{prefixGroup}</Text>
+          {typeof prefixGroup.content === 'string' ? (
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{prefixGroup.content}</Text>
           ) : (
-            prefixGroup
+            prefixGroup.content
           )}
         </View>
       )}
@@ -207,13 +213,13 @@ const Select: React.FC<SelectProps> = ({
             paddingHorizontal: rpm(10),
             borderTopRightRadius: rpm(10),
             borderBottomRightRadius: rpm(10),
-            backgroundColor: colors.surface
+            backgroundColor: suffixGroup.bgColor ?? colors.surface
           }}
         >
-          {typeof suffixGroup === 'string' ? (
-            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{suffixGroup}</Text>
+          {typeof suffixGroup.content === 'string' ? (
+            <Text className="text-gray-700" style={{ fontSize: rf(13) }}>{suffixGroup.content}</Text>
           ) : (
-            suffixGroup
+            suffixGroup.content
           )}
         </View>
       )}

@@ -192,7 +192,7 @@ export default function Index() {
                 <View className="items-end">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted, fontSize: rf(12) }}
+                    style={{ color: colors.textMuted, fontSize: rf(13) }}
                   >
                     Total Data
                   </CText>
@@ -206,7 +206,7 @@ export default function Index() {
 
               {/* Module */}
               <CText
-                className="font-regular"
+                className="font-medium"
                 style={{
                   fontSize: rf(13),
                   marginTop: rpm(8)
@@ -224,11 +224,11 @@ export default function Index() {
                 <View className="flex-row justify-between">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                    style={{ color: colors.textMuted, fontSize: rf(13), lineHeight: rpm(18) }}
                   >
                     On Progress
                   </CText>
-                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
+                  <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
                     123
                   </CText>
                 </View>
@@ -236,11 +236,11 @@ export default function Index() {
                 <View className="flex-row justify-between">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                    style={{ color: colors.textMuted, fontSize: rf(13), lineHeight: rpm(18) }}
                   >
                     Finish
                   </CText>
-                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
+                  <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
                     456
                   </CText>
                 </View>
@@ -268,7 +268,7 @@ export default function Index() {
                 <View className="items-end">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted, fontSize: rf(12) }}
+                    style={{ color: colors.textMuted, fontSize: rf(13) }}
                   >
                     Total Data
                   </CText>
@@ -282,7 +282,7 @@ export default function Index() {
 
               {/* Module */}
               <CText
-                className="font-regular"
+                className="font-medium"
                 style={{
                   fontSize: rf(13),
                   marginTop: rpm(8)
@@ -300,11 +300,11 @@ export default function Index() {
                 <View className="flex-row justify-between">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                    style={{ color: colors.textMuted, fontSize: rf(13), lineHeight: rpm(18) }}
                   >
                     On Progress
                   </CText>
-                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
+                  <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
                     123
                   </CText>
                 </View>
@@ -312,11 +312,11 @@ export default function Index() {
                 <View className="flex-row justify-between">
                   <CText
                     className="font-regular"
-                    style={{ color: colors.textMuted, fontSize: rf(12), lineHeight: rpm(16) }}
+                    style={{ color: colors.textMuted, fontSize: rf(13), lineHeight: rpm(18) }}
                   >
                     Finish
                   </CText>
-                  <CText className="font-medium" style={{ fontSize: rf(12), lineHeight: rpm(16) }}>
+                  <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
                     456
                   </CText>
                 </View>

@@ -1,6 +1,6 @@
-import { useAuthStore } from "@/hooks/zustand";
+import { LoginApi, useAuthStore } from "@/hooks/zustand";
 import { BASE_URL } from "./config";
-import { ApiResponse } from "./model-type";
+import { ApiResponse, UserAuthData } from "./model-type";
 
 type CallApiOptions = {
   endpoint: string;
@@ -18,7 +18,7 @@ export async function callApi<T>({
   isCredentian = true,
 }: CallApiOptions): Promise<ApiResponse<T>> {
   try {
-    const { authData } = useAuthStore.getState();
+    const { authData, setAuth, logout } = useAuthStore.getState();
 
     const finalHeaders: Record<string, string> = {
       Accept: "application/json",
@@ -30,7 +30,25 @@ export async function callApi<T>({
     if (isCredentian) {
       if (authData === null) throw new Error("Credential is not found!");
       if (authData.Token === null) throw new Error("Credential is not found!");
-      finalHeaders["Cookie"] = `.ASPXFORMSAUTH_WPAJM=${authData.Token}`;
+
+      const expirationDate = new Date(authData.ExpiredAt);
+      if (expirationDate <= new Date()) {
+        const createReq = await LoginApi<UserAuthData>(
+          authData.Username,
+          "",
+          true,
+        );
+
+        if (createReq.Data) {
+          finalHeaders["Cookie"] =
+            `.ASPXFORMSAUTH_WPAJM=${createReq.Data.Token}`;
+          setAuth(createReq.Data);
+        } else {
+          logout(authData.Username);
+        }
+      } else {
+        finalHeaders["Cookie"] = `.ASPXFORMSAUTH_WPAJM=${authData.Token}`;
+      }
 
       params = { ...params, username: authData.Username };
     }
