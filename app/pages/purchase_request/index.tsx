@@ -17,13 +17,16 @@ import {
 } from "react-native";
 
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
+import { PRDetailProps } from './detail';
 
 type DateRangePicker = "start" | "end";
 
 const PurchaseRequest: React.FC = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
+  const router = useRouter();
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -93,11 +96,11 @@ const PurchaseRequest: React.FC = () => {
     setShowDatePicker(true);
   };
 
-  const [onEndReCalled, setOnEndReCalled] = useState(true);
+  const [onEndReCalled, setOnEndReCalled, resetOnEndReCalled] = useDefaultState<boolean>(true);
   const [startData, setStartData] = useState(0);
   const [startLimit] = useState(15);
   const [data, setData] = useState<PrProps[]>([]);
-  const [totalData, setTotalData] = useState<number>(0);
+  // const [totalData, setTotalData] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
   const resetFilter = () => {
@@ -110,6 +113,7 @@ const PurchaseRequest: React.FC = () => {
     if (loading) return;
 
     if (isNewSearch == true) {
+      resetOnEndReCalled();
       setStartData(0);
       setData([]);
     }
@@ -127,7 +131,7 @@ const PurchaseRequest: React.FC = () => {
     };
 
     const createReq = await callApi<any[]>({
-      endpoint: "PoPaging",
+      endpoint: "PrPaging",
       params: {
         start: currentStart,
         limit: startLimit,
@@ -140,20 +144,19 @@ const PurchaseRequest: React.FC = () => {
       }
     });
 
-    setTotalData(createReq.TotalRecord ?? 0);
+    // setTotalData(createReq.TotalRecord ?? 0);
 
     // console.log(createReq);
     let resData: PrProps[] = [];
     if (createReq.Data !== undefined) resData = createReq.Data.map(MappingPr);
-    if (resData.length < startLimit || (createReq.TotalRecord ?? 0) <= startLimit) setOnEndReCalled(false);
+
+    const totalDataRecord = data.length + resData.length;
+    if (totalDataRecord === createReq.TotalRecord) setOnEndReCalled(false);
+    if ((createReq.TotalRecord ?? 0) > totalDataRecord) setStartData(prev => prev + startLimit);
 
     // setData(resData);
     setData(prev => [...prev, ...resData]);
 
-    if ((createReq.TotalRecord ?? 0) > startLimit) {
-      setOnEndReCalled(true);
-      setStartData(prev => prev + startLimit);
-    }
     setLoading(false);
   };
 
@@ -226,7 +229,7 @@ const PurchaseRequest: React.FC = () => {
 
         <CText className="font-medium" style={{ fontSize: rf(13), marginBottom: rpm(4), marginTop: rpm(10) }}>Date Range</CText>
         <View className="flex-row">
-          <Pressable className="flex-1 border border-gray-300"
+          <TouchableOpacity className="flex-1 border border-gray-300"
             style={{
               borderRadius: rpm(8),
               padding: rpm(10),
@@ -237,9 +240,9 @@ const PurchaseRequest: React.FC = () => {
             <CText className="font-regular text-gray-600" style={{ fontSize: rf(13) }}>
               {startDate ? startDate.toDateString() : "Start Date"}
             </CText>
-          </Pressable>
+          </TouchableOpacity>
 
-          <Pressable className="flex-1 border border-gray-300"
+          <TouchableOpacity className="flex-1 border border-gray-300"
             style={{
               borderRadius: rpm(8),
               padding: rpm(10)
@@ -249,7 +252,7 @@ const PurchaseRequest: React.FC = () => {
             <CText className="font-regular text-gray-600" style={{ fontSize: rf(13) }}>
               {endDate ? endDate.toDateString() : "End Date"}
             </CText>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </BaseModal>
       {
@@ -353,7 +356,7 @@ const PurchaseRequest: React.FC = () => {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <FlatList
           data={data}
-          keyExtractor={(item) => item.Id.toString()}
+          keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
           style={{
             paddingHorizontal: rpm(14)
@@ -364,7 +367,7 @@ const PurchaseRequest: React.FC = () => {
           onEndReachedThreshold={0.3}
           ListFooterComponent={
             loading ? <View className='flex-row justify-center items-center'
-              style={{ marginBottom: rpm(18) }}
+              style={{ marginBottom: rpm(18), marginTop: rpm(8) }}
             >
               <ActivityIndicator size="small" />
               <CText className='font-medium' style={{ fontSize: rf(13), marginStart: rpm(6) }}>Loading...</CText>
@@ -418,7 +421,15 @@ const PurchaseRequest: React.FC = () => {
                     >
                       <View className='flex-row items-center'>
                         <Ionicons name='checkmark-outline' size={rf(17)} color={colors.surface} />
-                        <CText className="font-medium ml-1" style={{ color: colors.surface, fontSize: rf(13) }}>Approve</CText>
+                        <CText className="font-medium"
+                          style={{
+                            marginLeft: rpm(2),
+                            color: colors.surface,
+                            fontSize: rf(13)
+                          }}
+                        >
+                          Approve
+                        </CText>
                       </View>
                     </TouchableOpacity>
 
@@ -434,7 +445,15 @@ const PurchaseRequest: React.FC = () => {
                     >
                       <View className='flex-row items-center'>
                         <Ionicons name='close-outline' size={rf(17)} color={colors.surface} />
-                        <CText className="font-medium ml-1" style={{ color: colors.surface, fontSize: rf(13) }}>Reject</CText>
+                        <CText className="font-medium"
+                          style={{
+                            marginLeft: rpm(2),
+                            color: colors.surface,
+                            fontSize: rf(13)
+                          }}
+                        >
+                          Reject
+                        </CText>
                       </View>
                     </TouchableOpacity>
                   </View>
@@ -442,10 +461,18 @@ const PurchaseRequest: React.FC = () => {
               >
                 <TouchableOpacity className="shadow-sm"
                   style={{
-                    // borderRadius: rpm(10),
                     paddingHorizontal: rpm(12),
                     paddingVertical: rpm(10),
                     backgroundColor: colors.surface
+                  }}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/pages/purchase_request/detail",
+                      params: {
+                        id: item.Id.toString(),
+                        pr_no: item.PrNo,
+                      } as PRDetailProps
+                    });
                   }}
                 >
                   <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
@@ -567,18 +594,18 @@ const PurchaseRequest: React.FC = () => {
 
 export default PurchaseRequest;
 
-function MappingPr(raw: any): PrProps {
+export function MappingPr(raw: any): PrProps {
   return {
     Id: raw.Id,
     PrNo: raw.PrNo,
     DtmSubmit: raw.DtmSubmit ? new Date(raw.DtmSubmit) : null,
     User1Name: raw.User1Name,
-    Approvers: MapApprovers({ raw, start_idx: 2 }),
+    Approvers: MapApproversPr({ raw, start_idx: 2 }),
     Status: (raw.DtmResponse2 && raw.DtmResponse3 && raw.DtmResponse4) ? "APPROVED" : ""
   };
 };
 
-function MapApprovers({ raw, start_idx = 1 }: { raw: any; start_idx: number; }): ApproverLevel[] {
+export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: number; }): ApproverLevel[] {
   const result: ApproverLevel[] = [];
 
   let i = start_idx;

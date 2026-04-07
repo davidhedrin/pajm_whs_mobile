@@ -80,7 +80,7 @@ const NewAccount = () => {
       <ScreenWrapper>
         <TouchableOpacity onPress={() => router.back()}
           style={{
-            paddingStart: rpm(14),
+            paddingStart: rpm(12),
             paddingTop: rpm(10)
           }}
         >

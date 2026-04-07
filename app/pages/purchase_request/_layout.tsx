@@ -36,6 +36,15 @@ const PurchaseRequestLayout = () => {
           </TouchableOpacity>
         )
       }} />
+
+      <Stack.Screen
+        name="detail"
+        options={{
+          title: "PR Detail",
+          headerTitleAlign: "center",
+          headerShown: false,
+        }}
+      />
     </Stack>
   )
 }
