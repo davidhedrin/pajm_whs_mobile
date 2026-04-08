@@ -39,19 +39,19 @@ const Button = ({
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      className={`${className ?? ''} w-full ${isDisabled ? 'bg-blue-300' : 'bg-blue-500'}`}
+      className={`${className ?? ''} ${isDisabled ? 'bg-blue-300' : 'bg-blue-500'}`}
       disabled={isDisabled}
       style={[
-        style,
         {
           paddingHorizontal: rpm(12),
           paddingVertical: rpm(11),
           borderRadius: rpm(10)
-        }
+        },
+        style
       ]}
       {...props}
     >
-      <View className="flex-row items-center justify-center gap-2">
+      <View className="flex-row items-center justify-center gap-1">
 
         {isLoading && (
           <ActivityIndicator size="small" color="#fff" />

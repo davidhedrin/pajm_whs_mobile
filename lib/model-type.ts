@@ -42,7 +42,24 @@ export type PrProps = {
   User1Name: string;
 
   Status: StatusPrPo;
+  Remark: string;
+
   Approvers: ApproverLevel[];
+  ItemDetails?: PrDetailProps[];
+};
+
+export type PrDetailProps = {
+  Id: number;
+  LastStock: number;
+  ProductId: number;
+  Quantity: number;
+  UnitPrice: number;
+
+  MeasurementName: string;
+  Merk: string;
+  ProductName: string;
+  Remark: string;
+  SKU: string;
 };
 
 // export type PrDetailProps = {

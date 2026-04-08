@@ -159,7 +159,7 @@ const AuthLogin = () => {
           </View>
         </View>
 
-        <Button onPress={(handleSubmit(fatchData))} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...'
+        <Button onPress={(handleSubmit(fatchData))} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='w-full'
           style={{
             marginBottom: rpm(30)
           }}

@@ -23,30 +23,30 @@ import { PRDetailProps } from './detail';
 
 type DateRangePicker = "start" | "end";
 
+export function getStatusStyle(status: string, colors: ColorScheme) {
+  switch (status) {
+    case "APPROVED":
+      return {
+        backgroundColor: colors.bg_success,
+        color: colors.success,
+      };
+    case "REJECTED":
+      return {
+        backgroundColor: colors.bg_danger,
+        color: colors.danger,
+      };
+    default:
+      return {
+        backgroundColor: colors.bg_shadow,
+        color: colors.text,
+      };
+  }
+};
+
 const PurchaseRequest: React.FC = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
-
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return {
-          backgroundColor: colors.bg_success,
-          color: colors.success,
-        };
-      case "REJECTED":
-        return {
-          backgroundColor: colors.bg_danger,
-          color: colors.danger,
-        };
-      default:
-        return {
-          backgroundColor: colors.bg_shadow,
-          color: colors.text,
-        };
-    }
-  };
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = () => {
@@ -136,7 +136,7 @@ const PurchaseRequest: React.FC = () => {
         start: currentStart,
         limit: startLimit,
         sort: "Id",
-        dir: "ASC",
+        dir: "DESC",
         gridfilters: inputSearchFilter.trim() !== "" ? JSON.stringify(searchGridFilter) : "",
         option2: statusFilter,
         dtm1: startDate ? startDate.toLocaleDateString("en-CA") : "",
@@ -487,10 +487,10 @@ const PurchaseRequest: React.FC = () => {
                           paddingHorizontal: rpm(6),
                           paddingVertical: rpm(5),
                         },
-                        getStatusStyle(item.Status)
+                        getStatusStyle(item.Status, colors)
                       ]}
                     >
-                      <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : "time-outline"} />
+                      <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : "time-outline"} color={colors.text} />
                       <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
                         {item.Status === 'APPROVED' ? "FINISH" : "ON PROGRESS"}
                       </CText>
@@ -529,7 +529,7 @@ const PurchaseRequest: React.FC = () => {
                     >
                       {/* APPROVAL LIST */}
                       {item.Approvers.map((a, i) => {
-                        const style = getStatusStyle(a.UserResponse);
+                        const style = getStatusStyle(a.UserResponse, colors);
 
                         return (
                           <View key={i} className="flex-row items-start"
@@ -548,8 +548,8 @@ const PurchaseRequest: React.FC = () => {
 
                             <View className="flex-1">
                               <View className="flex-row justify-between items-center">
-                                <CText className="font-medium text-lg" style={{ fontSize: rf(13) }}>
-                                  Approval - {a.Level}
+                                <CText className="font-medium" style={{ fontSize: rf(13) }}>
+                                  Approval - {a.Level - 1}
                                 </CText>
 
                                 <CText
@@ -594,14 +594,17 @@ const PurchaseRequest: React.FC = () => {
 
 export default PurchaseRequest;
 
-export function MappingPr(raw: any): PrProps {
+export function MappingPr(raw: any, items?: any): PrProps {
   return {
     Id: raw.Id,
     PrNo: raw.PrNo,
     DtmSubmit: raw.DtmSubmit ? new Date(raw.DtmSubmit) : null,
     User1Name: raw.User1Name,
+    Status: (raw.DtmResponse2 && raw.DtmResponse3 && raw.DtmResponse4) ? "APPROVED" : "",
+    Remark: raw.Remark,
+
     Approvers: MapApproversPr({ raw, start_idx: 2 }),
-    Status: (raw.DtmResponse2 && raw.DtmResponse3 && raw.DtmResponse4) ? "APPROVED" : ""
+    ItemDetails: items
   };
 };
 

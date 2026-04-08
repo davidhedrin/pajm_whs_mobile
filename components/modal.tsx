@@ -45,7 +45,7 @@ const BaseModal = ({
                 {
                   children ?? <>
                     <CText>Ini isi modal bebas 🚀</CText>
-                    <Button title="Close" onPress={() => onClose(false)} />
+                    <Button title="Close" onPress={() => onClose(false)} className="w-full" />
                   </>
                 }
               </View>

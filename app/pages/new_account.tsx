@@ -160,7 +160,7 @@ const NewAccount = () => {
             </View>
           </View>
 
-          <Button onPress={handleSubmit(fatchData)} title='Add Account' isLoading={isLoading} loadingTitle='Adding...'
+          <Button onPress={handleSubmit(fatchData)} title='Add Account' isLoading={isLoading} loadingTitle='Adding...' className='w-full'
             style={{
               marginBottom: rpm(30)
             }}

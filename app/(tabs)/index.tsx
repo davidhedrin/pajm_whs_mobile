@@ -416,7 +416,7 @@ export default function Index() {
           ))
         }
 
-        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" style={{ marginBottom: rpm(30) }} />
+        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }} />
       </AppBottomSheet>
     </ScreenWrapper>
   );

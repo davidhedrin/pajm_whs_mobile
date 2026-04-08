@@ -4,11 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ColorValue,
+  StyleProp,
   Text,
   TextInput,
   TextInputProps,
   TouchableOpacity,
   View,
+  ViewStyle,
 } from 'react-native';
 
 type GroupProps = {
@@ -29,6 +31,8 @@ type InputProps = TextInputProps & {
 
   onPressPrefixIcon?: () => void;
   onPressSuffixIcon?: () => void;
+  
+  style?: StyleProp<ViewStyle>
 };
 
 const Input: React.FC<InputProps> = ({
@@ -39,6 +43,7 @@ const Input: React.FC<InputProps> = ({
   suffixIcon,
   onPressPrefixIcon,
   onPressSuffixIcon,
+  style,
   ...props
 }) => {
   const { rpm, rf } = useResposiveScale();
@@ -99,14 +104,17 @@ const Input: React.FC<InputProps> = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholderTextColor={colors.backgrounds.placeholder}
-          style={{
-            fontFamily: 'PoppinsMedium',
-            color: colors.text,
-            fontSize: rf(13),
-            paddingTop: rpm(13),
-            paddingBottom: rpm(9),
-            minHeight: rpm(42),
-          }}
+          style={[
+            {
+              fontFamily: 'PoppinsMedium',
+              color: colors.text,
+              fontSize: rf(13),
+              paddingTop: rpm(13),
+              paddingBottom: rpm(9),
+              minHeight: rpm(42),
+            },
+            style
+          ]}
         />
 
         {/* SUFFIX ICON */}
