@@ -17,6 +17,7 @@ export type UserAuthData = {
   Token: string;
   ExpiredAt: string;
 
+  BpUserId: number;
   Username: string;
   Fullname: string;
   Role: string;
@@ -28,10 +29,12 @@ export type StatusPrPo = "" | "APPROVED" | "REJECTED";
 
 export type ApproverLevel = {
   Level: number;
+  UserId: number;
   UserApproved: boolean;
   UserName: string;
   UserResponse: StatusPrPo;
   DtmResponse: Date | null;
+  Remark?: string;
 };
 
 export type PrProps = {
@@ -45,6 +48,7 @@ export type PrProps = {
   Remark: string;
 
   Approvers: ApproverLevel[];
+  AssignLevel?: number;
   ItemDetails?: PrDetailProps[];
 };
 

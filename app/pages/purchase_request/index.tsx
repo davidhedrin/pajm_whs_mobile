@@ -16,6 +16,7 @@ import {
   View
 } from "react-native";
 
+import { useAuthStore } from '@/hooks/zustand';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
@@ -44,6 +45,7 @@ export function getStatusStyle(status: string, colors: ColorScheme) {
 };
 
 const PurchaseRequest: React.FC = () => {
+  const { authData } = useAuthStore();
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
@@ -136,7 +138,7 @@ const PurchaseRequest: React.FC = () => {
         start: currentStart,
         limit: startLimit,
         sort: "Id",
-        dir: "DESC",
+        dir: "ASC",
         gridfilters: inputSearchFilter.trim() !== "" ? JSON.stringify(searchGridFilter) : "",
         option2: statusFilter,
         dtm1: startDate ? startDate.toLocaleDateString("en-CA") : "",
@@ -148,7 +150,7 @@ const PurchaseRequest: React.FC = () => {
 
     // console.log(createReq);
     let resData: PrProps[] = [];
-    if (createReq.Data !== undefined) resData = createReq.Data.map(MappingPr);
+    if (createReq.Data !== undefined) resData = createReq.Data.map(x => MappingPr(x, authData?.BpUserId));
 
     const totalDataRecord = data.length + resData.length;
     if (totalDataRecord === createReq.TotalRecord) setOnEndReCalled(false);
@@ -490,9 +492,9 @@ const PurchaseRequest: React.FC = () => {
                         getStatusStyle(item.Status, colors)
                       ]}
                     >
-                      <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : "time-outline"} color={colors.text} />
+                      <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
                       <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
-                        {item.Status === 'APPROVED' ? "FINISH" : "ON PROGRESS"}
+                        {item.Status === '' ? "ON PROGRESS" : item.Status}
                       </CText>
                     </View>
                   </View>
@@ -520,68 +522,70 @@ const PurchaseRequest: React.FC = () => {
                     </TouchableOpacity>
                   </View>
 
-                  {isExpanded && (
-                    <View className="border-t-2 border-gray-200"
-                      style={{
-                        marginTop: rpm(9),
-                        paddingTop: rpm(9)
-                      }}
-                    >
-                      {/* APPROVAL LIST */}
-                      {item.Approvers.map((a, i) => {
-                        const style = getStatusStyle(a.UserResponse, colors);
+                  {
+                    isExpanded && (
+                      <View className="border-t-2 border-gray-200"
+                        style={{
+                          marginTop: rpm(9),
+                          paddingTop: rpm(9)
+                        }}
+                      >
+                        {/* APPROVAL LIST */}
+                        {item.Approvers.map((a, i) => {
+                          const style = getStatusStyle(a.UserResponse, colors);
 
-                        return (
-                          <View key={i} className="flex-row items-start"
-                            style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
-                          >
-                            <View
-                              className="rounded-full mr-3"
-                              style={{
-                                width: rw(5),
-                                height: rh(5),
-                                marginTop: rpm(7),
-                                marginRight: rpm(8),
-                                backgroundColor: colors.textMuted
-                              }}
-                            />
+                          return (
+                            <View key={i} className="flex-row items-start"
+                              style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
+                            >
+                              <View
+                                className="rounded-full mr-3"
+                                style={{
+                                  width: rw(5),
+                                  height: rh(5),
+                                  marginTop: rpm(7),
+                                  marginRight: rpm(8),
+                                  backgroundColor: colors.textMuted
+                                }}
+                              />
 
-                            <View className="flex-1">
-                              <View className="flex-row justify-between items-center">
-                                <CText className="font-medium" style={{ fontSize: rf(13) }}>
-                                  Approval - {a.Level - 1}
-                                </CText>
+                              <View className="flex-1">
+                                <View className="flex-row justify-between items-center">
+                                  <CText className="font-medium" style={{ fontSize: rf(13) }}>
+                                    Approval - {a.Level - 1}
+                                  </CText>
 
-                                <CText
-                                  className="rounded-full"
-                                  style={[
-                                    {
-                                      paddingHorizontal: rpm(6),
-                                      paddingVertical: rpm(2),
-                                      fontSize: rf(11)
-                                    },
-                                    style
-                                  ]}
-                                >
-                                  {a.UserResponse === '' ? "WAITING" : a.UserResponse}
-                                </CText>
-                              </View>
+                                  <CText
+                                    className="rounded-full"
+                                    style={[
+                                      {
+                                        paddingHorizontal: rpm(6),
+                                        paddingVertical: rpm(2),
+                                        fontSize: rf(11)
+                                      },
+                                      style
+                                    ]}
+                                  >
+                                    {a.UserResponse === '' ? "WAITING" : a.UserResponse}
+                                  </CText>
+                                </View>
 
-                              <View className="flex-row justify-between items-center">
-                                <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                                  {a.UserName}
-                                </CText>
+                                <View className="flex-row justify-between items-center">
+                                  <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                                    {a.UserName}
+                                  </CText>
 
-                                <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                                  {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
-                                </CText>
+                                  <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                                    {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+                                  </CText>
+                                </View>
                               </View>
                             </View>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )}
+                          );
+                        })}
+                      </View>
+                    )
+                  }
                 </TouchableOpacity>
               </Swipeable>
             </View>
@@ -594,16 +598,21 @@ const PurchaseRequest: React.FC = () => {
 
 export default PurchaseRequest;
 
-export function MappingPr(raw: any, items?: any): PrProps {
+export function MappingPr(raw: any, bp_id?: number, items?: any): PrProps {
+  const apprLevel = MapApproversPr({ raw, start_idx: 2 });
+  const asgLevel = apprLevel.find(x => x.UserId == bp_id);
+  const status = [raw.User2Response.trim(), raw.User3Response.trim(), raw.User4Response.trim()];
+
   return {
     Id: raw.Id,
     PrNo: raw.PrNo,
     DtmSubmit: raw.DtmSubmit ? new Date(raw.DtmSubmit) : null,
     User1Name: raw.User1Name,
-    Status: (raw.DtmResponse2 && raw.DtmResponse3 && raw.DtmResponse4) ? "APPROVED" : "",
+    Status: status.includes("REJECTED") ? "REJECTED" : status.every(res => res === "APPROVED") ? "APPROVED" : "",
     Remark: raw.Remark,
 
-    Approvers: MapApproversPr({ raw, start_idx: 2 }),
+    Approvers: apprLevel,
+    AssignLevel: asgLevel ? asgLevel.Level - 1 : undefined,
     ItemDetails: items
   };
 };
@@ -615,9 +624,11 @@ export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: nu
   while (raw[`User${i}Name`]) {
     result.push({
       Level: i,
+      UserId: raw[`User${i}`],
       UserApproved: raw[`User${i}Approved`],
       UserName: raw[`User${i}Name`],
       UserResponse: raw[`User${i}Response`],
+      Remark: raw[`Remark${i}`],
       DtmResponse: raw[`DtmResponse${i}`]
         ? raw[`DtmResponse${i}`].toString().trim() !== ""
           ? new Date(raw[`DtmResponse${i}`].replace(" ", "T"))

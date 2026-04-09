@@ -104,7 +104,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // logout semua account
       if (!username) {
-        await AsyncStorage.multiRemove(["accounts", "authData"]);
+        await AsyncStorage.multiRemove([
+          "accounts",
+          "authData",
+          "activeAccount",
+        ]);
 
         set({
           accounts: [],
@@ -127,8 +131,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (newActive) {
           await AsyncStorage.setItem("authData", newActive.Username);
+          await AsyncStorage.setItem("activeAccount", newActive.Username);
         } else {
           await AsyncStorage.removeItem("authData");
+          await AsyncStorage.removeItem("activeAccount");
         }
       }
 
@@ -206,69 +212,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isAuthLoaded: true });
     }
   },
-
-  // setAuth: async (authData) => {
-  //   try {
-  //     await AsyncStorage.setItem("authData", JSON.stringify(authData));
-
-  //     set({ authData, isAuthenticated: true });
-  //   } catch (e) {
-  //     throw e;
-  //   } finally {
-  //     set({ isAuthLoaded: true });
-  //   }
-  // },
-
-  // logout: async () => {
-  //   try {
-  //     await AsyncStorage.multiRemove(["authData"]);
-  //     set({
-  //       authData: null,
-  //       isAuthenticated: false,
-  //     });
-  //   } catch (e) {
-  //     throw e;
-  //   } finally {
-  //     set({ isAuthLoaded: false });
-  //   }
-  // },
-
-  // loadAuth: async () => {
-  //   try {
-  //     const [authData] = await AsyncStorage.multiGet(["authData"]).then((res) =>
-  //       res.map((r) => r[1]),
-  //     );
-
-  //     if (!authData) {
-  //       set({ isAuthenticated: false });
-  //       return;
-  //     }
-
-  //     const ticketParse = JSON.parse(authData) as UserAuthData;
-  //     const expirationDate = new Date(ticketParse.ExpiredAt);
-
-  //     const setDatas = {
-  //       authData: ticketParse,
-  //       isAuthenticated: true,
-  //     };
-
-  //     if (expirationDate <= new Date()) {
-  //       const createReq = await LoginApi<UserAuthData>(
-  //         ticketParse.Username,
-  //         "",
-  //         true,
-  //       );
-  //       if (createReq.Data) setDatas.authData = createReq.Data;
-  //       await AsyncStorage.setItem("authData", JSON.stringify(createReq));
-  //     }
-
-  //     set(setDatas);
-  //   } catch (e) {
-  //     throw e;
-  //   } finally {
-  //     set({ isAuthLoaded: true });
-  //   }
-  // },
 }));
 
 export async function LoginApi<T>(

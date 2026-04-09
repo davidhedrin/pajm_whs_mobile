@@ -80,3 +80,10 @@ export function useDefaultState<T>(defaultValue: T) {
 
   return [state, setState, reset] as const;
 }
+
+export function formatMoney(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
