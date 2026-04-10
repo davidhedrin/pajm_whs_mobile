@@ -13,7 +13,12 @@ module.exports = {
         regular: ["PoppinsRegular"],
         medium: ["PoppinsMedium"],
         semibold: ["PoppinsSemiBold"],
-        bolds: ["PoppinsBold"]
+        bolds: ["PoppinsBold"],
+
+        "regular-i": ["PoppinsItalic"],
+        "medium-i": ["PoppinsMediumItalic"],
+        "semibold-i": ["PoppinsSemiBoldItalic"],
+        "bolds-i": ["PoppinsBoldItalic"],
       }
     },
   },

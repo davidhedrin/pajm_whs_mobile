@@ -66,25 +66,12 @@ export type PrDetailProps = {
   SKU: string;
 };
 
-// export type PrDetailProps = {
-//   Dtm: Date | null;
-//   DtmSubmit: Date | null;
-//   Status: StatusPrPo;
+export type CheckAprLevelProps = {
+  show: boolean;
+  msg: string | null;
+};
 
-//   DtmResponse2: Date | null;
-//   DtmResponse3: Date | null;
-//   DtmResponse4: Date | null;
-
-//   Remark: string;
-//   Remark2: string;
-//   Remark3: string;
-//   Remark4: string;
-
-//   TotalAmount: number;
-
-//   User1: string;
-//   User1Email: string;
-//   User1Name: string;
-
-//   Approvers: ApproverLevel[];
-// };
+export type PrPoDetailPageProps = {
+  id: string;
+  doc_num: string;
+};

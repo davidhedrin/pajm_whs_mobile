@@ -37,7 +37,7 @@ const Alert = ({
             <Ionicons name={icon} size={rf(30)} color={colors[type]} />
           </View>
         }
-        <View style={{ marginStart: rpm(8) }}>
+        <View className='flex-1' style={{ marginStart: rpm(8) }}>
           <CText className="font-semibold" style={{ fontSize: rf(14) }}>
             {title}
           </CText>

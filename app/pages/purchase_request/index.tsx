@@ -5,7 +5,7 @@ import { OptionProps } from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, PrProps, ResponsiveScale } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PrPoDetailPageProps, PrProps, ResponsiveScale } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { formatDate, useDefaultState } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,11 +16,10 @@ import {
   View
 } from "react-native";
 
-import { useAuthStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore } from '@/hooks/zustand';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
-import { PRDetailProps } from './detail';
 
 type DateRangePicker = "start" | "end";
 
@@ -49,6 +48,7 @@ const PurchaseRequest: React.FC = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
+  const { showConfirm } = useConfirmStore();
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = () => {
@@ -102,7 +102,6 @@ const PurchaseRequest: React.FC = () => {
   const [startData, setStartData] = useState(0);
   const [startLimit] = useState(15);
   const [data, setData] = useState<PrProps[]>([]);
-  // const [totalData, setTotalData] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
   const resetFilter = () => {
@@ -138,7 +137,7 @@ const PurchaseRequest: React.FC = () => {
         start: currentStart,
         limit: startLimit,
         sort: "Id",
-        dir: "ASC",
+        dir: "DESC",
         gridfilters: inputSearchFilter.trim() !== "" ? JSON.stringify(searchGridFilter) : "",
         option2: statusFilter,
         dtm1: startDate ? startDate.toLocaleDateString("en-CA") : "",
@@ -402,7 +401,146 @@ const PurchaseRequest: React.FC = () => {
           }
           renderItem={({ item, index }: { item: PrProps; index: number }) => {
             const isExpanded = expandedId === item.Id;
-            return <View className='border-b border-gray-300'>
+            const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
+            const checkAprLevel = checkAprUserLevel(item, getCurAprLevel);
+
+            const content = (
+              <TouchableOpacity className="shadow-sm"
+                style={{
+                  paddingStart: rpm(12),
+                  paddingEnd: checkAprLevel.show ? rpm(8) : rpm(12),
+                  paddingVertical: rpm(10),
+                  backgroundColor: colors.surface
+                }}
+                onPress={() => {
+                  closeAllSwipe();
+                  router.push({
+                    pathname: "/pages/purchase_request/detail",
+                    params: {
+                      id: item.Id.toString(),
+                      doc_num: item.PrNo,
+                    } as PrPoDetailPageProps
+                  });
+                }}
+              >
+                <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
+                  <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
+                    {index + 1}. {item.PrNo}
+                  </CText>
+
+                  <View
+                    className="flex-row items-center rounded-full font-regular leading-none"
+                    style={[
+                      {
+                        paddingHorizontal: rpm(6),
+                        paddingVertical: rpm(5),
+                      },
+                      getStatusStyle(item.Status, colors)
+                    ]}
+                  >
+                    <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
+                    <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
+                      {item.Status === '' ? "ON PROGRESS" : item.Status}
+                    </CText>
+                  </View>
+                </View>
+
+                <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
+                  Req By: {item.User1Name}
+                </CText>
+
+                {/* 🔹 MAIN CONTENT */}
+                <View className='flex-row justify-between items-end'>
+                  {
+                    item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
+                      Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
+                    </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
+                  }
+
+
+                  <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
+                    <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
+                    <Ionicons
+                      name={isExpanded ? "chevron-up" : "chevron-down"}
+                      size={rf(17)}
+                      color={colors.text}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {
+                  isExpanded && (
+                    <View className="border-t-2 border-gray-200"
+                      style={{
+                        marginTop: rpm(9),
+                        paddingTop: rpm(9)
+                      }}
+                    >
+                      {/* APPROVAL LIST */}
+                      {item.Approvers.map((a, i) => {
+                        const style = getStatusStyle(a.UserResponse, colors);
+
+                        return (
+                          <View key={i} className="flex-row items-start"
+                            style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
+                          >
+                            <View
+                              className="rounded-full mr-3"
+                              style={{
+                                width: rw(5),
+                                height: rh(5),
+                                marginTop: rpm(7),
+                                marginRight: rpm(8),
+                                backgroundColor: colors.textMuted
+                              }}
+                            />
+
+                            <View className="flex-1">
+                              <View className="flex-row justify-between items-center">
+                                <CText className="font-medium" style={{ fontSize: rf(13) }}>
+                                  Approval - {a.Level - 1}
+                                </CText>
+
+                                <CText
+                                  className="rounded-full"
+                                  style={[
+                                    {
+                                      paddingHorizontal: rpm(6),
+                                      paddingVertical: rpm(2),
+                                      fontSize: rf(11)
+                                    },
+                                    style
+                                  ]}
+                                >
+                                  {a.UserResponse === '' ? "WAITING" : a.UserResponse}
+                                </CText>
+                              </View>
+
+                              <View className="flex-row justify-between items-center">
+                                <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                                  {a.UserName}
+                                </CText>
+
+                                <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                                  {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+                                </CText>
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )
+                }
+              </TouchableOpacity>
+            );
+
+            if (checkAprLevel.show) return <View className='border-b border-gray-300'
+              style={{
+                borderEndWidth: rpm(4),
+                borderEndColor: colors.primary
+              }}
+            >
               <Swipeable
                 ref={(ref) => {
                   if (ref) swipeableRefs.current.set(item.Id.toString(), ref);
@@ -417,8 +555,16 @@ const PurchaseRequest: React.FC = () => {
                         backgroundColor: colors.success,
                         paddingHorizontal: rpm(16)
                       }}
-                      onPress={() => {
+                      onPress={async () => {
                         swipeableRefs.current.get(item.Id.toString())?.close();
+
+                        const confirmed = await showConfirm({
+                          title: `Confirm Aproving!`,
+                          message: `Are you sure you want to Aprove this application? You can't undo this action!`,
+                          confirmText: "Yes, Confirm",
+                          cancelText: "No, Go back",
+                          icon: 'checkmark-circle-outline'
+                        });
                       }}
                     >
                       <View className='flex-row items-center'>
@@ -441,8 +587,16 @@ const PurchaseRequest: React.FC = () => {
                         backgroundColor: colors.danger,
                         paddingHorizontal: rpm(16)
                       }}
-                      onPress={() => {
+                      onPress={async () => {
                         swipeableRefs.current.get(item.Id.toString())?.close();
+
+                        const confirmed = await showConfirm({
+                          title: `Confirm Rejecting!`,
+                          message: `Are you sure you want to Reject this application? You can't undo this action!`,
+                          confirmText: "Yes, Reject",
+                          cancelText: "No, Go back",
+                          icon: 'information-circle-outline'
+                        });
                       }}
                     >
                       <View className='flex-row items-center'>
@@ -461,133 +615,12 @@ const PurchaseRequest: React.FC = () => {
                   </View>
                 )}
               >
-                <TouchableOpacity className="shadow-sm"
-                  style={{
-                    paddingHorizontal: rpm(12),
-                    paddingVertical: rpm(10),
-                    backgroundColor: colors.surface
-                  }}
-                  onPress={() => {
-                    router.push({
-                      pathname: "/pages/purchase_request/detail",
-                      params: {
-                        id: item.Id.toString(),
-                        pr_no: item.PrNo,
-                      } as PRDetailProps
-                    });
-                  }}
-                >
-                  <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
-                    <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
-                      {index + 1}. {item.PrNo}
-                    </CText>
-
-                    <View
-                      className="flex-row items-center rounded-full font-regular leading-none"
-                      style={[
-                        {
-                          paddingHorizontal: rpm(6),
-                          paddingVertical: rpm(5),
-                        },
-                        getStatusStyle(item.Status, colors)
-                      ]}
-                    >
-                      <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-                      <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
-                        {item.Status === '' ? "ON PROGRESS" : item.Status}
-                      </CText>
-                    </View>
-                  </View>
-
-                  <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
-                    Req By: {item.User1Name}
-                  </CText>
-
-                  {/* 🔹 MAIN CONTENT */}
-                  <View className='flex-row justify-between items-end'>
-                    {
-                      item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
-                        Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
-                      </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
-                    }
-
-
-                    <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
-                      <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
-                      <Ionicons
-                        name={isExpanded ? "chevron-up" : "chevron-down"}
-                        size={rf(17)}
-                        color={colors.text}
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  {
-                    isExpanded && (
-                      <View className="border-t-2 border-gray-200"
-                        style={{
-                          marginTop: rpm(9),
-                          paddingTop: rpm(9)
-                        }}
-                      >
-                        {/* APPROVAL LIST */}
-                        {item.Approvers.map((a, i) => {
-                          const style = getStatusStyle(a.UserResponse, colors);
-
-                          return (
-                            <View key={i} className="flex-row items-start"
-                              style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
-                            >
-                              <View
-                                className="rounded-full mr-3"
-                                style={{
-                                  width: rw(5),
-                                  height: rh(5),
-                                  marginTop: rpm(7),
-                                  marginRight: rpm(8),
-                                  backgroundColor: colors.textMuted
-                                }}
-                              />
-
-                              <View className="flex-1">
-                                <View className="flex-row justify-between items-center">
-                                  <CText className="font-medium" style={{ fontSize: rf(13) }}>
-                                    Approval - {a.Level - 1}
-                                  </CText>
-
-                                  <CText
-                                    className="rounded-full"
-                                    style={[
-                                      {
-                                        paddingHorizontal: rpm(6),
-                                        paddingVertical: rpm(2),
-                                        fontSize: rf(11)
-                                      },
-                                      style
-                                    ]}
-                                  >
-                                    {a.UserResponse === '' ? "WAITING" : a.UserResponse}
-                                  </CText>
-                                </View>
-
-                                <View className="flex-row justify-between items-center">
-                                  <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                                    {a.UserName}
-                                  </CText>
-
-                                  <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                                    {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
-                                  </CText>
-                                </View>
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    )
-                  }
-                </TouchableOpacity>
+                {content}
               </Swipeable>
+            </View>
+
+            return <View className='border-b border-gray-300'>
+              {content}
             </View>
           }}
         />
@@ -612,9 +645,61 @@ export function MappingPr(raw: any, bp_id?: number, items?: any): PrProps {
     Remark: raw.Remark,
 
     Approvers: apprLevel,
-    AssignLevel: asgLevel ? asgLevel.Level - 1 : undefined,
+    AssignLevel: asgLevel ? asgLevel.Level : undefined,
     ItemDetails: items
   };
+};
+
+export function checkAprUserLevel(prData: PrProps, curLevel?: ApproverLevel): CheckAprLevelProps {
+  if (curLevel !== undefined) {
+    const allApproval = prData.Approvers;
+
+    const curLevelVal = curLevel.Level;
+    const curResponse = curLevel.UserResponse;
+
+    const initLvl_1 = 2;
+    const initLvl_2 = 3;
+    const initLvl_3 = 4;
+
+    if (curLevelVal == initLvl_1) {
+      if (curResponse !== '') {
+        if (curResponse === 'APPROVED') return { show: false, msg: "Thank's for your response! You has been already approve this application." };
+        else return { show: false, msg: "Thank's for your response! You has chosen to decline this application." };
+      }
+
+      return { show: true, msg: null }
+    } else if (curLevelVal == initLvl_2) {
+      const prevLevel = allApproval.find(x => x.Level == (initLvl_2 - 1));
+      if (!prevLevel) return { show: false, msg: null }
+
+      if (prevLevel.UserResponse === '') return { show: false, msg: "Please waiting a moment! The previous Approval-1 is not response yet." };
+      else {
+        if (prevLevel.UserResponse === 'REJECTED') return { show: false, msg: null };
+      }
+
+      if (curResponse !== '') {
+        if (curResponse === 'APPROVED') return { show: false, msg: "Thank's for your response! You has been already approve this application." };
+        else return { show: false, msg: "Thank's for your response! You has chosen to decline this application." };
+      }
+
+      return { show: true, msg: null }
+    } else if (curLevelVal == initLvl_3) {
+      const prevLevel = allApproval.find(x => x.Level == (initLvl_3 - 1));
+      if (!prevLevel) return { show: false, msg: null }
+
+      if (prevLevel.UserResponse === '') return { show: false, msg: "Please waiting a moment! The previous Approval-2 is not response yet." };
+      else {
+        if (prevLevel.UserResponse === 'REJECTED') return { show: false, msg: null };
+      }
+
+      if (curResponse !== '') {
+        if (curResponse === 'APPROVED') return { show: false, msg: "Thank's for your response! You has been already approve this application." };
+        else return { show: false, msg: "Thank's for your response! You has chosen to decline this application." };
+      }
+
+      return { show: true, msg: null }
+    } else return { show: false, msg: "However, you are currently not assigned to this application, Thank you!" };
+  } else return { show: false, msg: "However, you are currently not assigned to this application, Thank you!" };
 };
 
 export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: number; }): ApproverLevel[] {
@@ -670,4 +755,11 @@ function SummaryCard({ title, count, color, icon, color_scheme, scales }: Summar
       </View>
     </View>
   );
+};
+
+export async function PrAction({ action, pr_id }: {
+  action: "APPROVED" | "REJECTED",
+  pr_id: number,
+}) {
+
 };

@@ -1,34 +1,31 @@
+import Alert from '@/components/alert';
 import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
-import { useAuthStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, PrProps } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PrPoDetailPageProps, PrProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { formatDate, formatMoney, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import { getStatusStyle, MappingPr } from '.';
-
-export type PRDetailProps = {
-  id: string,
-  pr_no: string
-}
+import { checkAprUserLevel, getStatusStyle, MappingPr } from '.';
 
 const PRDetail = () => {
   const { authData } = useAuthStore();
-  const params = useLocalSearchParams<PRDetailProps>();
+  const params = useLocalSearchParams<PrPoDetailPageProps>();
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
-  const router = useRouter();
+  const { showConfirm } = useConfirmStore();
 
   const [loading, setLoading] = useState(true);
   const [dataPr, setDataPr] = useState<PrProps | null>(null);
   const [curAprLevel, setCurAprLevel] = useState<ApproverLevel | null>(null);
   const [remark, setRemark] = useState("");
+  const [resCheckAprLevel, setResCheckAprLevel] = useState<CheckAprLevelProps | null>(null);
 
   const [grandTotalItems, setGrandTotalItems] = useState(0);
 
@@ -52,6 +49,9 @@ const PRDetail = () => {
           return total + item.Quantity * item.UnitPrice;
         }, 0);
         setGrandTotalItems(grandTotalItems ?? 0);
+
+        const checkAprLevel = checkAprUserLevel(prData, getCurAprLevel);
+        setResCheckAprLevel(checkAprLevel);
       };
 
     } catch (error: any) {
@@ -89,6 +89,23 @@ const PRDetail = () => {
         >
           {
             dataPr ? <View style={{ paddingTop: rpm(16) }}>
+              {
+                dataPr.Status !== "" && (
+                  <View style={{ marginBottom: rpm(16) }}>
+                    <Alert
+                      type={dataPr.Status === 'APPROVED' ? "success" : "danger"}
+                      icon='checkmark-circle-outline'
+                      title={`${dataPr.Status}!`}
+                      msg={
+                        dataPr.Status === 'APPROVED' ?
+                          "This application was reviewed and has been finish approved successfully." :
+                          "Sorry, but this request has been rejected for any reason. Please check timelines!"
+                      }
+                    />
+                  </View>
+                )
+              }
+
               <View
                 className='border-dashed'
                 style={{
@@ -126,6 +143,13 @@ const PRDetail = () => {
                   <CText className='font-semibold' style={{ fontSize: rf(13) }}>{dataPr.User1Name}</CText>
                 </View>
 
+                <View style={{ marginBottom: rpm(4) }}>
+                  <CText>Request Remark: </CText>
+                  <CText className='font-semibold' style={{ fontSize: rf(13) }}>
+                    {dataPr.Remark ? (dataPr.Remark.trim() !== "" ? dataPr.Remark : "-") : "-"}
+                  </CText>
+                </View>
+
                 <View className='flex-row justify-between' style={{ marginBottom: rpm(4) }}>
                   <View>
                     <CText>Request At: </CText>
@@ -137,95 +161,91 @@ const PRDetail = () => {
                   </View>
                   {
                     dataPr.AssignLevel !== undefined && <View className='items-end'>
-                      <CText>Assigned</CText>
-                      <CText className='font-semibold' style={{ fontSize: rf(13) }}>Approval - {dataPr.AssignLevel}</CText>
+                      <CText>Assign As</CText>
+                      <CText className='font-semibold' style={{ fontSize: rf(13) }}>Approval - {(dataPr.AssignLevel ?? 2) - 1}</CText>
                     </View>
                   }
                 </View>
               </View>
 
-              <View style={{ marginBottom: rpm(16) }}>
-                <CText
-                  className="font-medium leading-none"
-                  style={{ fontSize: rf(13), marginBottom: rpm(6) }}
-                >
-                  Remark
-                </CText>
-                <Input
-                  value={remark}
-                  onChangeText={(val) => setRemark(val)}
-                  placeholder="Leave your comment here if any"
-                  multiline
-                  numberOfLines={3}
-                // style={{
-                //   minHeight: rpm(3 * 24),
-                //   textAlignVertical: 'top'
-                // }}
-                />
-              </View>
-
-              {/* <Alert
-                type='success'
-                icon='checkmark-circle-outline'
-                title='Approved!'
-                msg="Thank's for your response! You has been already approve this application."
-              /> */}
               {
-                dataPr.Status !== 'APPROVED' && <View style={{ marginBottom: rpm(14) }}>
-                  {
-                    curAprLevel ? (
-                      curAprLevel.UserResponse === "" ? <View>
-                        <View className='items-center' style={{ marginBottom: rpm(6) }}>
-                          <CText className='text-center' style={{ width: rw(260) }}>
-                            You are assigned as the <CText className='font-semibold'>Approval - {dataPr.AssignLevel}</CText> user who approves this application.
-                          </CText>
-                        </View>
-
-                        <View className="flex-row overflow-hidden self-center"
-                          style={{ borderRadius: rpm(10) }}
-                        >
-                          <TouchableOpacity
-                            className="flex-row justify-center items-center"
-                            style={{
-                              paddingHorizontal: rpm(20),
-                              paddingVertical: rpm(10),
-                              backgroundColor: colors.success,
-                            }}
-                            onPress={() => { }}
-                          >
-                            <Ionicons name='checkmark-outline' size={rf(17)} color={"#fff"} />
-                            <CText className="font-medium ms-1" style={{ fontSize: rf(13), color: "#fff" }}>
-                              Approve
-                            </CText>
-                          </TouchableOpacity>
-
-                          <View className="w-[1px] bg-gray-200" />
-
-                          <TouchableOpacity
-                            className="flex-row justify-center items-center"
-                            style={{
-                              paddingHorizontal: rpm(20),
-                              paddingVertical: rpm(10),
-                              backgroundColor: colors.danger,
-                            }}
-                            onPress={() => { }}
-                          >
-                            <Ionicons name='close-outline' size={rf(17)} color={"#fff"} />
-                            <CText className="font-medium ms-1" style={{ fontSize: rf(13), color: "#fff" }}>
-                              Reject
-                            </CText>
-                          </TouchableOpacity>
-                        </View>
-                      </View> : curAprLevel.UserResponse === 'APPROVED' ? <CText>
-                        Thank's for your response! You has been already approve this application
-                      </CText> : <CText>
-                        However, you has chosen to decline this application.
+                resCheckAprLevel && (
+                  resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
+                    <View style={{ marginBottom: rpm(10) }}>
+                      <CText
+                        className="font-medium leading-none"
+                        style={{ fontSize: rf(13), marginBottom: rpm(6) }}
+                      >
+                        Remark
                       </CText>
-                    ) : <CText>
-                      However, you have not been assigned for this application, Thanks.
-                    </CText>
-                  }
-                </View>
+                      <Input
+                        value={remark}
+                        onChangeText={(val) => setRemark(val)}
+                        placeholder="Leave your comment here if any"
+                        multiline
+                        numberOfLines={3}
+                      />
+                    </View>
+
+                    <View className='items-center' style={{ marginBottom: rpm(6) }}>
+                      <CText className='font-medium-i text-center'>
+                        You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPr.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!
+                      </CText>
+                    </View>
+
+                    <View className="flex-row overflow-hidden self-center"
+                      style={{ borderRadius: rpm(10) }}
+                    >
+                      <TouchableOpacity
+                        className="flex-row justify-center items-center"
+                        style={{
+                          paddingHorizontal: rpm(20),
+                          paddingVertical: rpm(10),
+                          backgroundColor: colors.success,
+                        }}
+                        onPress={async () => {
+                          const confirmed = await showConfirm({
+                            title: `Confirm Aproving!`,
+                            message: `Are you sure you want to Aprove this application? You can't undo this action!`,
+                            confirmText: "Yes, Confirm",
+                            cancelText: "No, Go back",
+                            icon: 'checkmark-circle-outline'
+                          });
+                        }}
+                      >
+                        <Ionicons name='checkmark-outline' size={rf(17)} color={"#fff"} />
+                        <CText className="font-medium ms-1" style={{ fontSize: rf(13), color: "#fff" }}>
+                          Approve
+                        </CText>
+                      </TouchableOpacity>
+
+                      <View className="w-[1px] bg-gray-200" />
+
+                      <TouchableOpacity
+                        className="flex-row justify-center items-center"
+                        style={{
+                          paddingHorizontal: rpm(20),
+                          paddingVertical: rpm(10),
+                          backgroundColor: colors.danger,
+                        }}
+                        onPress={async () => {
+                          const confirmed = await showConfirm({
+                            title: `Confirm Rejecting!`,
+                            message: `Are you sure you want to Reject this application? You can't undo this action!`,
+                            confirmText: "Yes, Reject",
+                            cancelText: "No, Go back",
+                            icon: 'information-circle-outline'
+                          });
+                        }}
+                      >
+                        <Ionicons name='close-outline' size={rf(17)} color={"#fff"} />
+                        <CText className="font-medium ms-1" style={{ fontSize: rf(13), color: "#fff" }}>
+                          Reject
+                        </CText>
+                      </TouchableOpacity>
+                    </View>
+                  </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-center'>{resCheckAprLevel.msg}</CText>
+                )
               }
 
               <View style={{ marginBottom: rpm(16) }}>
@@ -364,8 +384,8 @@ const PRDetail = () => {
                               </CText>
 
                               <View className="flex-row justify-between">
-                                <CText className="font-regular" style={{ fontSize: rf(13) }}>Request Qty</CText>
-                                <CText className="font-medium" style={{ fontSize: rf(13) }}>{x.Quantity} {x.MeasurementName}</CText>
+                                <CText className="font-regular underline" style={{ fontSize: rf(13) }}>Request Qty</CText>
+                                <CText className="font-medium underline" style={{ fontSize: rf(13) }}>{x.Quantity} {x.MeasurementName}</CText>
                               </View>
                             </View>
 

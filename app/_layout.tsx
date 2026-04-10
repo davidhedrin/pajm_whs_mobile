@@ -31,6 +31,11 @@ export default function RootLayout() {
     PoppinsMedium: require("../assets/fonts/Poppins-Medium.ttf"),
     PoppinsSemiBold: require("../assets/fonts/Poppins-SemiBold.ttf"),
     PoppinsBold: require("../assets/fonts/Poppins-Bold.ttf"),
+    
+    PoppinsItalic: require("../assets/fonts/Poppins-Italic.ttf"),
+    PoppinsMediumItalic: require("../assets/fonts/Poppins-MediumItalic.ttf"),
+    PoppinsSemiBoldItalic: require("../assets/fonts/Poppins-SemiBoldItalic.ttf"),
+    PoppinsBoldItalic: require("../assets/fonts/Poppins-BoldItalic.ttf"),
   });
 
   useEffect(() => {
