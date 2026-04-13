@@ -3,16 +3,16 @@ import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
-import { useAuthStore, useConfirmStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, CheckAprLevelProps, PrPoDetailPageProps, PrProps } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps, PrProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { formatDate, formatMoney, showToast } from '@/lib/utils';
+import { ExecuteMinDelay, formatDate, formatMoney, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import { checkAprUserLevel, getStatusStyle, MappingPr } from '.';
+import { checkAprUserLevel, getStatusStyle, MappingPr, PrAction } from '.';
 
 const PRDetail = () => {
   const { authData } = useAuthStore();
@@ -20,6 +20,7 @@ const PRDetail = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const { showConfirm } = useConfirmStore();
+  const loadingPage = useLoadingStore.getState();
 
   const [loading, setLoading] = useState(true);
   const [dataPr, setDataPr] = useState<PrProps | null>(null);
@@ -67,6 +68,35 @@ const PRDetail = () => {
   useEffect(() => {
     fatchDatas(params.id);
   }, []);
+
+  const handlePrAction = async ({ action, pr_id, level, remark }: PrPoActionProps) => {
+    const confirmed = await showConfirm({
+      title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
+      message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} this application? You can't undo this action!`,
+      confirmText: `Yes, ${action === 'APPROVED' ? "Aprove" : "Reject"}`,
+      cancelText: "No, Go back",
+      icon: action === 'APPROVED' ? "checkmark-circle-outline" : "close-circle-outline"
+    });
+    if (!confirmed) return;
+
+    loadingPage.show();
+    try {
+      const reqDelay = await ExecuteMinDelay(PrAction({ action, pr_id, level, remark }), 2000);
+      await fatchDatas(pr_id.toString());
+      showToast({
+        type: "success",
+        title: "Update Finish",
+        message: reqDelay.Message
+      });
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Request Failed",
+        message: error.message
+      });
+    }
+    loadingPage.hide();
+  };
 
   return (
     <ScreenWrapper edges={['bottom']}>
@@ -204,12 +234,11 @@ const PRDetail = () => {
                           backgroundColor: colors.success,
                         }}
                         onPress={async () => {
-                          const confirmed = await showConfirm({
-                            title: `Confirm Aproving!`,
-                            message: `Are you sure you want to Aprove this application? You can't undo this action!`,
-                            confirmText: "Yes, Confirm",
-                            cancelText: "No, Go back",
-                            icon: 'checkmark-circle-outline'
+                          if (curAprLevel) handlePrAction({
+                            action: 'APPROVED',
+                            level: curAprLevel.Level,
+                            pr_id: dataPr.Id,
+                            remark: remark.trim()
                           });
                         }}
                       >
@@ -229,12 +258,11 @@ const PRDetail = () => {
                           backgroundColor: colors.danger,
                         }}
                         onPress={async () => {
-                          const confirmed = await showConfirm({
-                            title: `Confirm Rejecting!`,
-                            message: `Are you sure you want to Reject this application? You can't undo this action!`,
-                            confirmText: "Yes, Reject",
-                            cancelText: "No, Go back",
-                            icon: 'information-circle-outline'
+                          if (curAprLevel) handlePrAction({
+                            action: 'REJECTED',
+                            level: curAprLevel.Level,
+                            pr_id: dataPr.Id,
+                            remark: remark.trim()
                           });
                         }}
                       >

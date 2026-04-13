@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { GlobalConfirmModal } from "@/components/confirm-alert";
+import LoadingOverlay from "@/components/loading";
 import { useAuthStore } from "@/hooks/zustand";
 import { useResposiveScale } from "@/lib/resposive";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,7 +32,7 @@ export default function RootLayout() {
     PoppinsMedium: require("../assets/fonts/Poppins-Medium.ttf"),
     PoppinsSemiBold: require("../assets/fonts/Poppins-SemiBold.ttf"),
     PoppinsBold: require("../assets/fonts/Poppins-Bold.ttf"),
-    
+
     PoppinsItalic: require("../assets/fonts/Poppins-Italic.ttf"),
     PoppinsMediumItalic: require("../assets/fonts/Poppins-MediumItalic.ttf"),
     PoppinsSemiBoldItalic: require("../assets/fonts/Poppins-SemiBoldItalic.ttf"),
@@ -69,11 +70,13 @@ export default function RootLayout() {
       <BaseToast
         {...props}
         style={{
+          height: "auto",
           borderLeftColor: '#34D399',
           borderRadius: rpm(10),
           alignItems: "center"
         }}
         contentContainerStyle={{
+          paddingVertical: rpm(8),
           paddingHorizontal: rpm(12),
         }}
         text1Style={{
@@ -92,6 +95,7 @@ export default function RootLayout() {
             style={{ marginRight: rpm(12) }}
           />
         )}
+        text2NumberOfLines={5}
       />
     ),
 
@@ -99,11 +103,13 @@ export default function RootLayout() {
       <BaseToast
         {...props}
         style={{
+          height: "auto",
           borderLeftColor: '#3B82F6',
           borderRadius: rpm(10),
           alignItems: 'center',
         }}
         contentContainerStyle={{
+          paddingVertical: rpm(8),
           paddingHorizontal: rpm(12),
         }}
         text1Style={{
@@ -122,6 +128,7 @@ export default function RootLayout() {
             style={{ marginRight: rpm(12) }}
           />
         )}
+        text2NumberOfLines={5}
       />
     ),
 
@@ -129,11 +136,13 @@ export default function RootLayout() {
       <ErrorToast
         {...props}
         style={{
+          height: "auto",
           borderLeftColor: '#F87171',
           borderRadius: rpm(10),
           alignItems: "center"
         }}
         contentContainerStyle={{
+          paddingVertical: rpm(8),
           paddingHorizontal: rpm(12),
         }}
         text1Style={{
@@ -152,6 +161,7 @@ export default function RootLayout() {
             style={{ marginRight: rpm(12) }}
           />
         )}
+        text2NumberOfLines={5}
       />
     ),
   };
@@ -162,6 +172,8 @@ export default function RootLayout() {
 
       <Toast config={toastConfig} />
       <GlobalConfirmModal />
+
+      <LoadingOverlay />
     </GestureHandlerRootView>
   </ThemeProvider>;
 }

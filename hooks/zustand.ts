@@ -282,3 +282,16 @@ export const useConfirmStore = create<ConfirmStore>((set, get) => ({
     set({ visible: false, params: null, resolver: null });
   },
 }));
+
+type LoadingStore = {
+  visible: boolean;
+  show: () => void;
+  hide: () => void;
+};
+
+export const useLoadingStore = create<LoadingStore>((set) => ({
+  visible: false,
+
+  show: () => set({ visible: true }),
+  hide: () => set({ visible: false }),
+}));

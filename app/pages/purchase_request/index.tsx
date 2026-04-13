@@ -5,9 +5,9 @@ import { OptionProps } from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, CheckAprLevelProps, PrPoDetailPageProps, PrProps, ResponsiveScale } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps, PrProps, ResponsiveScale } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { formatDate, useDefaultState } from '@/lib/utils';
+import { ExecuteMinDelay, formatDate, showToast, useDefaultState } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -16,7 +16,7 @@ import {
   View
 } from "react-native";
 
-import { useAuthStore, useConfirmStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
@@ -49,6 +49,7 @@ const PurchaseRequest: React.FC = () => {
   const { colors } = useTheme();
   const router = useRouter();
   const { showConfirm } = useConfirmStore();
+  const loadingPage = useLoadingStore.getState();
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = () => {
@@ -102,7 +103,7 @@ const PurchaseRequest: React.FC = () => {
   const [startData, setStartData] = useState(0);
   const [startLimit] = useState(15);
   const [data, setData] = useState<PrProps[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
 
   const resetFilter = () => {
     resetStatusFilter();
@@ -111,7 +112,7 @@ const PurchaseRequest: React.FC = () => {
   };
 
   const fatchDatas = async (isNewSearch: boolean = false) => {
-    if (loading) return;
+    if (loadingData) return;
 
     if (isNewSearch == true) {
       resetOnEndReCalled();
@@ -120,7 +121,7 @@ const PurchaseRequest: React.FC = () => {
     }
     const currentStart = isNewSearch === true ? 0 : startData;
 
-    setLoading(true);
+    setLoadingData(true);
 
     const searchGridFilter = {
       f_0_field: "PrNo",
@@ -158,7 +159,7 @@ const PurchaseRequest: React.FC = () => {
     // setData(resData);
     setData(prev => [...prev, ...resData]);
 
-    setLoading(false);
+    setLoadingData(false);
   };
 
   const [isFirstRender, setIsFirstRender] = useState(true);
@@ -169,6 +170,37 @@ const PurchaseRequest: React.FC = () => {
     };
     firstInit();
   }, []);
+
+  const handlePrAction = async ({ action, pr_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
+    const confirmed = await showConfirm({
+      title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
+      message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} application "${doc_num}"?`,
+      confirmText: `Yes, ${action === 'APPROVED' ? "Aprove" : "Reject"}`,
+      cancelText: "No, Go back",
+      icon: action === 'APPROVED' ? "checkmark-circle-outline" : "close-circle-outline"
+    });
+    if (!confirmed) return;
+
+    loadingPage.show();
+    await PrAction({ action, pr_id, level, remark });
+
+    try {
+      const reqDelay = await ExecuteMinDelay(PrAction({ action, pr_id, level, remark }), 2000);
+      await fatchDatas();
+      showToast({
+        type: "success",
+        title: "Update Finish",
+        message: reqDelay.Message
+      });
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Request Failed",
+        message: error.message
+      });
+    }
+    loadingPage.hide();
+  };
 
   return (
     <ScreenWrapper scrollable={false} edges={['bottom']}>
@@ -367,7 +399,7 @@ const PurchaseRequest: React.FC = () => {
           }}
           onEndReachedThreshold={0.3}
           ListFooterComponent={
-            loading ? <View className='flex-row justify-center items-center'
+            loadingData ? <View className='flex-row justify-center items-center'
               style={{ marginBottom: rpm(18), marginTop: rpm(8) }}
             >
               <ActivityIndicator size="small" />
@@ -377,7 +409,7 @@ const PurchaseRequest: React.FC = () => {
           ListEmptyComponent={
             <View>
               {
-                !loading && <View className="items-center justify-center shadow-md"
+                !loadingData && <View className="items-center justify-center shadow-md"
                   style={{
                     paddingHorizontal: rpm(16),
                     paddingVertical: rpm(20),
@@ -558,12 +590,12 @@ const PurchaseRequest: React.FC = () => {
                       onPress={async () => {
                         swipeableRefs.current.get(item.Id.toString())?.close();
 
-                        const confirmed = await showConfirm({
-                          title: `Confirm Aproving!`,
-                          message: `Are you sure you want to Aprove this application? You can't undo this action!`,
-                          confirmText: "Yes, Confirm",
-                          cancelText: "No, Go back",
-                          icon: 'checkmark-circle-outline'
+                        if (getCurAprLevel) handlePrAction({
+                          action: 'APPROVED',
+                          level: getCurAprLevel.Level,
+                          pr_id: item.Id,
+                          remark: "",
+                          doc_num: item.PrNo
                         });
                       }}
                     >
@@ -590,12 +622,12 @@ const PurchaseRequest: React.FC = () => {
                       onPress={async () => {
                         swipeableRefs.current.get(item.Id.toString())?.close();
 
-                        const confirmed = await showConfirm({
-                          title: `Confirm Rejecting!`,
-                          message: `Are you sure you want to Reject this application? You can't undo this action!`,
-                          confirmText: "Yes, Reject",
-                          cancelText: "No, Go back",
-                          icon: 'information-circle-outline'
+                        if (getCurAprLevel) handlePrAction({
+                          action: 'REJECTED',
+                          level: getCurAprLevel.Level,
+                          pr_id: item.Id,
+                          remark: "",
+                          doc_num: item.PrNo
                         });
                       }}
                     >
@@ -757,9 +789,16 @@ function SummaryCard({ title, count, color, icon, color_scheme, scales }: Summar
   );
 };
 
-export async function PrAction({ action, pr_id }: {
-  action: "APPROVED" | "REJECTED",
-  pr_id: number,
-}) {
+export async function PrAction({ action, pr_id, level, remark }: PrPoActionProps) {
+  const createReq = await callApi<string>({
+    endpoint: "ApproveRejectPr",
+    params: {
+      action,
+      pr_id,
+      level: level - 1,
+      remark
+    }
+  });
 
+  return createReq;
 };

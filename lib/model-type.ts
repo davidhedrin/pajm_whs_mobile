@@ -75,3 +75,10 @@ export type PrPoDetailPageProps = {
   id: string;
   doc_num: string;
 };
+
+export type PrPoActionProps = {
+  action: "APPROVED" | "REJECTED";
+  pr_id: number;
+  level: number;
+  remark: string;
+};
