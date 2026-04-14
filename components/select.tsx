@@ -85,7 +85,7 @@ const Select: React.FC<SelectProps> = ({
           className="flex-row items-center justify-between border-gray-300/80"
           style={{
             paddingHorizontal: rpm(10),
-            paddingVertical: rpm(11),
+            paddingVertical: rpm(10),
             borderWidth: visible ? rpm(2) : rpm(1),
 
             borderTopLeftRadius: !prefixGroup ? 10 : undefined,
@@ -174,7 +174,7 @@ const Select: React.FC<SelectProps> = ({
                           style={{
                             marginHorizontal: rpm(6),
                             paddingHorizontal: rpm(10),
-                            paddingVertical: rpm(11),
+                            paddingVertical: rpm(10),
                             borderRadius: rpm(10),
                             backgroundColor: isSelected ? colors.bg_primary : undefined
                           }}

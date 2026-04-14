@@ -43,8 +43,8 @@ const Button = ({
       disabled={isDisabled}
       style={[
         {
-          paddingHorizontal: rpm(12),
-          paddingVertical: rpm(11),
+          paddingHorizontal: rpm(8),
+          paddingVertical: rpm(10),
           borderRadius: rpm(10)
         },
         style

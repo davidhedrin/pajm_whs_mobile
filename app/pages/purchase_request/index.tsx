@@ -5,7 +5,7 @@ import { OptionProps } from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps, PrProps, ResponsiveScale } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps, PrProps, ResponsiveScale, SortFilterProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, formatDate, showToast, useDefaultState } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,7 +45,7 @@ export function getStatusStyle(status: string, colors: ColorScheme) {
   }
 };
 
-const PurchaseRequest: React.FC = () => {
+const PurchaseRequest = () => {
   const { authData } = useAuthStore();
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
@@ -76,6 +76,9 @@ const PurchaseRequest: React.FC = () => {
   ];
   const [inputSearchFilter, setInputSearchFilter] = useState("");
   const [statusFilter, setStatusFilter, resetStatusFilter] = useDefaultState<string>(DEFAULT_STATUS_FILTER);
+
+  const [openModalSortFilter, setOpenModaSortlFilter] = useState(false);
+  const [sortFilter, setSortFilter, resetSortFilter] = useDefaultState<SortFilterProps[]>([{ key: "Id", dir: "DESC" }]);
 
   const [startDate, setStartDate, resetStartDate] = useDefaultState<Date | undefined>(undefined);
   const [endDate, setEndDate, resetEndDate] = useDefaultState<Date | undefined>(undefined);
@@ -140,8 +143,7 @@ const PurchaseRequest: React.FC = () => {
       params: {
         start: currentStart,
         limit: startLimit,
-        sort: "Id",
-        dir: "DESC",
+        sort: JSON.stringify(sortFilter),
         gridfilters: inputSearchFilter.trim() !== "" ? JSON.stringify(searchGridFilter) : "",
         option2: filterStatus,
         dtm1: startDate ? startDate.toLocaleDateString("en-CA") : "",
@@ -212,6 +214,7 @@ const PurchaseRequest: React.FC = () => {
 
   return (
     <ScreenWrapper scrollable={false} edges={['bottom']}>
+      {/* Modal show filter option */}
       <BaseModal
         visible={openModalFilter}
         onClose={setOpenModalFilter}
@@ -307,6 +310,63 @@ const PurchaseRequest: React.FC = () => {
         )
       }
 
+
+      {/* Modal show filter sort */}
+      <BaseModal
+        visible={openModalSortFilter}
+        onClose={setOpenModaSortlFilter}
+        resolveTitle='Apply'
+        resolveAction={() => {
+          setOpenModaSortlFilter(false);
+          fatchDatas(true);
+        }}
+      >
+        <View className='flex-row justify-between items-center' style={{ marginBottom: rpm(10) }}>
+          <CText className="font-semibold" style={{ fontSize: rf(14), }}>Sort Filter</CText>
+
+          <TouchableOpacity onPress={resetSortFilter}>
+            <CText className="font-semibold" style={{ fontSize: rf(14), color: colors.primary }}>
+              <Ionicons name='refresh-sharp' size={rf(16)} /> Reset
+            </CText>
+          </TouchableOpacity>
+        </View>
+
+        {
+          sortFilter.map((x, i) => (
+            <View key={i} className='flex-row items-center justify-between' style={{ marginBottom: rpm(6) }}>
+              <View className='w-2/3' style={{ paddingEnd: rpm(6) }}>
+                <Input
+                  value={x.key}
+                  // onChangeText={onChange}
+                  style={{
+                    paddingTop: rpm(10),
+                    paddingBottom: rpm(7),
+                  }}
+                  placeholder="Choose Key"
+                />
+              </View>
+              <View className='w-1/3'>
+                <Input
+                  value={x.dir}
+                  // onChangeText={onChange}
+                  style={{
+                    paddingTop: rpm(10),
+                    paddingBottom: rpm(7),
+                  }}
+                  placeholder="ASC/DESC"
+                />
+              </View>
+            </View>
+          ))
+        }
+
+        <TouchableOpacity onPress={() => setSortFilter(prev => [...prev, { key: "", dir: "" }])}>
+          <CText className="font-semibold" style={{ fontSize: rf(14), color: colors.primary }}>
+            <Ionicons name='add-outline' size={rf(16)} /> Add More
+          </CText>
+        </TouchableOpacity>
+      </BaseModal>
+
       <View
         style={{
           paddingTop: rpm(16),
@@ -379,6 +439,7 @@ const PurchaseRequest: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-row items-center"
+            onPress={() => setOpenModaSortlFilter(true)}
             style={{
               borderRadius: rpm(10),
               paddingHorizontal: rpm(10),

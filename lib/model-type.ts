@@ -5,6 +5,11 @@ export type ResponsiveScale = {
   rf: (size: number) => number;
 };
 
+export type SortFilterProps = {
+  key: string;
+  dir: string;
+};
+
 export type ApiResponse<T> = {
   Status: number;
   Success: boolean;

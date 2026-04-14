@@ -272,7 +272,7 @@ const PRDetail = () => {
                         </CText>
                       </TouchableOpacity>
                     </View>
-                  </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-center'>{resCheckAprLevel.msg}</CText>
+                  </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-center underline'>{resCheckAprLevel.msg}</CText>
                 )
               }
 

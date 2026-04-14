@@ -4,14 +4,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { TouchableOpacity } from "react-native";
 
-const PurchaseRequestLayout = () => {
+const PurchaseOrderLayout = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
 
   return (
     <Stack>
       <Stack.Screen name="index" options={{
-        title: "Purchase Request List",
+        title: "Purchase Order List",
         headerTitleAlign: "center",
         headerStyle: {
           backgroundColor: colors.surface,
@@ -32,7 +32,7 @@ const PurchaseRequestLayout = () => {
       <Stack.Screen
         name="detail"
         options={{
-          title: "Purchase Request Detail",
+          title: "Purchase Order Detail",
           headerTitleAlign: "center",
           headerShown: true,
 
@@ -49,4 +49,4 @@ const PurchaseRequestLayout = () => {
   )
 }
 
-export default PurchaseRequestLayout
+export default PurchaseOrderLayout

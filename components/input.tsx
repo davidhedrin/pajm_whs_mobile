@@ -109,9 +109,9 @@ const Input: React.FC<InputProps> = ({
               fontFamily: 'PoppinsMedium',
               color: colors.text,
               fontSize: rf(13),
-              paddingTop: rpm(13),
+              paddingTop: rpm(11),
               paddingBottom: rpm(9),
-              minHeight: rpm(42),
+              // minHeight: rpm(42),
             },
             style
           ]}
