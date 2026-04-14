@@ -20,6 +20,7 @@ type ModuleItem = {
 };
 export default function Index() {
   const { rw, rh, rpm, rf } = useResposiveScale();
+  const scales = useResposiveScale();
   const { authData, accounts, switchAccount } = useAuthStore();
   const { colors } = useTheme();
   const router = useRouter();
@@ -363,7 +364,7 @@ export default function Index() {
               badgeVal={item.badgeVal}
               onPress={item.onPress}
 
-              scales={useResposiveScale()}
+              scales={scales}
             />
           ))}
         </View>
@@ -411,7 +412,7 @@ export default function Index() {
                 bottomSheetRef.current?.close();
               }}
             >
-              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={useResposiveScale()} />
+              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={scales} />
             </TouchableOpacity>
           ))
         }

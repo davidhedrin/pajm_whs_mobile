@@ -14,6 +14,7 @@ import { Accounts } from '.';
 
 const SettingScreen = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
+  const scales = useResposiveScale();
   const { authData, accounts, switchAccount } = useAuthStore();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { showConfirm } = useConfirmStore();
@@ -131,7 +132,7 @@ const SettingScreen = () => {
               colors={colors}
               title='Profile'
               desc='Manage your personal information'
-              scales={useResposiveScale()}
+              scales={scales}
               isBordered={true}
             />
 
@@ -169,7 +170,7 @@ const SettingScreen = () => {
               colors={colors}
               title='Logout'
               desc='Sign out from your account'
-              scales={useResposiveScale()}
+              scales={scales}
             />
           </View>
         </View>
@@ -200,7 +201,7 @@ const SettingScreen = () => {
                 bottomSheetRef.current?.close();
               }}
             >
-              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={useResposiveScale()} />
+              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={scales} />
             </TouchableOpacity>
           ))
         }

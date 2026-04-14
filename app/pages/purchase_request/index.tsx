@@ -9,16 +9,18 @@ import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps
 import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, formatDate, showToast, useDefaultState } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList, LayoutAnimation, Platform, Pressable, TouchableOpacity,
   View
 } from "react-native";
 
+import { useScaleAnimation } from '@/hooks/scale-animation';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useRouter } from 'expo-router';
+import { Router, useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 
 type DateRangePicker = "start" | "end";
@@ -46,21 +48,22 @@ export function getStatusStyle(status: string, colors: ColorScheme) {
 const PurchaseRequest: React.FC = () => {
   const { authData } = useAuthStore();
   const { rw, rh, rpm, rf } = useResposiveScale();
+  const scales = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
-  const closeAllSwipe = () => {
+  const closeAllSwipe = useCallback(() => {
     swipeableRefs.current.forEach((ref) => ref?.close());
-  };
+  }, []);
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const toggleExpand = (id: number) => {
+  const toggleExpand = useCallback((id: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedId(prev => (prev === id ? null : id));
-  };
+  }, []);
 
   const [openModalFilter, setOpenModalFilter] = useState(false);
   const DEFAULT_STATUS_FILTER = "ShowAllData";
@@ -111,7 +114,7 @@ const PurchaseRequest: React.FC = () => {
     resetEndDate();
   };
 
-  const fatchDatas = async (isNewSearch: boolean = false) => {
+  const fatchDatas = async (isNewSearch: boolean = false, filterStatus = statusFilter) => {
     if (loadingData) return;
 
     if (isNewSearch == true) {
@@ -140,7 +143,7 @@ const PurchaseRequest: React.FC = () => {
         sort: "Id",
         dir: "DESC",
         gridfilters: inputSearchFilter.trim() !== "" ? JSON.stringify(searchGridFilter) : "",
-        option2: statusFilter,
+        option2: filterStatus,
         dtm1: startDate ? startDate.toLocaleDateString("en-CA") : "",
         dtm2: endDate ? endDate.toLocaleDateString("en-CA") : "",
       }
@@ -171,7 +174,13 @@ const PurchaseRequest: React.FC = () => {
     firstInit();
   }, []);
 
-  const handlePrAction = async ({ action, pr_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
+  const handleUpdateItem = (updatedItem: PrProps) => {
+    setData(
+      prev => prev.map(item => item.Id === updatedItem.Id ? { ...item, ...updatedItem } : item)
+    );
+  };
+
+  const handlePrAction = useCallback(async ({ action, pr_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} application "${doc_num}"?`,
@@ -182,11 +191,10 @@ const PurchaseRequest: React.FC = () => {
     if (!confirmed) return;
 
     loadingPage.show();
-    await PrAction({ action, pr_id, level, remark });
-
     try {
       const reqDelay = await ExecuteMinDelay(PrAction({ action, pr_id, level, remark }), 2000);
-      await fatchDatas();
+      const prData = MappingPr(reqDelay.Data, authData?.BpUserId);
+      handleUpdateItem(prData);
       showToast({
         type: "success",
         title: "Update Finish",
@@ -200,7 +208,7 @@ const PurchaseRequest: React.FC = () => {
       });
     }
     loadingPage.hide();
-  };
+  }, []);
 
   return (
     <ScreenWrapper scrollable={false} edges={['bottom']}>
@@ -319,12 +327,16 @@ const PurchaseRequest: React.FC = () => {
         </View>
         <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
           <SummaryCard
-            title="Total PO"
+            title="Total Data"
             count={1234}
             color={colors.bg_primary}
             icon="document-text-outline"
             color_scheme={colors}
-            scales={useResposiveScale()}
+            scales={scales}
+            onPress={() => {
+              setStatusFilter(DEFAULT_STATUS_FILTER);
+              fatchDatas(true, DEFAULT_STATUS_FILTER);
+            }}
           />
           <SummaryCard
             title="On Progress"
@@ -332,7 +344,11 @@ const PurchaseRequest: React.FC = () => {
             color={colors.bg_warning}
             icon="time-outline"
             color_scheme={colors}
-            scales={useResposiveScale()}
+            scales={scales}
+            onPress={() => {
+              setStatusFilter("ShowNotRespondedOnly");
+              fatchDatas(true, "ShowNotRespondedOnly");
+            }}
           />
           <SummaryCard
             title="Finish"
@@ -340,7 +356,11 @@ const PurchaseRequest: React.FC = () => {
             color={colors.bg_success}
             icon="checkmark-done-outline"
             color_scheme={colors}
-            scales={useResposiveScale()}
+            scales={scales}
+            onPress={() => {
+              setStatusFilter("ShowRespondedOnly");
+              fatchDatas(true, "ShowRespondedOnly");
+            }}
           />
         </View>
 
@@ -431,230 +451,18 @@ const PurchaseRequest: React.FC = () => {
 
             </View>
           }
-          renderItem={({ item, index }: { item: PrProps; index: number }) => {
-            const isExpanded = expandedId === item.Id;
-            const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
-            const checkAprLevel = checkAprUserLevel(item, getCurAprLevel);
-
-            const content = (
-              <TouchableOpacity className="shadow-sm"
-                style={{
-                  paddingStart: rpm(12),
-                  paddingEnd: checkAprLevel.show ? rpm(8) : rpm(12),
-                  paddingVertical: rpm(10),
-                  backgroundColor: colors.surface
-                }}
-                onPress={() => {
-                  closeAllSwipe();
-                  router.push({
-                    pathname: "/pages/purchase_request/detail",
-                    params: {
-                      id: item.Id.toString(),
-                      doc_num: item.PrNo,
-                    } as PrPoDetailPageProps
-                  });
-                }}
-              >
-                <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
-                  <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
-                    {index + 1}. {item.PrNo}
-                  </CText>
-
-                  <View
-                    className="flex-row items-center rounded-full font-regular leading-none"
-                    style={[
-                      {
-                        paddingHorizontal: rpm(6),
-                        paddingVertical: rpm(5),
-                      },
-                      getStatusStyle(item.Status, colors)
-                    ]}
-                  >
-                    <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-                    <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
-                      {item.Status === '' ? "ON PROGRESS" : item.Status}
-                    </CText>
-                  </View>
-                </View>
-
-                <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
-                  Req By: {item.User1Name}
-                </CText>
-
-                {/* 🔹 MAIN CONTENT */}
-                <View className='flex-row justify-between items-end'>
-                  {
-                    item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
-                      Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
-                    </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
-                  }
-
-
-                  <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
-                    <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
-                    <Ionicons
-                      name={isExpanded ? "chevron-up" : "chevron-down"}
-                      size={rf(17)}
-                      color={colors.text}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {
-                  isExpanded && (
-                    <View className="border-t-2 border-gray-200"
-                      style={{
-                        marginTop: rpm(9),
-                        paddingTop: rpm(9)
-                      }}
-                    >
-                      {/* APPROVAL LIST */}
-                      {item.Approvers.map((a, i) => {
-                        const style = getStatusStyle(a.UserResponse, colors);
-
-                        return (
-                          <View key={i} className="flex-row items-start"
-                            style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
-                          >
-                            <View
-                              className="rounded-full mr-3"
-                              style={{
-                                width: rw(5),
-                                height: rh(5),
-                                marginTop: rpm(7),
-                                marginRight: rpm(8),
-                                backgroundColor: colors.textMuted
-                              }}
-                            />
-
-                            <View className="flex-1">
-                              <View className="flex-row justify-between items-center">
-                                <CText className="font-medium" style={{ fontSize: rf(13) }}>
-                                  Approval - {a.Level - 1}
-                                </CText>
-
-                                <CText
-                                  className="rounded-full"
-                                  style={[
-                                    {
-                                      paddingHorizontal: rpm(6),
-                                      paddingVertical: rpm(2),
-                                      fontSize: rf(11)
-                                    },
-                                    style
-                                  ]}
-                                >
-                                  {a.UserResponse === '' ? "WAITING" : a.UserResponse}
-                                </CText>
-                              </View>
-
-                              <View className="flex-row justify-between items-center">
-                                <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                                  {a.UserName}
-                                </CText>
-
-                                <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                                  {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
-                                </CText>
-                              </View>
-                            </View>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )
-                }
-              </TouchableOpacity>
-            );
-
-            if (checkAprLevel.show) return <View className='border-b border-gray-300'
-              style={{
-                borderEndWidth: rpm(4),
-                borderEndColor: colors.primary
-              }}
-            >
-              <Swipeable
-                ref={(ref) => {
-                  if (ref) swipeableRefs.current.set(item.Id.toString(), ref);
-                }}
-                // onSwipeableOpen={closeAllSwipe}
-                overshootRight={false}
-                renderRightActions={() => (
-                  <View className="w-auto flex-col">
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center"
-                      style={{
-                        backgroundColor: colors.success,
-                        paddingHorizontal: rpm(16)
-                      }}
-                      onPress={async () => {
-                        swipeableRefs.current.get(item.Id.toString())?.close();
-
-                        if (getCurAprLevel) handlePrAction({
-                          action: 'APPROVED',
-                          level: getCurAprLevel.Level,
-                          pr_id: item.Id,
-                          remark: "",
-                          doc_num: item.PrNo
-                        });
-                      }}
-                    >
-                      <View className='flex-row items-center'>
-                        <Ionicons name='checkmark-outline' size={rf(17)} color={colors.surface} />
-                        <CText className="font-medium"
-                          style={{
-                            marginLeft: rpm(2),
-                            color: colors.surface,
-                            fontSize: rf(13)
-                          }}
-                        >
-                          Approve
-                        </CText>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 items-center justify-center"
-                      style={{
-                        backgroundColor: colors.danger,
-                        paddingHorizontal: rpm(16)
-                      }}
-                      onPress={async () => {
-                        swipeableRefs.current.get(item.Id.toString())?.close();
-
-                        if (getCurAprLevel) handlePrAction({
-                          action: 'REJECTED',
-                          level: getCurAprLevel.Level,
-                          pr_id: item.Id,
-                          remark: "",
-                          doc_num: item.PrNo
-                        });
-                      }}
-                    >
-                      <View className='flex-row items-center'>
-                        <Ionicons name='close-outline' size={rf(17)} color={colors.surface} />
-                        <CText className="font-medium"
-                          style={{
-                            marginLeft: rpm(2),
-                            color: colors.surface,
-                            fontSize: rf(13)
-                          }}
-                        >
-                          Reject
-                        </CText>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              >
-                {content}
-              </Swipeable>
-            </View>
-
-            return <View className='border-b border-gray-300'>
-              {content}
-            </View>
-          }}
+          renderItem={({ item, index }: { item: PrProps; index: number }) => <ItemRowFlatList
+            item={item}
+            index={index}
+            router={router}
+            expandedId={expandedId}
+            swipeableRefs={swipeableRefs}
+            colors={colors}
+            scales={scales}
+            closeAllSwipe={closeAllSwipe}
+            toggleExpand={toggleExpand}
+            handlePrAction={handlePrAction}
+          />}
         />
       </GestureHandlerRootView>
     </ScreenWrapper>
@@ -662,6 +470,256 @@ const PurchaseRequest: React.FC = () => {
 };
 
 export default PurchaseRequest;
+
+type ItemRowProps = {
+  item: PrProps;
+  index: number;
+  router: Router;
+  expandedId: number | null;
+  swipeableRefs: React.RefObject<Map<string, Swipeable>>;
+  colors: ColorScheme;
+  scales: ResponsiveScale;
+  closeAllSwipe: () => void;
+  toggleExpand: (id: number) => void;
+  handlePrAction: ({ action, pr_id, level, remark, doc_num }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
+};
+
+const ItemRowFlatList = React.memo(({
+  item,
+  index,
+  router,
+  expandedId,
+  swipeableRefs,
+  colors,
+  scales,
+  closeAllSwipe,
+  toggleExpand,
+  handlePrAction
+}: ItemRowProps) => {
+  const { rw, rh, rpm, rf } = scales;
+  const isExpanded = expandedId === item.Id;
+  const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
+  const checkAprLevel = checkAprUserLevel(item, getCurAprLevel);
+
+  const content = (
+    <TouchableOpacity className="shadow-sm"
+      style={{
+        paddingStart: rpm(12),
+        paddingEnd: checkAprLevel.show ? rpm(8) : rpm(12),
+        paddingVertical: rpm(10),
+        backgroundColor: colors.surface
+      }}
+      onPress={() => {
+        closeAllSwipe();
+        router.push({
+          pathname: "/pages/purchase_request/detail",
+          params: {
+            id: item.Id.toString(),
+            doc_num: item.PrNo,
+          } as PrPoDetailPageProps
+        });
+      }}
+    >
+      <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
+        <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
+          {index + 1}. {item.PrNo}
+        </CText>
+
+        <View
+          className="flex-row items-center rounded-full font-regular leading-none"
+          style={[
+            {
+              paddingHorizontal: rpm(6),
+              paddingVertical: rpm(5),
+            },
+            getStatusStyle(item.Status, colors)
+          ]}
+        >
+          <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
+          <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
+            {item.Status === '' ? "ON PROGRESS" : item.Status}
+          </CText>
+        </View>
+      </View>
+
+      <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
+        Req By: {item.User1Name}
+      </CText>
+
+      {/* 🔹 MAIN CONTENT */}
+      <View className='flex-row justify-between items-end'>
+        {
+          item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
+            Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
+          </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
+        }
+
+
+        <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
+          <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
+          <Ionicons
+            name={isExpanded ? "chevron-up" : "chevron-down"}
+            size={rf(17)}
+            color={colors.text}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {
+        isExpanded && (
+          <View className="border-t-2 border-gray-200"
+            style={{
+              marginTop: rpm(9),
+              paddingTop: rpm(9)
+            }}
+          >
+            {/* APPROVAL LIST */}
+            {item.Approvers.map((a, i) => {
+              const style = getStatusStyle(a.UserResponse, colors);
+
+              return (
+                <View key={i} className="flex-row items-start"
+                  style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
+                >
+                  <View
+                    className="rounded-full mr-3"
+                    style={{
+                      width: rw(5),
+                      height: rh(5),
+                      marginTop: rpm(7),
+                      marginRight: rpm(8),
+                      backgroundColor: colors.textMuted
+                    }}
+                  />
+
+                  <View className="flex-1">
+                    <View className="flex-row justify-between items-center">
+                      <CText className="font-medium" style={{ fontSize: rf(13) }}>
+                        Approval - {a.Level - 1}
+                      </CText>
+
+                      <CText
+                        className="rounded-full"
+                        style={[
+                          {
+                            paddingHorizontal: rpm(6),
+                            paddingVertical: rpm(2),
+                            fontSize: rf(11)
+                          },
+                          style
+                        ]}
+                      >
+                        {a.UserResponse === '' ? "WAITING" : a.UserResponse}
+                      </CText>
+                    </View>
+
+                    <View className="flex-row justify-between items-center">
+                      <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                        {a.UserName}
+                      </CText>
+
+                      <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                        {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+                      </CText>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )
+      }
+    </TouchableOpacity>
+  );
+
+  if (checkAprLevel.show) return <View className='border-b border-gray-300'
+    style={{
+      borderEndWidth: rpm(4),
+      borderEndColor: colors.primary
+    }}
+  >
+    <Swipeable
+      ref={(ref) => {
+        if (ref) swipeableRefs.current.set(item.Id.toString(), ref);
+      }}
+      // onSwipeableOpen={closeAllSwipe}
+      overshootRight={false}
+      renderRightActions={() => (
+        <View className="w-auto flex-col">
+          <TouchableOpacity
+            className="flex-1 items-center justify-center"
+            style={{
+              backgroundColor: colors.success,
+              paddingHorizontal: rpm(16)
+            }}
+            onPress={async () => {
+              swipeableRefs.current.get(item.Id.toString())?.close();
+
+              if (getCurAprLevel) handlePrAction({
+                action: 'APPROVED',
+                level: getCurAprLevel.Level,
+                pr_id: item.Id,
+                remark: "",
+                doc_num: item.PrNo
+              });
+            }}
+          >
+            <View className='flex-row items-center'>
+              <Ionicons name='checkmark-outline' size={rf(17)} color={colors.surface} />
+              <CText className="font-medium"
+                style={{
+                  marginLeft: rpm(2),
+                  color: colors.surface,
+                  fontSize: rf(13)
+                }}
+              >
+                Approve
+              </CText>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-1 items-center justify-center"
+            style={{
+              backgroundColor: colors.danger,
+              paddingHorizontal: rpm(16)
+            }}
+            onPress={async () => {
+              swipeableRefs.current.get(item.Id.toString())?.close();
+
+              if (getCurAprLevel) handlePrAction({
+                action: 'REJECTED',
+                level: getCurAprLevel.Level,
+                pr_id: item.Id,
+                remark: "",
+                doc_num: item.PrNo
+              });
+            }}
+          >
+            <View className='flex-row items-center'>
+              <Ionicons name='close-outline' size={rf(17)} color={colors.surface} />
+              <CText className="font-medium"
+                style={{
+                  marginLeft: rpm(2),
+                  color: colors.surface,
+                  fontSize: rf(13)
+                }}
+              >
+                Reject
+              </CText>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
+      {content}
+    </Swipeable>
+  </View>
+
+  return <View className='border-b border-gray-300'>
+    {content}
+  </View>
+});
 
 export function MappingPr(raw: any, bp_id?: number, items?: any): PrProps {
   const apprLevel = MapApproversPr({ raw, start_idx: 2 });
@@ -765,32 +823,41 @@ type SummaryCardProps = {
   icon: keyof typeof Ionicons.glyphMap;
   color_scheme: ColorScheme;
   scales: ResponsiveScale;
+  onPress?: () => void;
 };
 
-function SummaryCard({ title, count, color, icon, color_scheme, scales }: SummaryCardProps) {
+function SummaryCard({ title, count, color, icon, color_scheme, scales, onPress }: SummaryCardProps) {
+  const { scale, onPressIn, onPressOut } = useScaleAnimation(0.92);
   const { rpm, rf } = scales;
 
   return (
-    <View
-      className="w-[31.5%] mb-[3%] flex-row justify-between items-center"
-      style={{
-        borderRadius: rpm(10),
-        paddingVertical: rpm(8),
-        paddingHorizontal: rpm(7),
-        backgroundColor: color
-      }}
+    <Pressable
+      onPressIn={onPressIn} onPressOut={onPressOut}
+      onPress={onPress}
+      className="w-[31.5%] mb-[3%]"
     >
-      <Ionicons name={icon} size={rf(24)} color={color_scheme.text} />
-      <View className='items-end'>
-        <CText className="font-medium" style={{ fontSize: rf(12) }}>{title}</CText>
-        <CText className="font-bold" style={{ fontSize: rf(14) }}>{count}</CText>
-      </View>
-    </View>
+      <Animated.View className="flex-row justify-between items-center"
+        style={{
+          transform: [{ scale }],
+          borderRadius: rpm(10),
+          paddingVertical: rpm(8),
+          paddingHorizontal: rpm(7),
+          backgroundColor: color
+        }}
+      >
+        <Ionicons name={icon} size={rf(24)} color={color_scheme.text} />
+        <View className='items-end'>
+          <CText className="font-medium" style={{ fontSize: rf(12) }}>{title}</CText>
+          <CText className="font-bold" style={{ fontSize: rf(14) }}>{count}</CText>
+        </View>
+      </Animated.View>
+
+    </Pressable>
   );
 };
 
 export async function PrAction({ action, pr_id, level, remark }: PrPoActionProps) {
-  const createReq = await callApi<string>({
+  const createReq = await callApi<any>({
     endpoint: "ApproveRejectPr",
     params: {
       action,
@@ -802,3 +869,231 @@ export async function PrAction({ action, pr_id, level, remark }: PrPoActionProps
 
   return createReq;
 };
+
+
+// Ol render item ---------------------------------------------------------------------
+
+// renderItem={({ item, index }: { item: PrProps; index: number }) => {
+//   const isExpanded = expandedId === item.Id;
+//   const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
+//   const checkAprLevel = checkAprUserLevel(item, getCurAprLevel);
+
+//   const content = (
+//     <TouchableOpacity className="shadow-sm"
+//       style={{
+//         paddingStart: rpm(12),
+//         paddingEnd: checkAprLevel.show ? rpm(8) : rpm(12),
+//         paddingVertical: rpm(10),
+//         backgroundColor: colors.surface
+//       }}
+//       onPress={() => {
+//         closeAllSwipe();
+//         router.push({
+//           pathname: "/pages/purchase_request/detail",
+//           params: {
+//             id: item.Id.toString(),
+//             doc_num: item.PrNo,
+//           } as PrPoDetailPageProps
+//         });
+//       }}
+//     >
+//       <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
+//         <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
+//           {index + 1}. {item.PrNo}
+//         </CText>
+
+//         <View
+//           className="flex-row items-center rounded-full font-regular leading-none"
+//           style={[
+//             {
+//               paddingHorizontal: rpm(6),
+//               paddingVertical: rpm(5),
+//             },
+//             getStatusStyle(item.Status, colors)
+//           ]}
+//         >
+//           <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
+//           <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
+//             {item.Status === '' ? "ON PROGRESS" : item.Status}
+//           </CText>
+//         </View>
+//       </View>
+
+//       <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
+//         Req By: {item.User1Name}
+//       </CText>
+
+//       {/* 🔹 MAIN CONTENT */}
+//       <View className='flex-row justify-between items-end'>
+//         {
+//           item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
+//             Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
+//           </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
+//         }
+
+
+//         <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
+//           <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
+//           <Ionicons
+//             name={isExpanded ? "chevron-up" : "chevron-down"}
+//             size={rf(17)}
+//             color={colors.text}
+//           />
+//         </TouchableOpacity>
+//       </View>
+
+//       {
+//         isExpanded && (
+//           <View className="border-t-2 border-gray-200"
+//             style={{
+//               marginTop: rpm(9),
+//               paddingTop: rpm(9)
+//             }}
+//           >
+//             {/* APPROVAL LIST */}
+//             {item.Approvers.map((a, i) => {
+//               const style = getStatusStyle(a.UserResponse, colors);
+
+//               return (
+//                 <View key={i} className="flex-row items-start"
+//                   style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
+//                 >
+//                   <View
+//                     className="rounded-full mr-3"
+//                     style={{
+//                       width: rw(5),
+//                       height: rh(5),
+//                       marginTop: rpm(7),
+//                       marginRight: rpm(8),
+//                       backgroundColor: colors.textMuted
+//                     }}
+//                   />
+
+//                   <View className="flex-1">
+//                     <View className="flex-row justify-between items-center">
+//                       <CText className="font-medium" style={{ fontSize: rf(13) }}>
+//                         Approval - {a.Level - 1}
+//                       </CText>
+
+//                       <CText
+//                         className="rounded-full"
+//                         style={[
+//                           {
+//                             paddingHorizontal: rpm(6),
+//                             paddingVertical: rpm(2),
+//                             fontSize: rf(11)
+//                           },
+//                           style
+//                         ]}
+//                       >
+//                         {a.UserResponse === '' ? "WAITING" : a.UserResponse}
+//                       </CText>
+//                     </View>
+
+//                     <View className="flex-row justify-between items-center">
+//                       <CText className="font-regular" style={{ fontSize: rf(12) }}>
+//                         {a.UserName}
+//                       </CText>
+
+//                       <CText className="font-regular" style={{ fontSize: rf(12) }}>
+//                         {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+//                       </CText>
+//                     </View>
+//                   </View>
+//                 </View>
+//               );
+//             })}
+//           </View>
+//         )
+//       }
+//     </TouchableOpacity>
+//   );
+
+//   if (checkAprLevel.show) return <View className='border-b border-gray-300'
+//     style={{
+//       borderEndWidth: rpm(4),
+//       borderEndColor: colors.primary
+//     }}
+//   >
+//     <Swipeable
+//       ref={(ref) => {
+//         if (ref) swipeableRefs.current.set(item.Id.toString(), ref);
+//       }}
+//       // onSwipeableOpen={closeAllSwipe}
+//       overshootRight={false}
+//       renderRightActions={() => (
+//         <View className="w-auto flex-col">
+//           <TouchableOpacity
+//             className="flex-1 items-center justify-center"
+//             style={{
+//               backgroundColor: colors.success,
+//               paddingHorizontal: rpm(16)
+//             }}
+//             onPress={async () => {
+//               swipeableRefs.current.get(item.Id.toString())?.close();
+
+//               if (getCurAprLevel) handlePrAction({
+//                 action: 'APPROVED',
+//                 level: getCurAprLevel.Level,
+//                 pr_id: item.Id,
+//                 remark: "",
+//                 doc_num: item.PrNo
+//               });
+//             }}
+//           >
+//             <View className='flex-row items-center'>
+//               <Ionicons name='checkmark-outline' size={rf(17)} color={colors.surface} />
+//               <CText className="font-medium"
+//                 style={{
+//                   marginLeft: rpm(2),
+//                   color: colors.surface,
+//                   fontSize: rf(13)
+//                 }}
+//               >
+//                 Approve
+//               </CText>
+//             </View>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             className="flex-1 items-center justify-center"
+//             style={{
+//               backgroundColor: colors.danger,
+//               paddingHorizontal: rpm(16)
+//             }}
+//             onPress={async () => {
+//               swipeableRefs.current.get(item.Id.toString())?.close();
+
+//               if (getCurAprLevel) handlePrAction({
+//                 action: 'REJECTED',
+//                 level: getCurAprLevel.Level,
+//                 pr_id: item.Id,
+//                 remark: "",
+//                 doc_num: item.PrNo
+//               });
+//             }}
+//           >
+//             <View className='flex-row items-center'>
+//               <Ionicons name='close-outline' size={rf(17)} color={colors.surface} />
+//               <CText className="font-medium"
+//                 style={{
+//                   marginLeft: rpm(2),
+//                   color: colors.surface,
+//                   fontSize: rf(13)
+//                 }}
+//               >
+//                 Reject
+//               </CText>
+//             </View>
+//           </TouchableOpacity>
+//         </View>
+//       )}
+//     >
+//       {content}
+//     </Swipeable>
+//   </View>
+
+//   return <View className='border-b border-gray-300'>
+//     {content}
+//   </View>
+// }}
