@@ -98,6 +98,7 @@ const PurchaseRequest = () => {
       return updated;
     });
   };
+
   const sortingFilterSort = (): SortFilterProps[] => {
     return sortFilter.filter(item => item.key !== "" && item.dir !== "");
   };
@@ -334,20 +335,14 @@ const PurchaseRequest = () => {
         )
       }
 
-
       {/* Modal show filter sort */}
       <BaseModal
         visible={openModalSortFilter}
         onClose={setOpenModaSortlFilter}
         resolveTitle='Apply'
-        resolveAction={async () => {
+        resolveAction={() => {
           setOpenModaSortlFilter(false);
-          await fatchDatas(true);
-
-          setSortFilter(sortingFilterSort);
-        }}
-        rejectAction={() => {
-          setSortFilter(sortingFilterSort);
+          fatchDatas(true);
         }}
       >
         <View className='flex-row justify-between items-center' style={{ marginBottom: rpm(10) }}>
@@ -473,7 +468,10 @@ const PurchaseRequest = () => {
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-row items-center"
-            onPress={() => setOpenModaSortlFilter(true)}
+            onPress={() => {
+              setSortFilter(sortingFilterSort());
+              setOpenModaSortlFilter(true);
+            }}
             style={{
               borderRadius: rpm(10),
               paddingHorizontal: rpm(10),

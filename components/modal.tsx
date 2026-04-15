@@ -11,13 +11,11 @@ type BaseModalProps = {
   children?: React.ReactNode;
   resolveTitle?: string;
   resolveAction?: () => void;
-  rejectAction?: () => void;
 };
 
 const BaseModal = ({
   resolveTitle,
   resolveAction,
-  rejectAction,
   visible,
   onClose,
   children,
@@ -30,16 +28,10 @@ const BaseModal = ({
       transparent
       visible={visible}
       animationType="fade"
-      onRequestClose={() => {
-        if (rejectAction) rejectAction();
-        onClose(false);
-      }}
+      onRequestClose={() => onClose(false)}
     >
       <TouchableWithoutFeedback
-        onPress={() => {
-          if (rejectAction) rejectAction();
-          onClose(false);
-        }}
+        onPress={() => onClose(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/40">
           <TouchableWithoutFeedback>
@@ -56,10 +48,7 @@ const BaseModal = ({
                   children ?? <>
                     <CText>Ini isi modal bebas 🚀</CText>
                     <Button title="Close"
-                      onPress={() => {
-                        if (rejectAction) rejectAction();
-                        onClose(false);
-                      }}
+                      onPress={() => onClose(false)}
                       className="w-full"
                     />
                   </>
@@ -74,10 +63,7 @@ const BaseModal = ({
                 >
                   <TouchableOpacity
                     className="flex-1 justify-center items-center"
-                    onPress={() => {
-                      if (rejectAction) rejectAction();
-                      onClose(false);
-                    }}
+                    onPress={() => onClose(false)}
                   >
                     <CText className="text-gray-700 font-medium" style={{ fontSize: rf(13) }}>Cancel</CText>
                   </TouchableOpacity>
