@@ -7,7 +7,7 @@ import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { callApi } from '@/lib/api-fatch';
 import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps, PrProps, ResponsiveScale, SortFilterProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { ExecuteMinDelay, formatDate, showToast, useDefaultState } from '@/lib/utils';
+import { formatDate, showToast, useDefaultState } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -219,7 +219,7 @@ const PurchaseRequest = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await ExecuteMinDelay(PrAction({ action, pr_id, level, remark }), 2000);
+      const reqDelay = await PrAction({ action, pr_id, level, remark });
       const prData = MappingPr(reqDelay.Data, authData?.BpUserId);
       handleUpdateItem(prData);
       showToast({

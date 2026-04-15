@@ -46,7 +46,7 @@ const NewAccount = () => {
     try {
       setIsLoading(true);
       const createReq = LoginApi<UserAuthData>(data.username, data.password);
-      const req = await ExecuteMinDelay(createReq, 2000);
+      const req = await ExecuteMinDelay(createReq, 1000);
       const res = req.Data;
       if (res) await setAuth(res);
       router.back();

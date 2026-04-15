@@ -7,8 +7,10 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from "@/components/button";
 import { useAuthStore } from "@/hooks/zustand";
-import { ResponsiveScale, UserAuthData } from "@/lib/model-type";
+import { callApi } from "@/lib/api-fatch";
+import { ResponsiveScale, StatisticProps, UserAuthData } from "@/lib/model-type";
 import { useResposiveScale } from "@/lib/resposive";
+import { showToast } from "@/lib/utils";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 
@@ -45,6 +47,24 @@ export default function Index() {
   ];
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
+
+  const fatchStatistic = async () => {
+    try {
+      const createReq = await callApi<StatisticProps>({
+        endpoint: "PrDetailById",
+        params: {
+          pr_id: "",
+        }
+      });
+    }
+    catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Request Failed",
+        message: error.message
+      });
+    }
+  }
 
   return (
     <ScreenWrapper>
@@ -173,6 +193,7 @@ export default function Index() {
           </View>
 
           <View className="flex-row flex-wrap justify-between mt-2" style={{ marginTop: rpm(6) }}>
+            {/* Purchase Request */}
             <View
               className="w-[48.5%] mb-[3%]"
               style={{
@@ -205,7 +226,6 @@ export default function Index() {
 
               </View>
 
-              {/* Module */}
               <CText
                 className="font-medium"
                 style={{
@@ -216,12 +236,9 @@ export default function Index() {
                 Purchase Request
               </CText>
 
-              {/* Divider */}
               <View className="h-px bg-gray-400" style={{ marginVertical: rpm(6) }} />
 
-              {/* Status */}
               <View className="gap-1">
-
                 <View className="flex-row justify-between">
                   <CText
                     className="font-regular"
@@ -245,10 +262,10 @@ export default function Index() {
                     456
                   </CText>
                 </View>
-
               </View>
             </View>
 
+            {/* Purchase Order */}
             <View
               className="w-[48.5%] mb-[3%]"
               style={{
@@ -257,7 +274,6 @@ export default function Index() {
                 backgroundColor: colors.bg_warning
               }}
             >
-              {/* Header */}
               <View className="flex-row justify-between">
                 <View
                   className="bg-orange-600/30 items-center justify-center"
@@ -281,7 +297,6 @@ export default function Index() {
 
               </View>
 
-              {/* Module */}
               <CText
                 className="font-medium"
                 style={{
@@ -292,12 +307,9 @@ export default function Index() {
                 Purchase Order
               </CText>
 
-              {/* Divider */}
               <View className="h-px bg-gray-400" style={{ marginVertical: rpm(6) }} />
 
-              {/* Status */}
               <View className="gap-1">
-
                 <View className="flex-row justify-between">
                   <CText
                     className="font-regular"
@@ -321,7 +333,6 @@ export default function Index() {
                     456
                   </CText>
                 </View>
-
               </View>
             </View>
           </View>
@@ -430,6 +441,7 @@ type ModuleButtonProps = {
   badgeVal?: string;
   onPress?: () => void;
 };
+
 function ModuleButton({ iconName, title, badgeVal, onPress, scales }: ModuleButtonProps) {
   const { rw, rh, rpm, rf } = scales;
   const { colors } = useTheme();

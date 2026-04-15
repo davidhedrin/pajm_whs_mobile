@@ -30,6 +30,16 @@ export type UserAuthData = {
   Email: string;
 };
 
+export type StatisticProps = {
+  PrTotalData: number;
+  PrOnProgress: number;
+  PrFinish: number;
+
+  PoTotalData: number;
+  PoOnProgress: number;
+  PoFinish: number;
+};
+
 export type StatusPrPo = "" | "APPROVED" | "REJECTED";
 
 export type ApproverLevel = {

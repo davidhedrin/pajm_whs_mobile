@@ -7,7 +7,7 @@ import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand'
 import { callApi } from '@/lib/api-fatch';
 import { ApproverLevel, CheckAprLevelProps, PrPoActionProps, PrPoDetailPageProps, PrProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { ExecuteMinDelay, formatDate, formatMoney, showToast } from '@/lib/utils';
+import { formatDate, formatMoney, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -81,7 +81,7 @@ const PRDetail = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await ExecuteMinDelay(PrAction({ action, pr_id, level, remark }), 2000);
+      const reqDelay = await PrAction({ action, pr_id, level, remark });
       await fatchDatas(pr_id.toString());
       showToast({
         type: "success",
