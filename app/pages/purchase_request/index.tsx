@@ -17,6 +17,7 @@ import {
   View
 } from "react-native";
 
+import CustomDropdown from '@/components/dropdown';
 import { useScaleAnimation } from '@/hooks/scale-animation';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -79,6 +80,27 @@ const PurchaseRequest = () => {
 
   const [openModalSortFilter, setOpenModaSortlFilter] = useState(false);
   const [sortFilter, setSortFilter, resetSortFilter] = useDefaultState<SortFilterProps[]>([{ key: "Id", dir: "DESC" }]);
+  const listSortKey = [
+    { label: "ID", value: "Id" },
+    { label: "Doc. Number", value: "PrNo" },
+    { label: "Submit Date", value: "Dtm" },
+  ]
+  const addNewSortFilter = () => {
+    if (sortFilter.length < listSortKey.length) setSortFilter(prev => [...prev, { key: "", dir: "" }]);
+  };
+  const handleChangeSortFilter = (index: number, field: 'key' | 'dir', value: string) => {
+    setSortFilter(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      return updated;
+    });
+  };
+  const sortingFilterSort = (): SortFilterProps[] => {
+    return sortFilter.filter(item => item.key !== "" && item.dir !== "");
+  };
 
   const [startDate, setStartDate, resetStartDate] = useDefaultState<Date | undefined>(undefined);
   const [endDate, setEndDate, resetEndDate] = useDefaultState<Date | undefined>(undefined);
@@ -138,12 +160,14 @@ const PurchaseRequest = () => {
       f_1_data_value: inputSearchFilter,
     };
 
+    const sortFiltering = sortingFilterSort();
+
     const createReq = await callApi<any[]>({
       endpoint: "PrPaging",
       params: {
         start: currentStart,
         limit: startLimit,
-        sort: JSON.stringify(sortFilter),
+        sort: JSON.stringify(sortFiltering),
         gridfilters: inputSearchFilter.trim() !== "" ? JSON.stringify(searchGridFilter) : "",
         option2: filterStatus,
         dtm1: startDate ? startDate.toLocaleDateString("en-CA") : "",
@@ -316,9 +340,14 @@ const PurchaseRequest = () => {
         visible={openModalSortFilter}
         onClose={setOpenModaSortlFilter}
         resolveTitle='Apply'
-        resolveAction={() => {
+        resolveAction={async () => {
           setOpenModaSortlFilter(false);
-          fatchDatas(true);
+          await fatchDatas(true);
+
+          setSortFilter(sortingFilterSort);
+        }}
+        rejectAction={() => {
+          setSortFilter(sortingFilterSort);
         }}
       >
         <View className='flex-row justify-between items-center' style={{ marginBottom: rpm(10) }}>
@@ -333,34 +362,39 @@ const PurchaseRequest = () => {
 
         {
           sortFilter.map((x, i) => (
-            <View key={i} className='flex-row items-center justify-between' style={{ marginBottom: rpm(6) }}>
+            <View key={i} className='flex-row items-center justify-between' style={{ marginBottom: rpm(8) }}>
               <View className='w-2/3' style={{ paddingEnd: rpm(6) }}>
-                <Input
-                  value={x.key}
-                  // onChangeText={onChange}
+                <CustomDropdown
+                  data={listSortKey}
                   style={{
                     paddingTop: rpm(10),
                     paddingBottom: rpm(7),
                   }}
-                  placeholder="Choose Key"
+                  value={x.key}
+                  onChange={(y) => handleChangeSortFilter(i, 'key', y)}
+                  placeholder="Choose Colomn"
                 />
               </View>
               <View className='w-1/3'>
-                <Input
-                  value={x.dir}
-                  // onChangeText={onChange}
+                <CustomDropdown
+                  data={[
+                    { label: "Asc", value: "ASC" },
+                    { label: "Desc", value: "DESC" },
+                  ]}
                   style={{
                     paddingTop: rpm(10),
                     paddingBottom: rpm(7),
                   }}
-                  placeholder="ASC/DESC"
+                  value={x.dir}
+                  onChange={(y) => handleChangeSortFilter(i, 'dir', y)}
+                  placeholder="Dir"
                 />
               </View>
             </View>
           ))
         }
 
-        <TouchableOpacity onPress={() => setSortFilter(prev => [...prev, { key: "", dir: "" }])}>
+        <TouchableOpacity onPress={() => addNewSortFilter()}>
           <CText className="font-semibold" style={{ fontSize: rf(14), color: colors.primary }}>
             <Ionicons name='add-outline' size={rf(16)} /> Add More
           </CText>

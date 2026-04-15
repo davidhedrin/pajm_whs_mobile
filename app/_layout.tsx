@@ -9,19 +9,14 @@ import { GlobalConfirmModal } from "@/components/confirm-alert";
 import LoadingOverlay from "@/components/loading";
 import { useAuthStore } from "@/hooks/zustand";
 import { useResposiveScale } from "@/lib/resposive";
-import { Ionicons } from "@expo/vector-icons";
-import Toast, {
-  BaseToast,
-  BaseToastProps,
-  ErrorToast,
-  ToastConfig,
-} from 'react-native-toast-message';
+import { toastConfigs } from "@/lib/toast-config";
+import Toast from 'react-native-toast-message';
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { rpm, rf } = useResposiveScale();
+  const scales = useResposiveScale();
   const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
@@ -64,113 +59,11 @@ export default function RootLayout() {
 
   if (!isReady) return null;
 
-
-  const toastConfig: ToastConfig = {
-    success: (props: BaseToastProps) => (
-      <BaseToast
-        {...props}
-        style={{
-          height: "auto",
-          borderLeftColor: '#34D399',
-          borderRadius: rpm(10),
-          alignItems: "center"
-        }}
-        contentContainerStyle={{
-          paddingVertical: rpm(8),
-          paddingHorizontal: rpm(12),
-        }}
-        text1Style={{
-          fontSize: rf(14),
-          fontWeight: 'bold',
-        }}
-        text2Style={{
-          fontSize: rf(13),
-          color: '#6B7280',
-        }}
-        renderTrailingIcon={() => (
-          <Ionicons
-            name="checkmark-circle-outline"
-            size={rf(25)}
-            color="#34D399"
-            style={{ marginRight: rpm(12) }}
-          />
-        )}
-        text2NumberOfLines={5}
-      />
-    ),
-
-    info: (props: BaseToastProps) => (
-      <BaseToast
-        {...props}
-        style={{
-          height: "auto",
-          borderLeftColor: '#3B82F6',
-          borderRadius: rpm(10),
-          alignItems: 'center',
-        }}
-        contentContainerStyle={{
-          paddingVertical: rpm(8),
-          paddingHorizontal: rpm(12),
-        }}
-        text1Style={{
-          fontSize: rf(14),
-          fontWeight: 'bold',
-        }}
-        text2Style={{
-          fontSize: rf(13),
-          color: '#6B7280',
-        }}
-        renderTrailingIcon={() => (
-          <Ionicons
-            name="information-circle-outline"
-            size={rf(25)}
-            color="#3B82F6"
-            style={{ marginRight: rpm(12) }}
-          />
-        )}
-        text2NumberOfLines={5}
-      />
-    ),
-
-    error: (props: BaseToastProps) => (
-      <ErrorToast
-        {...props}
-        style={{
-          height: "auto",
-          borderLeftColor: '#F87171',
-          borderRadius: rpm(10),
-          alignItems: "center"
-        }}
-        contentContainerStyle={{
-          paddingVertical: rpm(8),
-          paddingHorizontal: rpm(12),
-        }}
-        text1Style={{
-          fontSize: rf(14),
-          fontWeight: 'bold',
-        }}
-        text2Style={{
-          fontSize: rf(13),
-          color: '#6B7280',
-        }}
-        renderTrailingIcon={() => (
-          <Ionicons
-            name="warning-outline"
-            size={rf(25)}
-            color="#F87171"
-            style={{ marginRight: rpm(12) }}
-          />
-        )}
-        text2NumberOfLines={5}
-      />
-    ),
-  };
-
   return <ThemeProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }} />
 
-      <Toast config={toastConfig} />
+      <Toast config={toastConfigs({scales})} />
       <GlobalConfirmModal />
 
       <LoadingOverlay />

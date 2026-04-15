@@ -63,7 +63,7 @@ const lightColors: ColorScheme = {
   backgrounds: {
     input: "#ffffff",
     placeholder: "#9ca3af",
-    editInput: "#ffffff",
+    editInput: "#ebebeb",
   },
   statusBarStyle: "dark-content" as const,
 
@@ -99,7 +99,7 @@ const darkColors: ColorScheme = {
   backgrounds: {
     input: "#131821",
     placeholder: "#9ca3af",
-    editInput: "#394059",
+    editInput: "#292f45",
   },
   statusBarStyle: "light-content" as const,
 
