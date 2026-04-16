@@ -30,14 +30,13 @@ export type UserAuthData = {
   Email: string;
 };
 
+type SourceStatisPrPo = "PR" | "PO";
 export type StatisticProps = {
-  PrTotalData: number;
-  PrOnProgress: number;
-  PrFinish: number;
-
-  PoTotalData: number;
-  PoOnProgress: number;
-  PoFinish: number;
+  Source: SourceStatisPrPo;
+  Waiting: number;
+  TotalData: number;
+  OnProgress: number;
+  Finish: number;
 };
 
 export type StatusPrPo = "" | "APPROVED" | "REJECTED";

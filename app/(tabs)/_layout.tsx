@@ -35,7 +35,7 @@ const TabsLayout = () => {
         name="index"
         options={{
           title: 'Home',
-          tabBarBadge: 2,
+          // tabBarBadge: 2,
           tabBarIcon: ({ focused, color }) => (
             <View
               style={{

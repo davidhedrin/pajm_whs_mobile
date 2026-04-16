@@ -19,6 +19,7 @@ import {
 
 import CustomDropdown from '@/components/dropdown';
 import { useScaleAnimation } from '@/hooks/scale-animation';
+import { useStatisticStore } from '@/hooks/statistic-zustand';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Router, useRouter } from 'expo-router';
@@ -54,6 +55,7 @@ const PurchaseRequest = () => {
   const router = useRouter();
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
+  const { dataStPr } = useStatisticStore();
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = useCallback(() => {
@@ -74,6 +76,7 @@ const PurchaseRequest = () => {
     { label: "Finish Approval", value: "ShowRespondedOnly" },
     { label: "Not Submitted", value: "ShowNotSubmittedOnly" },
     { label: "Submitted", value: "ShowSubmittedOnly" },
+    { label: "Rejected", value: "ShowRejectedOnly" },
   ];
   const [inputSearchFilter, setInputSearchFilter] = useState("");
   const [statusFilter, setStatusFilter, resetStatusFilter] = useDefaultState<string>(DEFAULT_STATUS_FILTER);
@@ -417,7 +420,7 @@ const PurchaseRequest = () => {
         <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
           <SummaryCard
             title="Total Data"
-            count={1234}
+            count={dataStPr?.TotalData ?? 0}
             color={colors.bg_primary}
             icon="document-text-outline"
             color_scheme={colors}
@@ -429,7 +432,7 @@ const PurchaseRequest = () => {
           />
           <SummaryCard
             title="On Progress"
-            count={3456}
+            count={dataStPr?.OnProgress ?? 0}
             color={colors.bg_warning}
             icon="time-outline"
             color_scheme={colors}
@@ -441,7 +444,7 @@ const PurchaseRequest = () => {
           />
           <SummaryCard
             title="Finish"
-            count={7890}
+            count={dataStPr?.Finish ?? 0}
             color={colors.bg_success}
             icon="checkmark-done-outline"
             color_scheme={colors}
@@ -889,12 +892,12 @@ export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: nu
   const result: ApproverLevel[] = [];
 
   let i = start_idx;
-  while (raw[`User${i}Name`]) {
+  while (raw[`User${i}Name`] !== undefined) {
     result.push({
       Level: i,
       UserId: raw[`User${i}`],
       UserApproved: raw[`User${i}Approved`],
-      UserName: raw[`User${i}Name`],
+      UserName: raw[`User${i}Name`].trim() === "" ? "UNKNOWN" : raw[`User${i}Name`].trim(),
       UserResponse: raw[`User${i}Response`],
       Remark: raw[`Remark${i}`],
       DtmResponse: raw[`DtmResponse${i}`]

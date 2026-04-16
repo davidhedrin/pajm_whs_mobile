@@ -6,13 +6,13 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from "@/components/button";
-import { useAuthStore } from "@/hooks/zustand";
-import { callApi } from "@/lib/api-fatch";
-import { ResponsiveScale, StatisticProps, UserAuthData } from "@/lib/model-type";
+import { useStatisticStore } from "@/hooks/statistic-zustand";
+import { useAuthStore, useLoadingStore } from "@/hooks/zustand";
+import { ResponsiveScale, UserAuthData } from "@/lib/model-type";
 import { useResposiveScale } from "@/lib/resposive";
 import { showToast } from "@/lib/utils";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 type ModuleItem = {
   iconName: React.ComponentProps<typeof Ionicons>["name"];
@@ -26,36 +26,15 @@ export default function Index() {
   const { authData, accounts, switchAccount } = useAuthStore();
   const { colors } = useTheme();
   const router = useRouter();
-
-  const modules: ModuleItem[] = [
-    {
-      iconName: "document-text-outline",
-      title: "Purchase Request",
-      onPress: () => {
-        router.push("/pages/purchase_request");
-      }
-    },
-    {
-      iconName: "cart-outline",
-      title: "Purchase Order",
-      badgeVal: "5",
-    },
-    {
-      iconName: "cube-outline",
-      title: "Delivery Notes",
-    },
-  ];
+  const { dataStPr, dataStPo, fetchStatistic } = useStatisticStore();
+  const loadingPage = useLoadingStore.getState();
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
-  const fatchStatistic = async () => {
+  const fatchDatas = async (bp_id = authData?.BpUserId ?? 0) => {
+    loadingPage.show();
     try {
-      const createReq = await callApi<StatisticProps>({
-        endpoint: "PrDetailById",
-        params: {
-          pr_id: "",
-        }
-      });
+      await fetchStatistic(bp_id);
     }
     catch (error: any) {
       showToast({
@@ -64,7 +43,12 @@ export default function Index() {
         message: error.message
       });
     }
-  }
+    loadingPage.hide();
+  };
+
+  useEffect(() => {
+    fatchDatas();
+  }, []);
 
   return (
     <ScreenWrapper>
@@ -220,7 +204,7 @@ export default function Index() {
                   </CText>
 
                   <CText className="font-semibold" style={{ fontSize: rf(17) }}>
-                    1456
+                    {dataStPr?.TotalData ?? 0}
                   </CText>
                 </View>
 
@@ -247,7 +231,7 @@ export default function Index() {
                     On Progress
                   </CText>
                   <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
-                    123
+                    {dataStPr?.OnProgress ?? 0}
                   </CText>
                 </View>
 
@@ -259,7 +243,7 @@ export default function Index() {
                     Finish
                   </CText>
                   <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
-                    456
+                    {dataStPr?.Finish ?? 0}
                   </CText>
                 </View>
               </View>
@@ -291,7 +275,7 @@ export default function Index() {
                   </CText>
 
                   <CText className="font-semibold" style={{ fontSize: rf(17) }}>
-                    1456
+                    {dataStPo?.TotalData ?? 0}
                   </CText>
                 </View>
 
@@ -318,7 +302,7 @@ export default function Index() {
                     On Progress
                   </CText>
                   <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
-                    123
+                    {dataStPo?.TotalData ?? 0}
                   </CText>
                 </View>
 
@@ -330,7 +314,7 @@ export default function Index() {
                     Finish
                   </CText>
                   <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
-                    456
+                    {dataStPo?.TotalData ?? 0}
                   </CText>
                 </View>
               </View>
@@ -367,17 +351,35 @@ export default function Index() {
         <View
           className="flex-row flex-wrap justify-between"
         >
-          {modules.map((item, index) => (
-            <ModuleButton
-              key={index}
-              iconName={item.iconName}
-              title={item.title}
-              badgeVal={item.badgeVal}
-              onPress={item.onPress}
+          {
+            [
+              {
+                iconName: "document-text-outline",
+                title: "Purchase Request",
+                badgeVal: dataStPr?.Waiting ? (dataStPr?.Waiting > 0 ? dataStPr?.Waiting : undefined) : undefined,
+                onPress: () => router.push("/pages/purchase_request")
+              },
+              {
+                iconName: "cart-outline",
+                title: "Purchase Order",
+                badgeVal: dataStPo?.Waiting ? (dataStPo?.Waiting > 0 ? dataStPo?.Waiting : undefined) : undefined,
+              },
+              {
+                iconName: "cube-outline",
+                title: "Delivery Notes",
+              },
+            ].map((item, index) => (
+              <ModuleButton
+                key={index}
+                iconName={item.iconName}
+                title={item.title}
+                badgeVal={item.badgeVal}
+                onPress={item.onPress}
 
-              scales={scales}
-            />
-          ))}
+                scales={scales}
+              />
+            ))
+          }
         </View>
       </View>
 
@@ -419,8 +421,14 @@ export default function Index() {
             <TouchableOpacity
               key={i}
               onPress={async () => {
-                await switchAccount(x.Username);
                 bottomSheetRef.current?.close();
+
+                loadingPage.show();
+                await switchAccount(x.Username);
+
+                const findUser = accounts.find(y => y.Username == x.Username);
+                await fetchStatistic(findUser?.BpUserId ?? 0);
+                loadingPage.hide();
               }}
             >
               <Accounts data={x} activeUser={authData?.Username ?? ""} scales={scales} />
@@ -435,10 +443,10 @@ export default function Index() {
 };
 
 type ModuleButtonProps = {
-  iconName: React.ComponentProps<typeof Ionicons>["name"];
+  iconName: string;
   title: string;
   scales: ResponsiveScale;
-  badgeVal?: string;
+  badgeVal?: number;
   onPress?: () => void;
 };
 
@@ -463,12 +471,12 @@ function ModuleButton({ iconName, title, badgeVal, onPress, scales }: ModuleButt
         style={{
           top: rpm(6),
           right: rpm(6),
-          width: rw(18),
-          height: rh(18)
+          width: rw(15),
+          height: rh(15)
         }}
       >
         <CText
-          className="font-medium"
+          className="font-medium leading-none"
           style={{ color: '#ffffff', fontSize: rf(11) }}
         >
           {badgeVal}
@@ -477,7 +485,7 @@ function ModuleButton({ iconName, title, badgeVal, onPress, scales }: ModuleButt
     }
 
     <Ionicons
-      name={iconName}
+      name={iconName as React.ComponentProps<typeof Ionicons>["name"]}
       size={rf(25)}
       color={colors.primary}
     />
