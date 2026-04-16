@@ -145,14 +145,11 @@ const PurchaseRequest = () => {
 
   const fatchDatas = async (isNewSearch: boolean = false, filterStatus = statusFilter) => {
     if (loadingData) return;
-
     if (isNewSearch == true) {
       resetOnEndReCalled();
-      setStartData(0);
       setData([]);
     }
     const currentStart = isNewSearch === true ? 0 : startData;
-
     setLoadingData(true);
 
     const searchGridFilter = {
@@ -163,9 +160,7 @@ const PurchaseRequest = () => {
       f_1_data_type: "string",
       f_1_data_value: inputSearchFilter,
     };
-
     const sortFiltering = sortingFilterSort();
-
     const createReq = await callApi<any[]>({
       endpoint: "PrPaging",
       params: {
@@ -179,19 +174,15 @@ const PurchaseRequest = () => {
       }
     });
 
-    // setTotalData(createReq.TotalRecord ?? 0);
-
     // console.log(createReq);
     let resData: PrProps[] = [];
     if (createReq.Data !== undefined) resData = createReq.Data.map(x => MappingPr(x, authData?.BpUserId));
 
-    const totalDataRecord = data.length + resData.length;
+    const totalDataRecord = (isNewSearch === true ? 0 : data.length) + resData.length;
     if (totalDataRecord === createReq.TotalRecord) setOnEndReCalled(false);
-    if ((createReq.TotalRecord ?? 0) > totalDataRecord) setStartData(prev => prev + startLimit);
+    if ((createReq.TotalRecord ?? 0) > totalDataRecord) setStartData(currentStart + startLimit);
 
-    // setData(resData);
     setData(prev => [...prev, ...resData]);
-
     setLoadingData(false);
   };
 
