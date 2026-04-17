@@ -452,7 +452,7 @@ export default function Index() {
                 }}
                 onPress={() => {
                   router.push({
-                    pathname: "/pages/purchase_request/detail",
+                    pathname: x.module_url as any,
                     params: {
                       id: x.id.toString(),
                       doc_num: x.doc_num,

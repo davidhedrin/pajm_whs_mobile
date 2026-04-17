@@ -383,177 +383,178 @@ const PurchaseOrder = () => {
           <CText className="font-regular" style={{ fontSize: rf(12) }}>
             This summary data's is belongs to you!
           </CText>
-          <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
-            <SummaryCard
-              title="Total Data"
-              count={dataStPo?.TotalData ?? 0}
-              color={colors.bg_primary}
-              icon="document-text-outline"
-              color_scheme={colors}
-              scales={scales}
-              onPress={() => {
-                setStatusFilter(DEFAULT_STATUS_FILTER);
-                fatchDatas(true, DEFAULT_STATUS_FILTER);
-              }}
-            />
-            <SummaryCard
-              title="On Progress"
-              count={dataStPo?.OnProgress ?? 0}
-              color={colors.bg_warning}
-              icon="time-outline"
-              color_scheme={colors}
-              scales={scales}
-              onPress={() => {
-                setStatusFilter("ShowNotRespondedOnly");
-                fatchDatas(true, "ShowNotRespondedOnly");
-              }}
-            />
-            <SummaryCard
-              title="Finish"
-              count={dataStPo?.Finish ?? 0}
-              color={colors.bg_success}
-              icon="checkmark-done-outline"
-              color_scheme={colors}
-              scales={scales}
-              onPress={() => {
-                setStatusFilter("ShowRespondedOnly");
-                fatchDatas(true, "ShowRespondedOnly");
-              }}
-            />
-          </View>
+        </View>
 
-          <View className="flex-row justify-between mb-3" style={{ marginBottom: rpm(10) }}>
-            <TouchableOpacity className="flex-row items-center"
-              onPress={() => setOpenModalFilter(true)}
-              style={{
-                borderRadius: rpm(10),
-                paddingHorizontal: rpm(10),
-                paddingVertical: rpm(6),
-                backgroundColor: colors.surface
-              }}
-            >
-              <Ionicons name="filter-outline" size={rf(14)} color={colors.text} />
-              <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Filter</CText>
-
-              {
-                (statusFilter !== DEFAULT_STATUS_FILTER || startDate || endDate) && <View
-                  className="absolute bg-red-500 rounded-full items-center justify-center"
-                  style={{
-                    top: rpm(0),
-                    right: rpm(0),
-                    width: rw(8),
-                    height: rh(8)
-                  }}
-                />
-              }
-            </TouchableOpacity>
-
-            <TouchableOpacity className="flex-row items-center"
-              onPress={() => {
-                setSortFilter(sortingFilterSort());
-                setOpenModaSortlFilter(true);
-              }}
-              style={{
-                borderRadius: rpm(10),
-                paddingHorizontal: rpm(10),
-                paddingVertical: rpm(6),
-                backgroundColor: colors.surface
-              }}
-            >
-              <Ionicons name="swap-vertical-outline" size={rf(14)} color={colors.text} />
-              <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Sort</CText>
-
-              {
-                (sortFilter.length > 1) && <View
-                  className="absolute bg-red-500 rounded-full items-center justify-center"
-                  style={{
-                    top: rpm(0),
-                    right: rpm(0),
-                    width: rw(8),
-                    height: rh(8)
-                  }}
-                />
-              }
-            </TouchableOpacity>
-          </View>
-
-          <Input
-            value={inputSearchFilter}
-            onChangeText={(val) => setInputSearchFilter(val)}
-            placeholder="Document number or request name..."
-            suffixGroup={{
-              content: <TouchableOpacity onPress={async () => {
-                fatchDatas(true);
-              }}>
-                <Ionicons name='search-outline' size={rf(18)} color={"#fff"} />
-              </TouchableOpacity>,
-              bgColor: colors.primary
+        <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
+          <SummaryCard
+            title="Total Data"
+            count={dataStPo?.TotalData ?? 0}
+            color={colors.bg_primary}
+            icon="document-text-outline"
+            color_scheme={colors}
+            scales={scales}
+            onPress={() => {
+              setStatusFilter(DEFAULT_STATUS_FILTER);
+              fatchDatas(true, DEFAULT_STATUS_FILTER);
+            }}
+          />
+          <SummaryCard
+            title="On Progress"
+            count={dataStPo?.OnProgress ?? 0}
+            color={colors.bg_warning}
+            icon="time-outline"
+            color_scheme={colors}
+            scales={scales}
+            onPress={() => {
+              setStatusFilter("ShowNotRespondedOnly");
+              fatchDatas(true, "ShowNotRespondedOnly");
+            }}
+          />
+          <SummaryCard
+            title="Finish"
+            count={dataStPo?.Finish ?? 0}
+            color={colors.bg_success}
+            icon="checkmark-done-outline"
+            color_scheme={colors}
+            scales={scales}
+            onPress={() => {
+              setStatusFilter("ShowRespondedOnly");
+              fatchDatas(true, "ShowRespondedOnly");
             }}
           />
         </View>
 
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <FlatList
-            data={data}
-            keyExtractor={(item, index) => index.toString()}
-            showsVerticalScrollIndicator={false}
+        <View className="flex-row justify-between mb-3" style={{ marginBottom: rpm(10) }}>
+          <TouchableOpacity className="flex-row items-center"
+            onPress={() => setOpenModalFilter(true)}
             style={{
-              paddingHorizontal: rpm(14)
+              borderRadius: rpm(10),
+              paddingHorizontal: rpm(10),
+              paddingVertical: rpm(6),
+              backgroundColor: colors.surface
             }}
-            onEndReached={() => {
-              if (onEndReCalled) fatchDatas();
-            }}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={
-              loadingData ? <View className='flex-row justify-center items-center'
-                style={{ marginBottom: rpm(18), marginTop: rpm(8) }}
-              >
-                <ActivityIndicator size="small" />
-                <CText className='font-medium' style={{ fontSize: rf(13), marginStart: rpm(6) }}>Loading...</CText>
-              </View> : null
-            }
-            ListEmptyComponent={
-              <View>
-                {
-                  !loadingData && <View className="items-center justify-center shadow-md"
-                    style={{
-                      paddingHorizontal: rpm(16),
-                      paddingVertical: rpm(20),
-                      borderRadius: rpm(10),
-                      backgroundColor: colors.surface
-                    }}
-                  >
-                    <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
+          >
+            <Ionicons name="filter-outline" size={rf(14)} color={colors.text} />
+            <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Filter</CText>
 
-                    <CText className="font-medium text-gray-500 text-center" style={{ fontSize: rf(13) }}>
-                      No Data Found!
-                    </CText>
-
-                    <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(12) }}>
-                      No data results or, Try adjusting filters.
-                    </CText>
-                  </View>
-                }
-
-              </View>
-            }
-            renderItem={
-              ({ item, index }: { item: PoProps; index: number }) => <ItemRowFlatList
-                item={item}
-                index={index}
-                router={router}
-                expandedId={expandedId}
-                swipeableRefs={swipeableRefs}
-                colors={colors}
-                scales={scales}
-                closeAllSwipe={closeAllSwipe}
-                toggleExpand={toggleExpand}
-                handlePoAction={handlePoAction}
+            {
+              (statusFilter !== DEFAULT_STATUS_FILTER || startDate || endDate) && <View
+                className="absolute bg-red-500 rounded-full items-center justify-center"
+                style={{
+                  top: rpm(0),
+                  right: rpm(0),
+                  width: rw(8),
+                  height: rh(8)
+                }}
               />
             }
-          />
-        </GestureHandlerRootView>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center"
+            onPress={() => {
+              setSortFilter(sortingFilterSort());
+              setOpenModaSortlFilter(true);
+            }}
+            style={{
+              borderRadius: rpm(10),
+              paddingHorizontal: rpm(10),
+              paddingVertical: rpm(6),
+              backgroundColor: colors.surface
+            }}
+          >
+            <Ionicons name="swap-vertical-outline" size={rf(14)} color={colors.text} />
+            <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Sort</CText>
+
+            {
+              (sortFilter.length > 1) && <View
+                className="absolute bg-red-500 rounded-full items-center justify-center"
+                style={{
+                  top: rpm(0),
+                  right: rpm(0),
+                  width: rw(8),
+                  height: rh(8)
+                }}
+              />
+            }
+          </TouchableOpacity>
+        </View>
+
+        <Input
+          value={inputSearchFilter}
+          onChangeText={(val) => setInputSearchFilter(val)}
+          placeholder="Document number or request name..."
+          suffixGroup={{
+            content: <TouchableOpacity onPress={async () => {
+              fatchDatas(true);
+            }}>
+              <Ionicons name='search-outline' size={rf(18)} color={"#fff"} />
+            </TouchableOpacity>,
+            bgColor: colors.primary
+          }}
+        />
       </View>
+
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <FlatList
+          data={data}
+          keyExtractor={(item, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
+          style={{
+            paddingHorizontal: rpm(14)
+          }}
+          onEndReached={() => {
+            if (onEndReCalled) fatchDatas();
+          }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            loadingData ? <View className='flex-row justify-center items-center'
+              style={{ marginBottom: rpm(18), marginTop: rpm(8) }}
+            >
+              <ActivityIndicator size="small" />
+              <CText className='font-medium' style={{ fontSize: rf(13), marginStart: rpm(6) }}>Loading...</CText>
+            </View> : null
+          }
+          ListEmptyComponent={
+            <View>
+              {
+                !loadingData && <View className="items-center justify-center shadow-md"
+                  style={{
+                    paddingHorizontal: rpm(16),
+                    paddingVertical: rpm(20),
+                    borderRadius: rpm(10),
+                    backgroundColor: colors.surface
+                  }}
+                >
+                  <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
+
+                  <CText className="font-medium text-gray-500 text-center" style={{ fontSize: rf(13) }}>
+                    No Data Found!
+                  </CText>
+
+                  <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(12) }}>
+                    No data results or, Try adjusting filters.
+                  </CText>
+                </View>
+              }
+
+            </View>
+          }
+          renderItem={
+            ({ item, index }: { item: PoProps; index: number }) => <ItemRowFlatList
+              item={item}
+              index={index}
+              router={router}
+              expandedId={expandedId}
+              swipeableRefs={swipeableRefs}
+              colors={colors}
+              scales={scales}
+              closeAllSwipe={closeAllSwipe}
+              toggleExpand={toggleExpand}
+              handlePoAction={handlePoAction}
+            />
+          }
+        />
+      </GestureHandlerRootView>
     </ScreenWrapper>
   )
 };
@@ -759,7 +760,7 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PrNo
+                doc_num: item.PoNo
               });
             }}
           >
@@ -791,7 +792,7 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PrNo
+                doc_num: item.PoNo
               });
             }}
           >
