@@ -39,158 +39,161 @@ const SettingScreen = () => {
   };
 
   return (
-    <ScreenWrapper>
-      <View className="rounded-bl-full"
-        style={{
-          paddingTop: rpm(24),
-          paddingHorizontal: rpm(18),
-          backgroundColor: colors.primary
-        }}
-      >
-        <View className="flex-row items-start">
-          <Ionicons name='settings-outline' size={rf(27)} style={{ color: "#fff" }} />
-          <CText className='font-medium leading-tight'
-            style={{
-              color: "#fff",
-              fontSize: rpm(28),
-              marginLeft: rpm(6),
-              marginBottom: rpm(20),
-            }}
-          >Settings</CText>
-        </View>
-
-        {/* PROFILE HEADER */}
-        <View className="flex-row items-center" style={{ marginBottom: rpm(14) }}>
-          <View
-            className="bg-slate-700 rounded-full items-center justify-center"
-            style={{
-              padding: rpm(14),
-              marginRight: rpm(14)
-            }}
-          >
-            <Ionicons name="person" size={rf(30)} color="white" />
-          </View>
-
-          <View className="flex-1">
-            <View className="flex-row justify-between items-center">
-              <CText className="font-semibold" style={{ color: "#fff", fontSize: rf(17) }}>
-                {authData?.Fullname ?? "Guest"}
-              </CText>
-
-              <View className="bg-blue-100 rounded-full" style={{ paddingHorizontal: rpm(10), paddingVertical: rpm(3) }}>
-                <CText className="font-medium" style={{ color: "#2563eb", fontSize: rf(13) }}>
-                  {authData?.Role ?? "Guest"}
-                </CText>
-              </View>
-            </View>
-
-            <CText className="text-gray-500" style={{ color: "#fff", fontSize: rf(14) }}>
-              {authData?.Email ? (authData.Email.trim() !== "" ? authData.Email : "Email not registered") : "Email not registered"}
-            </CText>
-          </View>
-
-        </View>
-      </View>
-
-      <View style={{ paddingTop: rpm(20), paddingHorizontal: rpm(12) }}>
-        {/* CONTENT */}
-        <View>
-          {/* ACCOUNT BUTTONS */}
-          <View className="flex-row justify-between" style={{ marginBottom: rpm(24), paddingHorizontal: rpm(6) }}>
-            <Button title='Switch Account' prefixIcon='swap-horizontal-outline'
-              className="flex-1 bg-transparent border border-gray-500"
-              style={{
-                borderRadius: 9999,
-                paddingTop: rpm(10),
-                paddingBottom: rpm(10),
-                marginEnd: rpm(10)
-              }}
-              titleColor={colors.text}
-              onPress={() => bottomSheetRef.current?.open()}
-            />
-            <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="flex-1 bg-blue-500"
-              style={{
-                borderRadius: 9999,
-                paddingTop: rpm(10),
-                paddingBottom: rpm(10),
-              }} />
-          </View>
-
-          {/* MENU ITEMS */}
-          <View
-            style={{
-              borderRadius: rpm(14),
-              paddingHorizontal: rpm(13),
-              paddingVertical: rpm(5),
-              backgroundColor: colors.surface
-            }}
-          >
-            {/* Profile */}
-            <ItemMenu
-              onPressItem={() => { }}
-              icon='person-outline'
-              colors={colors}
-              title='Profile'
-              desc='Manage your personal information'
-              scales={scales}
-              isBordered={true}
-            />
-
-            {/* Dark Mode */}
-            <View className="flex-row items-center border-b border-gray-200"
-              style={{
-                paddingVertical: rpm(9)
-              }}
-            >
-              <Ionicons name="moon-outline" size={rf(18)} color={colors.text} />
-              <View className='flex-1 ml-4'
-                style={{
-                  marginLeft: rpm(13)
-                }}
-              >
-                <CText className="font-medium" style={{ fontSize: rf(13) }}>
-                  Dark Mode
-                </CText>
-                <CText style={{ fontSize: rf(12) }}>
-                  Switch between light and dark theme
-                </CText>
-              </View>
-              <Switch
-                value={isDarkMode}
-                onValueChange={(val) => {
-                  toggleDarkMode(val);
-                }}
-              />
-            </View>
-
-            {/* Logout */}
-            <ItemMenu
-              onPressItem={confirmLogout}
-              icon='log-out-outline'
-              colors={colors}
-              title='Logout'
-              desc='Sign out from your account'
-              scales={scales}
-            />
-          </View>
-        </View>
-
-        {/* FOOTER VERSION */}
-        <View className="items-center"
+    <>
+      <ScreenWrapper>
+        <View className="rounded-bl-full"
           style={{
-            paddingTop: rpm(20),
-            paddingBottom: rpm(14)
+            paddingTop: rpm(24),
+            paddingHorizontal: rpm(18),
+            backgroundColor: colors.primary
           }}
         >
-          <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
-            PAJM Warehouse App
-          </CText>
-          <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
-            Version 1.0
-          </CText>
-        </View>
-      </View>
+          <View className="flex-row items-start">
+            <Ionicons name='settings-outline' size={rf(27)} style={{ color: "#fff" }} />
+            <CText className='font-medium leading-tight'
+              style={{
+                color: "#fff",
+                fontSize: rpm(28),
+                marginLeft: rpm(6),
+                marginBottom: rpm(20),
+              }}
+            >Settings</CText>
+          </View>
 
+          {/* PROFILE HEADER */}
+          <View className="flex-row items-center" style={{ marginBottom: rpm(14) }}>
+            <View
+              className="bg-slate-700 rounded-full items-center justify-center"
+              style={{
+                padding: rpm(14),
+                marginRight: rpm(14)
+              }}
+            >
+              <Ionicons name="person" size={rf(30)} color="white" />
+            </View>
+
+            <View className="flex-1">
+              <View className="flex-row justify-between items-center">
+                <CText className="font-semibold" style={{ color: "#fff", fontSize: rf(17) }}>
+                  {authData?.Fullname ?? "Guest"}
+                </CText>
+
+                <View className="bg-blue-100 rounded-full" style={{ paddingHorizontal: rpm(10), paddingVertical: rpm(3) }}>
+                  <CText className="font-medium" style={{ color: "#2563eb", fontSize: rf(13) }}>
+                    {authData?.Role ?? "Guest"}
+                  </CText>
+                </View>
+              </View>
+
+              <CText className="text-gray-500" style={{ color: "#fff", fontSize: rf(14) }}>
+                {authData?.Email ? (authData.Email.trim() !== "" ? authData.Email : "Email not registered") : "Email not registered"}
+              </CText>
+            </View>
+
+          </View>
+        </View>
+
+        <View style={{ paddingTop: rpm(20), paddingHorizontal: rpm(12) }}>
+          {/* CONTENT */}
+          <View>
+            {/* ACCOUNT BUTTONS */}
+            <View className="flex-row justify-between" style={{ marginBottom: rpm(24), paddingHorizontal: rpm(6) }}>
+              <Button title='Switch Account' prefixIcon='swap-horizontal-outline'
+                className="flex-1 bg-transparent border border-gray-500"
+                style={{
+                  borderRadius: 9999,
+                  paddingTop: rpm(10),
+                  paddingBottom: rpm(10),
+                  marginEnd: rpm(10)
+                }}
+                titleColor={colors.text}
+                onPress={() => bottomSheetRef.current?.open()}
+              />
+              <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="flex-1 bg-blue-500"
+                style={{
+                  borderRadius: 9999,
+                  paddingTop: rpm(10),
+                  paddingBottom: rpm(10),
+                }} />
+            </View>
+
+            {/* MENU ITEMS */}
+            <View
+              style={{
+                borderRadius: rpm(14),
+                paddingHorizontal: rpm(13),
+                paddingVertical: rpm(5),
+                backgroundColor: colors.surface
+              }}
+            >
+              {/* Profile */}
+              <ItemMenu
+                onPressItem={() => { }}
+                icon='person-outline'
+                colors={colors}
+                title='Profile'
+                desc='Manage your personal information'
+                scales={scales}
+                isBordered={true}
+              />
+
+              {/* Dark Mode */}
+              <View className="flex-row items-center border-b border-gray-200"
+                style={{
+                  paddingVertical: rpm(9)
+                }}
+              >
+                <Ionicons name="moon-outline" size={rf(18)} color={colors.text} />
+                <View className='flex-1 ml-4'
+                  style={{
+                    marginLeft: rpm(13)
+                  }}
+                >
+                  <CText className="font-medium" style={{ fontSize: rf(13) }}>
+                    Dark Mode
+                  </CText>
+                  <CText style={{ fontSize: rf(12) }}>
+                    Switch between light and dark theme
+                  </CText>
+                </View>
+                <Switch
+                  value={isDarkMode}
+                  onValueChange={(val) => {
+                    toggleDarkMode(val);
+                  }}
+                />
+              </View>
+
+              {/* Logout */}
+              <ItemMenu
+                onPressItem={confirmLogout}
+                icon='log-out-outline'
+                colors={colors}
+                title='Logout'
+                desc='Sign out from your account'
+                scales={scales}
+              />
+            </View>
+          </View>
+
+          {/* FOOTER VERSION */}
+          <View className="items-center"
+            style={{
+              paddingTop: rpm(20),
+              paddingBottom: rpm(14)
+            }}
+          >
+            <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
+              PAJM Warehouse App
+            </CText>
+            <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
+              Version 1.0
+            </CText>
+          </View>
+        </View>
+
+      </ScreenWrapper>
+      
       <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["30%", "40%"]} enableGesture={true}>
         {
           accounts.map((x, i) => (
@@ -208,7 +211,7 @@ const SettingScreen = () => {
 
         <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }} />
       </AppBottomSheet>
-    </ScreenWrapper>
+    </>
   )
 }
 

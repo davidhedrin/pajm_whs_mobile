@@ -30,7 +30,7 @@ export type UserAuthData = {
   Email: string;
 };
 
-type SourceStatisPrPo = "PR" | "PO";
+export type SourceStatisPrPo = "PR" | "PO";
 export type StatisticProps = {
   Source: SourceStatisPrPo;
   Waiting: number;

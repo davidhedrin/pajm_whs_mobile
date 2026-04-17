@@ -18,6 +18,7 @@ import {
 } from "react-native";
 
 import CustomDropdown from '@/components/dropdown';
+import { saveRecentItem } from '@/hooks/recently-halper';
 import { useScaleAnimation } from '@/hooks/scale-animation';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
@@ -55,7 +56,7 @@ const PurchaseRequest = () => {
   const router = useRouter();
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
-  const { dataStPr } = useStatisticStore();
+  const { dataStPr, fetchStatistic } = useStatisticStore();
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = useCallback(() => {
@@ -221,6 +222,8 @@ const PurchaseRequest = () => {
         title: "Update Finish",
         message: reqDelay.Message
       });
+
+      fetchStatistic(authData?.BpUserId ?? 0);
     } catch (error: any) {
       showToast({
         type: "error",
@@ -459,6 +462,18 @@ const PurchaseRequest = () => {
           >
             <Ionicons name="filter-outline" size={rf(14)} color={colors.text} />
             <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Filter</CText>
+
+            {
+              (statusFilter !== DEFAULT_STATUS_FILTER || startDate || endDate) && <View
+                className="absolute bg-red-500 rounded-full items-center justify-center"
+                style={{
+                  top: rpm(0),
+                  right: rpm(0),
+                  width: rw(8),
+                  height: rh(8)
+                }}
+              />
+            }
           </TouchableOpacity>
 
           <TouchableOpacity className="flex-row items-center"
@@ -475,6 +490,18 @@ const PurchaseRequest = () => {
           >
             <Ionicons name="swap-vertical-outline" size={rf(14)} color={colors.text} />
             <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Sort</CText>
+
+            {
+              (sortFilter.length > 1) && <View
+                className="absolute bg-red-500 rounded-full items-center justify-center"
+                style={{
+                  top: rpm(0),
+                  right: rpm(0),
+                  width: rw(8),
+                  height: rh(8)
+                }}
+              />
+            }
           </TouchableOpacity>
         </View>
 
@@ -598,6 +625,15 @@ const ItemRowFlatList = React.memo(({
       }}
       onPress={() => {
         closeAllSwipe();
+        saveRecentItem({
+          id: item.Id,
+          doc_num: item.PrNo,
+          name: item.User1Name,
+          date: item.DtmSubmit,
+          source: 'PR',
+          module_url: "/pages/purchase_request/detail",
+        });
+
         router.push({
           pathname: "/pages/purchase_request/detail",
           params: {
@@ -608,7 +644,7 @@ const ItemRowFlatList = React.memo(({
       }}
     >
       <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
-        <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
+        <CText className="font-semibold" style={{ fontSize: rf(13) }}>
           {index + 1}. {item.PrNo}
         </CText>
 

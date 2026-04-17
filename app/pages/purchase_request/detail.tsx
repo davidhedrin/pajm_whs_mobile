@@ -2,6 +2,7 @@ import Alert from '@/components/alert';
 import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
+import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
@@ -21,6 +22,7 @@ const PRDetail = () => {
   const { colors } = useTheme();
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
+  const { fetchStatistic } = useStatisticStore();
 
   const [loading, setLoading] = useState(true);
   const [dataPr, setDataPr] = useState<PrProps | null>(null);
@@ -88,6 +90,8 @@ const PRDetail = () => {
         title: "Update Finish",
         message: reqDelay.Message
       });
+      
+      fetchStatistic(authData?.BpUserId ?? 0);
     } catch (error: any) {
       showToast({
         type: "error",
@@ -99,7 +103,12 @@ const PRDetail = () => {
   };
 
   return (
-    <ScreenWrapper edges={['bottom']}>
+    <ScreenWrapper
+      edges={['bottom']}
+      refreshControlAction={async () => {
+        await fatchDatas(params.id);
+      }}
+    >
       {
         loading ? <View className='flex-1 justify-center items-center'
           style={{

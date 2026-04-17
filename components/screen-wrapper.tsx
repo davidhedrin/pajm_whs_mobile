@@ -1,17 +1,31 @@
 import useTheme from "@/hooks/use-theme";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { ReactNode } from "react";
-import { ScrollView } from "react-native";
+import React, { ReactNode, useState } from "react";
+import { RefreshControl, ScrollView } from "react-native";
 import { SafeAreaView, SafeAreaViewProps } from "react-native-safe-area-context";
 
 interface ScreenWrapperProps extends SafeAreaViewProps {
   children: ReactNode;
   gradientColors?: [string, string];
   scrollable?: boolean;
+  refreshControlAction?: () => Promise<void>
 }
 
-const ScreenWrapper = ({ children, gradientColors, scrollable = true, ...props }: ScreenWrapperProps) => {
+const ScreenWrapper = ({ children, gradientColors, scrollable = true, refreshControlAction, ...props }: ScreenWrapperProps) => {
+  const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
+
+  const onRefresh = async () => {
+    if (!refreshControlAction) return;
+
+    setRefreshing(true);
+    try {
+      await refreshControlAction();
+    } catch (err) {
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <LinearGradient
@@ -24,6 +38,9 @@ const ScreenWrapper = ({ children, gradientColors, scrollable = true, ...props }
             <ScrollView
               contentContainerStyle={{ flexGrow: 1 }}
               showsVerticalScrollIndicator={false}
+              refreshControl={
+                refreshControlAction ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined
+              }
             >
               {children}
             </ScrollView>
