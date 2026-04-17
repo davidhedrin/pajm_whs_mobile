@@ -80,6 +80,36 @@ export type PrDetailProps = {
   SKU: string;
 };
 
+export type PoProps = {
+  Id: number;
+  PoNo: string;
+  PrNo: string;
+
+  SubmitDtm: Date | null;
+  User1Name: string;
+
+  Status: StatusPrPo;
+  Remark: string;
+
+  Approvers: ApproverLevel[];
+  AssignLevel?: number;
+  ItemDetails?: PoDetailProps[];
+};
+
+export type PoDetailProps = {
+  Id: number;
+  LastStock: number;
+  ProductId: number;
+  Quantity: number;
+  UnitPrice: number;
+
+  MeasurementName: string;
+  Merk: string;
+  ProductName: string;
+  Remark: string;
+  SKU: string;
+};
+
 export type CheckAprLevelProps = {
   show: boolean;
   msg: string | null;
@@ -92,7 +122,7 @@ export type PrPoDetailPageProps = {
 
 export type PrPoActionProps = {
   action: "APPROVED" | "REJECTED";
-  pr_id: number;
+  doc_id: number;
   level: number;
   remark: string;
 };

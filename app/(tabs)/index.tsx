@@ -490,11 +490,11 @@ export default function Index() {
             >
               <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
 
-              <CText className="font-medium text-gray-500 text-center" style={{ fontSize: rf(13) }}>
+              <CText className="font-semibold text-center" style={{ fontSize: rf(13) }}>
                 You haven't any history yet.
               </CText>
 
-              <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(12) }}>
+              <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(13) }}>
                 Start explore and they will appear here.
               </CText>
             </View>

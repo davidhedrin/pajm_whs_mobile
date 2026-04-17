@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import { checkAprUserLevel, getStatusStyle, MappingPr, PrAction } from '.';
+import { CheckPrUserLevel, getStatusStyle, MappingPr, PrAction } from '.';
 
 const PRDetail = () => {
   const { authData } = useAuthStore();
@@ -53,7 +53,7 @@ const PRDetail = () => {
         }, 0);
         setGrandTotalItems(grandTotalItems ?? 0);
 
-        const checkAprLevel = checkAprUserLevel(prData, getCurAprLevel);
+        const checkAprLevel = CheckPrUserLevel(prData, getCurAprLevel);
         setResCheckAprLevel(checkAprLevel);
       };
 
@@ -71,7 +71,7 @@ const PRDetail = () => {
     fatchDatas(params.id);
   }, []);
 
-  const handlePrAction = async ({ action, pr_id, level, remark }: PrPoActionProps) => {
+  const handlePrAction = async ({ action, doc_id, level, remark }: PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} this application? You can't undo this action!`,
@@ -83,14 +83,14 @@ const PRDetail = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PrAction({ action, pr_id, level, remark });
-      await fatchDatas(pr_id.toString());
+      const reqDelay = await PrAction({ action, doc_id, level, remark });
+      await fatchDatas(doc_id.toString());
       showToast({
         type: "success",
         title: "Update Finish",
         message: reqDelay.Message
       });
-      
+
       fetchStatistic(authData?.BpUserId ?? 0);
     } catch (error: any) {
       showToast({
@@ -246,7 +246,7 @@ const PRDetail = () => {
                           if (curAprLevel) handlePrAction({
                             action: 'APPROVED',
                             level: curAprLevel.Level,
-                            pr_id: dataPr.Id,
+                            doc_id: dataPr.Id,
                             remark: remark.trim()
                           });
                         }}
@@ -270,7 +270,7 @@ const PRDetail = () => {
                           if (curAprLevel) handlePrAction({
                             action: 'REJECTED',
                             level: curAprLevel.Level,
-                            pr_id: dataPr.Id,
+                            doc_id: dataPr.Id,
                             remark: remark.trim()
                           });
                         }}
@@ -396,7 +396,7 @@ const PRDetail = () => {
                   }}
                 >
                   {
-                    dataPr.ItemDetails?.map((x, i) => {
+                    dataPr.ItemDetails && dataPr.ItemDetails.length > 0 ? dataPr.ItemDetails.map((x, i) => {
                       const totalPrice = x.Quantity * x.UnitPrice;
 
                       return <View key={i}>
@@ -451,7 +451,22 @@ const PRDetail = () => {
                           </View>
                         </View>
                       </View>
-                    })
+                    }) : <View className="items-center justify-center"
+                      style={{
+                        paddingHorizontal: rpm(8),
+                        paddingVertical: rpm(20),
+                      }}
+                    >
+                      <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
+
+                      <CText className="font-semibold text-center" style={{ fontSize: rf(13) }}>
+                        Item not found!
+                      </CText>
+
+                      <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(13) }}>
+                        No item detail in this application.
+                      </CText>
+                    </View>
                   }
                 </View>
 

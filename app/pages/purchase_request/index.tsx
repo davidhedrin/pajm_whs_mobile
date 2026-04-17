@@ -102,7 +102,6 @@ const PurchaseRequest = () => {
       return updated;
     });
   };
-
   const sortingFilterSort = (): SortFilterProps[] => {
     return sortFilter.filter(item => item.key !== "" && item.dir !== "");
   };
@@ -202,7 +201,7 @@ const PurchaseRequest = () => {
     );
   };
 
-  const handlePrAction = useCallback(async ({ action, pr_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
+  const handlePrAction = useCallback(async ({ action, doc_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} application "${doc_num}"?`,
@@ -214,7 +213,7 @@ const PurchaseRequest = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PrAction({ action, pr_id, level, remark });
+      const reqDelay = await PrAction({ action, doc_id, level, remark });
       const prData = MappingPr(reqDelay.Data, authData?.BpUserId);
       handleUpdateItem(prData);
       showToast({
@@ -508,7 +507,7 @@ const PurchaseRequest = () => {
         <Input
           value={inputSearchFilter}
           onChangeText={(val) => setInputSearchFilter(val)}
-          placeholder="Purchase number or request name..."
+          placeholder="Document number or request name..."
           suffixGroup={{
             content: <TouchableOpacity onPress={async () => {
               fatchDatas(true);
@@ -565,18 +564,20 @@ const PurchaseRequest = () => {
 
             </View>
           }
-          renderItem={({ item, index }: { item: PrProps; index: number }) => <ItemRowFlatList
-            item={item}
-            index={index}
-            router={router}
-            expandedId={expandedId}
-            swipeableRefs={swipeableRefs}
-            colors={colors}
-            scales={scales}
-            closeAllSwipe={closeAllSwipe}
-            toggleExpand={toggleExpand}
-            handlePrAction={handlePrAction}
-          />}
+          renderItem={
+            ({ item, index }: { item: PrProps; index: number }) => <ItemRowFlatList
+              item={item}
+              index={index}
+              router={router}
+              expandedId={expandedId}
+              swipeableRefs={swipeableRefs}
+              colors={colors}
+              scales={scales}
+              closeAllSwipe={closeAllSwipe}
+              toggleExpand={toggleExpand}
+              handlePrAction={handlePrAction}
+            />
+          }
         />
       </GestureHandlerRootView>
     </ScreenWrapper>
@@ -595,7 +596,7 @@ type ItemRowProps = {
   scales: ResponsiveScale;
   closeAllSwipe: () => void;
   toggleExpand: (id: number) => void;
-  handlePrAction: ({ action, pr_id, level, remark, doc_num }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
+  handlePrAction: ({ action, doc_id, level, remark, doc_num }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
 };
 
 const ItemRowFlatList = React.memo(({
@@ -613,7 +614,7 @@ const ItemRowFlatList = React.memo(({
   const { rw, rh, rpm, rf } = scales;
   const isExpanded = expandedId === item.Id;
   const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
-  const checkAprLevel = checkAprUserLevel(item, getCurAprLevel);
+  const checkAprLevel = CheckPrUserLevel(item, getCurAprLevel);
 
   const content = (
     <TouchableOpacity className="shadow-sm"
@@ -677,7 +678,6 @@ const ItemRowFlatList = React.memo(({
           </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
         }
 
-
         <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
           <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
           <Ionicons
@@ -697,58 +697,60 @@ const ItemRowFlatList = React.memo(({
             }}
           >
             {/* APPROVAL LIST */}
-            {item.Approvers.map((a, i) => {
-              const style = getStatusStyle(a.UserResponse, colors);
+            {
+              item.Approvers.map((a, i) => {
+                const style = getStatusStyle(a.UserResponse, colors);
 
-              return (
-                <View key={i} className="flex-row items-start"
-                  style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
-                >
-                  <View
-                    className="rounded-full mr-3"
-                    style={{
-                      width: rw(5),
-                      height: rh(5),
-                      marginTop: rpm(7),
-                      marginRight: rpm(8),
-                      backgroundColor: colors.textMuted
-                    }}
-                  />
+                return (
+                  <View key={i} className="flex-row items-start"
+                    style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
+                  >
+                    <View
+                      className="rounded-full mr-3"
+                      style={{
+                        width: rw(5),
+                        height: rh(5),
+                        marginTop: rpm(7),
+                        marginRight: rpm(8),
+                        backgroundColor: colors.textMuted
+                      }}
+                    />
 
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-center">
-                      <CText className="font-medium" style={{ fontSize: rf(13) }}>
-                        Approval - {a.Level - 1}
-                      </CText>
+                    <View className="flex-1">
+                      <View className="flex-row justify-between items-center">
+                        <CText className="font-medium" style={{ fontSize: rf(13) }}>
+                          Approval - {a.Level - 1}
+                        </CText>
 
-                      <CText
-                        className="rounded-full"
-                        style={[
-                          {
-                            paddingHorizontal: rpm(6),
-                            paddingVertical: rpm(2),
-                            fontSize: rf(11)
-                          },
-                          style
-                        ]}
-                      >
-                        {a.UserResponse === '' ? "WAITING" : a.UserResponse}
-                      </CText>
-                    </View>
+                        <CText
+                          className="rounded-full"
+                          style={[
+                            {
+                              paddingHorizontal: rpm(6),
+                              paddingVertical: rpm(2),
+                              fontSize: rf(11)
+                            },
+                            style
+                          ]}
+                        >
+                          {a.UserResponse === '' ? "WAITING" : a.UserResponse}
+                        </CText>
+                      </View>
 
-                    <View className="flex-row justify-between items-center">
-                      <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                        {a.UserName}
-                      </CText>
+                      <View className="flex-row justify-between items-center">
+                        <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                          {a.UserName}
+                        </CText>
 
-                      <CText className="font-regular" style={{ fontSize: rf(12) }}>
-                        {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
-                      </CText>
+                        <CText className="font-regular" style={{ fontSize: rf(12) }}>
+                          {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
+                        </CText>
+                      </View>
                     </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })
+            }
           </View>
         )
       }
@@ -781,7 +783,7 @@ const ItemRowFlatList = React.memo(({
               if (getCurAprLevel) handlePrAction({
                 action: 'APPROVED',
                 level: getCurAprLevel.Level,
-                pr_id: item.Id,
+                doc_id: item.Id,
                 remark: "",
                 doc_num: item.PrNo
               });
@@ -813,7 +815,7 @@ const ItemRowFlatList = React.memo(({
               if (getCurAprLevel) handlePrAction({
                 action: 'REJECTED',
                 level: getCurAprLevel.Level,
-                pr_id: item.Id,
+                doc_id: item.Id,
                 remark: "",
                 doc_num: item.PrNo
               });
@@ -863,9 +865,33 @@ export function MappingPr(raw: any, bp_id?: number, items?: any): PrProps {
   };
 };
 
-export function checkAprUserLevel(prData: PrProps, curLevel?: ApproverLevel): CheckAprLevelProps {
+export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: number; }): ApproverLevel[] {
+  const result: ApproverLevel[] = [];
+
+  let i = start_idx;
+  while (raw[`User${i}Name`] !== undefined) {
+    result.push({
+      Level: i,
+      UserId: raw[`User${i}`],
+      UserApproved: raw[`User${i}Approved`],
+      UserName: raw[`User${i}Name`].trim() === "" ? "UNKNOWN" : raw[`User${i}Name`].trim(),
+      UserResponse: raw[`User${i}Response`],
+      Remark: raw[`Remark${i}`],
+      DtmResponse: raw[`DtmResponse${i}`]
+        ? raw[`DtmResponse${i}`].toString().trim() !== ""
+          ? new Date(raw[`DtmResponse${i}`].replace(" ", "T"))
+          : null
+        : null,
+    });
+    i++;
+  }
+
+  return result;
+};
+
+export function CheckPrUserLevel(data: PrProps, curLevel?: ApproverLevel): CheckAprLevelProps {
   if (curLevel !== undefined) {
-    const allApproval = prData.Approvers;
+    const allApproval = data.Approvers;
 
     const curLevelVal = curLevel.Level;
     const curResponse = curLevel.UserResponse;
@@ -915,28 +941,18 @@ export function checkAprUserLevel(prData: PrProps, curLevel?: ApproverLevel): Ch
   } else return { show: false, msg: "However, you are currently not assigned to this application, Thank you!" };
 };
 
-export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: number; }): ApproverLevel[] {
-  const result: ApproverLevel[] = [];
+export async function PrAction({ action, doc_id, level, remark }: PrPoActionProps) {
+  const createReq = await callApi<any>({
+    endpoint: "ApproveRejectPr",
+    params: {
+      action,
+      pr_id: doc_id,
+      level: level - 1,
+      remark
+    }
+  });
 
-  let i = start_idx;
-  while (raw[`User${i}Name`] !== undefined) {
-    result.push({
-      Level: i,
-      UserId: raw[`User${i}`],
-      UserApproved: raw[`User${i}Approved`],
-      UserName: raw[`User${i}Name`].trim() === "" ? "UNKNOWN" : raw[`User${i}Name`].trim(),
-      UserResponse: raw[`User${i}Response`],
-      Remark: raw[`Remark${i}`],
-      DtmResponse: raw[`DtmResponse${i}`]
-        ? raw[`DtmResponse${i}`].toString().trim() !== ""
-          ? new Date(raw[`DtmResponse${i}`].replace(" ", "T"))
-          : null
-        : null,
-    });
-    i++;
-  }
-
-  return result;
+  return createReq;
 };
 
 type SummaryCardProps = {
@@ -949,7 +965,7 @@ type SummaryCardProps = {
   onPress?: () => void;
 };
 
-function SummaryCard({ title, count, color, icon, color_scheme, scales, onPress }: SummaryCardProps) {
+export function SummaryCard({ title, count, color, icon, color_scheme, scales, onPress }: SummaryCardProps) {
   const { scale, onPressIn, onPressOut } = useScaleAnimation(0.92);
   const { rpm, rf } = scales;
 
@@ -977,20 +993,6 @@ function SummaryCard({ title, count, color, icon, color_scheme, scales, onPress 
 
     </Pressable>
   );
-};
-
-export async function PrAction({ action, pr_id, level, remark }: PrPoActionProps) {
-  const createReq = await callApi<any>({
-    endpoint: "ApproveRejectPr",
-    params: {
-      action,
-      pr_id,
-      level: level - 1,
-      remark
-    }
-  });
-
-  return createReq;
 };
 
 
