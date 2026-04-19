@@ -516,13 +516,22 @@ export default function Index() {
             <TouchableOpacity
               key={i}
               onPress={async () => {
-                bottomSheetRef.current?.close();
+                const confirmed = await showConfirm({
+                  title: "Confirm Switch!",
+                  message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                  confirmText: "Yes, Switch",
+                  cancelText: "Cancel",
+                  icon: 'swap-horizontal-outline'
+                });
+
+                if (!confirmed) return;
+                setRecentItems([]);
+                clearRecentItems();
 
                 loadingPage.show();
-                const findUser = accounts.find(y => y.Username == x.Username);
-                await fetchStatistic(findUser?.BpUserId ?? 0);
-
+                await fetchStatistic(x?.BpUserId ?? 0);
                 await switchAccount(x.Username);
+                bottomSheetRef.current?.close();
                 loadingPage.hide();
               }}
             >

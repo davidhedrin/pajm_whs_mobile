@@ -2,8 +2,10 @@ import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from '@/components/button';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
+import { clearRecentItems } from '@/hooks/recently-halper';
+import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
-import { useAuthStore, useConfirmStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import { ResponsiveScale } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +21,8 @@ const SettingScreen = () => {
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { showConfirm } = useConfirmStore();
   const router = useRouter();
+  const loadingPage = useLoadingStore.getState();
+  const { fetchStatistic } = useStatisticStore();
   const { logout } = useAuthStore();
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
@@ -193,15 +197,29 @@ const SettingScreen = () => {
         </View>
 
       </ScreenWrapper>
-      
+
       <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["30%", "40%"]} enableGesture={true}>
         {
           accounts.map((x, i) => (
             <TouchableOpacity
               key={i}
               onPress={async () => {
+                const confirmed = await showConfirm({
+                  title: "Confirm Switch!",
+                  message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                  confirmText: "Yes, Switch",
+                  cancelText: "Cancel",
+                  icon: 'swap-horizontal-outline'
+                });
+
+                if (!confirmed) return;
+                loadingPage.show();
+                await clearRecentItems();
+
+                await fetchStatistic(x?.BpUserId ?? 0);
                 await switchAccount(x.Username);
                 bottomSheetRef.current?.close();
+                loadingPage.hide();
               }}
             >
               <Accounts data={x} activeUser={authData?.Username ?? ""} scales={scales} />
