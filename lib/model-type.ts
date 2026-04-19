@@ -91,6 +91,12 @@ export type PoProps = {
   Status: StatusPrPo;
   Remark: string;
 
+  SupplierName: string;
+  ShipToName: string;
+  DeliveryTime: string;
+  CostCenterName: string;
+  SubCostCenterName: string;
+
   Approvers: ApproverLevel[];
   AssignLevel?: number;
   ItemDetails?: PoDetailProps[];

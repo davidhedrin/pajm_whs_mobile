@@ -386,7 +386,7 @@ const PurchaseRequest = () => {
         }
 
         <TouchableOpacity onPress={() => addNewSortFilter()}>
-          <CText className="font-semibold" style={{ fontSize: rf(14), color: colors.primary }}>
+          <CText className="font-semibold" style={{ fontSize: rf(13), color: colors.primary }}>
             <Ionicons name='add-outline' size={rf(16)} /> Add More
           </CText>
         </TouchableOpacity>

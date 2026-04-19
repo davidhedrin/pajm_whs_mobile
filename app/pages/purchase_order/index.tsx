@@ -148,7 +148,7 @@ const PurchaseOrder = () => {
       }
     });
 
-    console.log(createReq);
+    // console.log(createReq);
     let resData: PoProps[] = [];
     if (createReq.Data !== undefined) resData = createReq.Data.map(x => MappingPo(x, authData?.BpUserId));
 
@@ -360,7 +360,7 @@ const PurchaseOrder = () => {
         }
 
         <TouchableOpacity onPress={() => addNewSortFilter()}>
-          <CText className="font-semibold" style={{ fontSize: rf(14), color: colors.primary }}>
+          <CText className="font-semibold" style={{ fontSize: rf(13), color: colors.primary }}>
             <Ionicons name='add-outline' size={rf(16)} /> Add More
           </CText>
         </TouchableOpacity>
@@ -834,6 +834,12 @@ export function MappingPo(raw: any, bp_id?: number, items?: any): PoProps {
     User1Name: raw.User1Name,
     Status: status.includes("REJECTED") ? "REJECTED" : status.every(res => res === "APPROVED") ? "APPROVED" : "",
     Remark: raw.Remark,
+
+    SupplierName: raw.SupplierName ? raw.SupplierName.trim() != "" ? raw.SupplierName : undefined : undefined,
+    ShipToName: raw.ShipToName ? raw.ShipToName.trim() != "" ? raw.ShipToName : undefined : undefined,
+    DeliveryTime: raw.DeliveryTime ? raw.DeliveryTime.trim() != "" ? raw.DeliveryTime : undefined : undefined,
+    CostCenterName: raw.CostCenterName ? raw.CostCenterName.trim() != "" ? raw.CostCenterName : undefined : undefined,
+    SubCostCenterName: raw.SubCostCenterName ? raw.SubCostCenterName.trim() != "" ? raw.SubCostCenterName : undefined : undefined,
 
     Approvers: apprLevel,
     AssignLevel: asgLevel ? asgLevel.Level : undefined,

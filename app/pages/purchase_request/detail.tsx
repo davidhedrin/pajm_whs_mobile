@@ -56,7 +56,6 @@ const PRDetail = () => {
         const checkAprLevel = CheckPrUserLevel(prData, getCurAprLevel);
         setResCheckAprLevel(checkAprLevel);
       };
-
     } catch (error: any) {
       showToast({
         type: "error",
@@ -138,7 +137,7 @@ const PRDetail = () => {
                       msg={
                         dataPr.Status === 'APPROVED' ?
                           "This application was reviewed and has been finish approved successfully." :
-                          "Sorry, but this request has been rejected for any reason. Please check timelines!"
+                          "This request has been rejected for any reason. See the timelines comment if any!"
                       }
                     />
                   </View>
@@ -307,7 +306,6 @@ const PRDetail = () => {
 
                       return (
                         <View key={index} className="flex-row">
-
                           {/* LEFT: Circle + Line */}
                           <View className="items-center" style={{ marginRight: rpm(8) }}>
                             {/* Circle */}
@@ -335,7 +333,6 @@ const PRDetail = () => {
 
                           {/* RIGHT: Content */}
                           <View className="flex-1" style={{ marginBottom: index !== (dataPr.Approvers.length - 1) ? rpm(16) : undefined }}>
-
                             {/* Header */}
                             <View className="flex-row justify-between items-center">
                               <CText className="font-semibold">
@@ -417,7 +414,7 @@ const PRDetail = () => {
 
                               {/* SKU */}
                               <CText className="font-regular" style={{ fontSize: rf(13) }}>
-                                SKU: ABC-12345
+                                SKU: {x.SKU}
                               </CText>
 
                               <View className="flex-row justify-between">

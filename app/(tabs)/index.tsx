@@ -465,9 +465,17 @@ export default function Index() {
                     {i + 1}. {x.doc_num}
                   </CText>
 
-                  <CText style={{ fontSize: rf(13) }}>
-                    Source: {x.source}
-                  </CText>
+                  <View className="flex-row items-center">
+                    <CText style={{ fontSize: rf(13), marginEnd: rpm(2) }} className="leading-none">
+                      Source: {x.source}
+                    </CText>
+
+                    <Ionicons
+                      name={x.source === 'PR' ? "document-text-outline" : "cart-outline"}
+                      size={rf(17)}
+                      color={x.source === 'PR' ? colors.success : colors.warning}
+                    />
+                  </View>
                 </View>
 
                 <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
