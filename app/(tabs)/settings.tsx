@@ -38,6 +38,7 @@ const SettingScreen = () => {
 
     if (confirmed) {
       await logout(authData?.Username ?? "");
+      await clearRecentItems();
       router.replace("/(auth)/login");
     }
   };
