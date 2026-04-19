@@ -46,8 +46,6 @@ const PoDetail = () => {
 
 
       if (createReq.Data !== undefined && createReq.Data !== null) {
-        console.log(createReq.Data.Header);
-
         const poData = MappingPo(createReq.Data.Header, authData?.BpUserId, createReq.Data.Items);
         const getCurAprLevel = poData.Approvers.find(x => x.Level === poData.AssignLevel);
         setDataPo(poData);

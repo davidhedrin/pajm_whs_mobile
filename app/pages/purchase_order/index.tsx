@@ -515,7 +515,7 @@ const PurchaseOrder = () => {
             </View> : null
           }
           ListEmptyComponent={
-            <View>
+            <View style={{ marginTop: rpm(8) }}>
               {
                 !loadingData && <View className="items-center justify-center shadow-md"
                   style={{
