@@ -35,7 +35,11 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    loadAuth();
+    const load = async () => {
+      await loadAuth();
+    };
+
+    load();
   }, []);
 
   useEffect(() => {
