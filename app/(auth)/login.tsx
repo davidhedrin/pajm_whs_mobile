@@ -6,9 +6,9 @@ import Select from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
-import { UserAuthData } from '@/lib/model-type';
+import { sistemOrgList, UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { showToast } from '@/lib/utils';
+import { orgLable, showToast } from '@/lib/utils';
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
@@ -18,9 +18,15 @@ import { z } from "zod";
 const AuthLogin = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const { setAuth, setActiceOrg } = useAuthStore();
   const [togglePass, setTogglePass] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const optOrg = sistemOrgList.map((org) => ({
+    label: `${org} - ${orgLable[org]}`,
+    value: org,
+    disabled: org === "LCS",
+  }));
 
   const regSchema = z.object({
     username: z.string().nonempty("Please enter your username"),
@@ -47,12 +53,16 @@ const AuthLogin = () => {
       setIsLoading(true);
       const createReq = await LoginApi<UserAuthData>(data.username, data.password);
       const res = createReq.Data;
-      if (res) await setAuth(res);
-      showToast({
-        type: "success",
-        title: "Success Login",
-        message: "You have logged in successfully."
-      });
+      if (res) {
+        await setActiceOrg(data.organization as any)
+        await setAuth(res);
+
+        showToast({
+          type: "success",
+          title: "Success Login",
+          message: "You have logged in successfully."
+        });
+      }
     } catch (error: any) {
       showToast({
         type: "error",
@@ -143,15 +153,12 @@ const AuthLogin = () => {
               render={({ field: { onChange, value } }) => (
                 <>
                   <Select
-                    options={[
-                      { label: 'PAJM - Pemalang Aji Jaya Maritimindo', value: 'PAJM' },
-                      { label: 'LCS - Lentera Cipta Samudra', value: 'LCS', disabled: true },
-                    ]}
+                    options={optOrg}
                     value={value}
                     onChange={onChange}
                     placeholder="Select your organization"
                   />
-                  
+
                   {errors.organization && <ErrorLable err_msg={errors.organization.message} />}
                 </>
               )}

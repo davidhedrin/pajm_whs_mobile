@@ -6,24 +6,26 @@ import { clearRecentItems } from '@/hooks/recently-halper';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
-import { ResponsiveScale } from '@/lib/model-type';
+import { ResponsiveScale, SistemOrg, sistemOrgList } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useRef } from 'react';
-import { Switch, TouchableOpacity, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, Switch, TouchableOpacity, View } from 'react-native';
 import { Accounts } from '.';
 
 const SettingScreen = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
-  const { authData, accounts, switchAccount } = useAuthStore();
+  const { authData, accounts, activeOrg, switchAccount } = useAuthStore();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { showConfirm } = useConfirmStore();
   const router = useRouter();
   const loadingPage = useLoadingStore.getState();
   const { fetchStatistic } = useStatisticStore();
   const { logout } = useAuthStore();
+
+  const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg | null>(activeOrg);
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
@@ -112,7 +114,10 @@ const SettingScreen = () => {
                   marginEnd: rpm(10)
                 }}
                 titleColor={colors.text}
-                onPress={() => bottomSheetRef.current?.open()}
+                onPress={() => {
+                  setActiveTabSwitch(activeOrg);
+                  bottomSheetRef.current?.open();
+                }}
               />
               <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="flex-1 bg-blue-500"
                 style={{
@@ -196,16 +201,56 @@ const SettingScreen = () => {
             </CText>
           </View>
         </View>
-
       </ScreenWrapper>
 
       <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["30%", "40%"]} enableGesture={true}>
+        <View style={{ paddingBottom: rpm(12), paddingTop: rpm(4) }}>
+          <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Choose Organization</CText>
+
+          <View className="flex-row items-center border border-gray-300"
+            style={{
+              borderRadius: rpm(10)
+            }}
+          >
+            {sistemOrgList.map((tab) => {
+              const isActive = activeTabSwitch === tab;
+
+              return (
+                <Pressable
+                  key={tab}
+                  onPress={() => setActiveTabSwitch(tab as any)}
+                  className="flex-1 items-center"
+                  style={{
+                    paddingVertical: rpm(10)
+                  }}
+                >
+                  <CText className="font-semibold leading-none" style={{ color: isActive ? colors.primary : colors.textMuted, fontSize: rf(13) }}>
+                    PT. {tab}
+                  </CText>
+
+                  {isActive && (
+                    <View className="rounded-full"
+                      style={{
+                        width: rpm(20),
+                        height: rpm(3),
+                        backgroundColor: colors.primary,
+                        marginTop: rpm(5)
+                      }}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Registered Accounts</CText>
         {
           accounts.map((x, i) => (
             <TouchableOpacity
               key={i}
               onPress={async () => {
-                if(x.Username == authData?.Username) return;
+                if (x.Username == authData?.Username) return;
 
                 const confirmed = await showConfirm({
                   title: "Confirm Switch!",
@@ -230,6 +275,7 @@ const SettingScreen = () => {
           ))
         }
 
+        <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Or</CText>
         <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }} />
       </AppBottomSheet>
     </>

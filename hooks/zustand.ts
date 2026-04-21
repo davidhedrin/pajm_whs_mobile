@@ -1,5 +1,5 @@
 import Configs from "@/lib/config";
-import { ApiResponse, UserAuthData } from "@/lib/model-type";
+import { ApiResponse, SistemOrg, UserAuthData } from "@/lib/model-type";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
@@ -7,6 +7,7 @@ import { create } from "zustand";
 type AuthState = {
   accounts: UserAuthData[];
   authData: UserAuthData | null;
+  activeOrg: SistemOrg | null;
 
   isAuthenticated: boolean;
   isAuthLoaded: boolean;
@@ -15,11 +16,14 @@ type AuthState = {
   switchAccount: (username: string) => Promise<void>;
   logout: (username?: string) => Promise<void>;
   loadAuth: () => Promise<void>;
+
+  setActiceOrg: (org: SistemOrg) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   accounts: [],
   authData: null,
+  activeOrg: null,
 
   isAuthenticated: false,
   isAuthLoaded: false,
@@ -108,6 +112,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           "accounts",
           "authData",
           "activeAccount",
+          "activeOrg"
         ]);
 
         set({
@@ -152,6 +157,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const accountsStr = await AsyncStorage.getItem("accounts");
       const activeUsername = await AsyncStorage.getItem("authData");
+      const activeOrg = await AsyncStorage.getItem("activeOrg");
 
       if (!accountsStr) {
         set({
@@ -205,6 +211,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts,
         authData,
         isAuthenticated: !!authData,
+        activeOrg: activeOrg as SistemOrg
       });
     } catch (e) {
       throw e;
@@ -212,6 +219,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isAuthLoaded: true });
     }
   },
+
+  setActiceOrg: async (org: SistemOrg) => {
+    await AsyncStorage.setItem("activeOrg", org);
+    set({ activeOrg: org });
+  }
 }));
 
 export async function LoginApi<T>(

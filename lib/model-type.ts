@@ -1,4 +1,5 @@
-export type SistemOrg = "PAJM" | "LCS";
+export const sistemOrgList = ["PAJM", "LCS"] as const;
+export type SistemOrg = (typeof sistemOrgList)[number];
 
 export type ResponsiveScale = {
   rw: (size: number) => number;

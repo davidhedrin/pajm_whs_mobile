@@ -9,7 +9,7 @@ import Button from "@/components/button";
 import { clearRecentItems, getRecentItems, RecentItem } from "@/hooks/recently-halper";
 import { useStatisticStore } from "@/hooks/statistic-zustand";
 import { useAuthStore, useConfirmStore, useLoadingStore } from "@/hooks/zustand";
-import { ResponsiveScale, SistemOrg, UserAuthData } from "@/lib/model-type";
+import { ResponsiveScale, SistemOrg, sistemOrgList, UserAuthData } from "@/lib/model-type";
 import { useResposiveScale } from "@/lib/resposive";
 import { formatDate, showToast } from "@/lib/utils";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -24,12 +24,14 @@ type ModuleItem = {
 export default function Index() {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
-  const { authData, accounts, switchAccount } = useAuthStore();
+  const { authData, accounts, activeOrg, switchAccount } = useAuthStore();
   const { colors } = useTheme();
   const { showConfirm } = useConfirmStore();
   const router = useRouter();
   const { dataStPr, dataStPo, fetchStatistic } = useStatisticStore();
   const loadingPage = useLoadingStore.getState();
+
+  const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg | null>(activeOrg);
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
@@ -52,7 +54,6 @@ export default function Index() {
     if (authData != null) fatchDatas(authData?.BpUserId ?? 0);
   }, [authData]);
 
-
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
   const loadRecentView = async () => {
     const data = await getRecentItems();
@@ -63,8 +64,6 @@ export default function Index() {
       loadRecentView();
     }, [])
   );
-
-  const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg>("PAJM");
 
   return (
     <>
@@ -79,7 +78,10 @@ export default function Index() {
           <View className="flex-row items-center justify-between">
 
             {/* Profile Section */}
-            <TouchableOpacity onPress={() => bottomSheetRef.current?.open()}>
+            <TouchableOpacity onPress={() => {
+              setActiveTabSwitch(activeOrg);
+              bottomSheetRef.current?.open();
+            }}>
               <View
                 className="flex-row items-center border rounded-full"
                 style={{
@@ -521,7 +523,7 @@ export default function Index() {
               borderRadius: rpm(10)
             }}
           >
-            {["PAJM", "LCS"].map((tab) => {
+            {sistemOrgList.map((tab) => {
               const isActive = activeTabSwitch === tab;
 
               return (
