@@ -1,3 +1,5 @@
+export type SistemOrg = "PAJM" | "LCS";
+
 export type ResponsiveScale = {
   rw: (size: number) => number;
   rh: (size: number) => number;

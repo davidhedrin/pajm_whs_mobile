@@ -8,7 +8,7 @@ import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { ExecuteMinDelay, showToast } from '@/lib/utils';
+import { showToast } from '@/lib/utils';
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
@@ -24,8 +24,9 @@ const AuthLogin = () => {
 
   const regSchema = z.object({
     username: z.string().nonempty("Please enter your username"),
-    password: z.string().nonempty("Please enter your password").min(8, "Password must be at least 8 char"),
+    password: z.string().nonempty("Please enter your password"),
     organization: z.string().nonempty("Please select organization"),
+    // .min(8, "Password must be at least 8 char")
   });
 
   type RegFormData = z.infer<typeof regSchema>;
@@ -44,9 +45,8 @@ const AuthLogin = () => {
   const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = LoginApi<UserAuthData>(data.username, data.password);
-      const req = await ExecuteMinDelay(createReq, 1000);
-      const res = req.Data;
+      const createReq = await LoginApi<UserAuthData>(data.username, data.password);
+      const res = createReq.Data;
       if (res) await setAuth(res);
       showToast({
         type: "success",

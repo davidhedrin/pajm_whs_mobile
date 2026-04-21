@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/lib/config";
+import Configs from "@/lib/config";
 import { ApiResponse, UserAuthData } from "@/lib/model-type";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -221,7 +221,7 @@ export async function LoginApi<T>(
 ): Promise<ApiResponse<T>> {
   try {
     const res = await fetch(
-      `${BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx/Login`,
+      `${Configs.BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx/Login`,
       {
         method: "POST",
         headers: {

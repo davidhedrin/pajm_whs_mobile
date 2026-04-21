@@ -2,14 +2,14 @@ import ScreenWrapper from "@/components/screen-wrapper";
 import { CText } from "@/components/text";
 import useTheme from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Pressable, Text, TouchableOpacity, View } from "react-native";
 
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from "@/components/button";
 import { clearRecentItems, getRecentItems, RecentItem } from "@/hooks/recently-halper";
 import { useStatisticStore } from "@/hooks/statistic-zustand";
 import { useAuthStore, useConfirmStore, useLoadingStore } from "@/hooks/zustand";
-import { ResponsiveScale, UserAuthData } from "@/lib/model-type";
+import { ResponsiveScale, SistemOrg, UserAuthData } from "@/lib/model-type";
 import { useResposiveScale } from "@/lib/resposive";
 import { formatDate, showToast } from "@/lib/utils";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -63,6 +63,8 @@ export default function Index() {
       loadRecentView();
     }, [])
   );
+
+  const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg>("PAJM");
 
   return (
     <>
@@ -511,11 +513,54 @@ export default function Index() {
       </ScreenWrapper>
 
       <AppBottomSheet title="Switch Account" ref={bottomSheetRef} snapPoints={["30%", "40%"]} enableGesture={true}>
+        <View style={{ paddingBottom: rpm(12), paddingTop: rpm(4) }}>
+          <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Choose Organization</CText>
+
+          <View className="flex-row items-center border border-gray-300"
+            style={{
+              borderRadius: rpm(10)
+            }}
+          >
+            {["PAJM", "LCS"].map((tab) => {
+              const isActive = activeTabSwitch === tab;
+
+              return (
+                <Pressable
+                  key={tab}
+                  onPress={() => setActiveTabSwitch(tab as any)}
+                  className="flex-1 items-center"
+                  style={{
+                    paddingVertical: rpm(10)
+                  }}
+                >
+                  <CText className="font-semibold leading-none" style={{ color: isActive ? colors.primary : colors.textMuted, fontSize: rf(13) }}>
+                    PT. {tab}
+                  </CText>
+
+                  {isActive && (
+                    <View className="rounded-full"
+                      style={{
+                        width: rpm(20),
+                        height: rpm(3),
+                        backgroundColor: colors.primary,
+                        marginTop: rpm(5)
+                      }}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Registered Accounts</CText>
         {
           accounts.map((x, i) => (
             <TouchableOpacity
               key={i}
               onPress={async () => {
+                if (x.Username == authData?.Username) return;
+
                 const confirmed = await showConfirm({
                   title: "Confirm Switch!",
                   message: "Are you sure you want to switch account? This action will delete recently viewed data!",
@@ -540,7 +585,8 @@ export default function Index() {
           ))
         }
 
-        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }} />
+        <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Or</CText>
+        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(10) }} />
       </AppBottomSheet>
     </>
   );

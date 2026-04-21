@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "pajm_whs_mobile",
+    "name": "PAJM Warehose",
     "slug": "pajm_whs_mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,6 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      },
       "supportsTablet": true
     },
     "android": {
@@ -18,7 +23,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.cips111299.pajm_whs_mobile"
     },
     "web": {
       "output": "static",
@@ -30,7 +36,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 80,
           "resizeMode": "contain",
           "backgroundColor": "#f8fafc",
           "dark": {
@@ -38,11 +44,28 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "flipper": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a58adf6e-55a9-4096-955f-4d4688f0fc37"
+      }
     }
   }
 }

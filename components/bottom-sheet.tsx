@@ -69,7 +69,7 @@ const AppBottomSheet = forwardRef<BottomSheetRef, Props>(
           {
             title !== undefined && <View>
               <CText className="text-center" style={{ fontSize: rf(14) }}>{title}</CText>
-              <View className="border-b border-gray-300" style={{ marginTop: rpm(6), marginBottom: rpm(14) }} />
+              <View className="border-b border-gray-300" style={{ marginTop: rpm(6), marginBottom: rpm(8) }} />
             </View>
           }
         </View>

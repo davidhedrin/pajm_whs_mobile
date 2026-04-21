@@ -25,7 +25,8 @@ const NewAccount = () => {
   const [togglePass, setTogglePass] = useState(true);
   const regSchema = z.object({
     username: z.string().nonempty("Please enter your username"),
-    password: z.string().nonempty("Please enter your password").min(8, "Password must be at least 8 char"),
+    password: z.string().nonempty("Please enter your password"),
+    // .min(8, "Password must be at least 8 char")
   });
 
   type RegFormData = z.infer<typeof regSchema>;

@@ -205,6 +205,8 @@ const SettingScreen = () => {
             <TouchableOpacity
               key={i}
               onPress={async () => {
+                if(x.Username == authData?.Username) return;
+
                 const confirmed = await showConfirm({
                   title: "Confirm Switch!",
                   message: "Are you sure you want to switch account? This action will delete recently viewed data!",
