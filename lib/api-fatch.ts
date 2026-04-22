@@ -18,7 +18,7 @@ export async function callApi<T>({
   isCredentian = true,
 }: CallApiOptions): Promise<ApiResponse<T>> {
   try {
-    const { authData, setAuth, logout } = useAuthStore.getState();
+    const { authData, activeOrg, setAuth, logout } = useAuthStore.getState();
 
     let finalHeaders: Record<string, string> = {
       Accept: "application/json",
@@ -26,7 +26,9 @@ export async function callApi<T>({
       ...headers,
     };
 
-    const ENDPOINT_URL = `${Configs.BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx`;
+    const BASE_URL =
+      activeOrg === "PAJM" ? Configs.BASE_URL_PAJM : Configs.BASE_URL_LCS;
+    const ENDPOINT_URL = `${BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx`;
     if (isCredentian) {
       if (authData === null) throw new Error("Credential is not found!");
       if (authData.Token === null) throw new Error("Credential is not found!");
@@ -36,6 +38,7 @@ export async function callApi<T>({
         const createReq = await LoginApi<UserAuthData>(
           authData.Username,
           "",
+          authData.Org,
           true,
         );
 

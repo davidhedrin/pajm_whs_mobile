@@ -1,6 +1,6 @@
 import ScreenWrapper from "@/components/screen-wrapper";
 import { CText } from "@/components/text";
-import useTheme from "@/hooks/use-theme";
+import useTheme, { ColorScheme } from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, Text, TouchableOpacity, View } from "react-native";
 
@@ -13,14 +13,8 @@ import { ResponsiveScale, SistemOrg, sistemOrgList, UserAuthData } from "@/lib/m
 import { useResposiveScale } from "@/lib/resposive";
 import { formatDate, showToast } from "@/lib/utils";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type ModuleItem = {
-  iconName: React.ComponentProps<typeof Ionicons>["name"];
-  title: string;
-  badgeVal?: string;
-  onPress?: () => void;
-};
 export default function Index() {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
@@ -32,6 +26,8 @@ export default function Index() {
   const loadingPage = useLoadingStore.getState();
 
   const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg | null>(activeOrg);
+  const acoPajm = useMemo(() => accounts.filter(x => x.Org === "PAJM"), [accounts]);
+  const acoLcs = useMemo(() => accounts.filter(x => x.Org === "LCS"), [accounts]);
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
@@ -126,6 +122,10 @@ export default function Index() {
                 width: rw(36),
                 height: rh(36),
               }}
+              onPress={async () => {
+                // ClearAllStorage();
+                // CheckAllStorage();
+              }}
             >
               <Ionicons name="notifications-outline" size={rf(20)} color="white" />
 
@@ -162,7 +162,7 @@ export default function Index() {
               </CText>
 
               <CText className="font-semibold" style={{ fontSize: rf(21), marginTop: rpm(4) }}>
-                <Text className="font-semibold text-red-500">PAJM</Text> Warehouse
+                <Text className="font-semibold text-red-500">{activeOrg}</Text> Warehouse
               </CText>
 
               <CText
@@ -557,38 +557,77 @@ export default function Index() {
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Registered Accounts</CText>
         {
-          accounts.map((x, i) => (
-            <TouchableOpacity
-              key={i}
-              onPress={async () => {
-                if (x.Username == authData?.Username) return;
+          activeTabSwitch === "PAJM" ? (
+            acoPajm.length > 0 ? acoPajm.map((x, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={async () => {
+                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
 
-                const confirmed = await showConfirm({
-                  title: "Confirm Switch!",
-                  message: "Are you sure you want to switch account? This action will delete recently viewed data!",
-                  confirmText: "Yes, Switch",
-                  cancelText: "Cancel",
-                  icon: 'swap-horizontal-outline'
-                });
+                  const confirmed = await showConfirm({
+                    title: "Confirm Switch!",
+                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                    confirmText: "Yes, Switch",
+                    cancelText: "Cancel",
+                    icon: 'swap-horizontal-outline'
+                  });
 
-                if (!confirmed) return;
-                setRecentItems([]);
-                clearRecentItems();
+                  if (!confirmed) return;
+                  setRecentItems([]);
+                  clearRecentItems();
 
-                loadingPage.show();
-                await fetchStatistic(x?.BpUserId ?? 0);
-                await switchAccount(x.Username);
-                bottomSheetRef.current?.close();
-                loadingPage.hide();
-              }}
-            >
-              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={scales} />
-            </TouchableOpacity>
-          ))
+                  loadingPage.show();
+                  await switchAccount(x.Username, x.Org);
+                  await fetchStatistic(x?.BpUserId ?? 0);
+                  bottomSheetRef.current?.close();
+                  loadingPage.hide();
+                }}
+              >
+                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
+              </TouchableOpacity>
+            )) : EmptyAccount(scales, colors)
+          ) : (
+            acoLcs.length > 0 ? acoLcs.map((x, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={async () => {
+                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
+
+                  const confirmed = await showConfirm({
+                    title: "Confirm Switch!",
+                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                    confirmText: "Yes, Switch",
+                    cancelText: "Cancel",
+                    icon: 'swap-horizontal-outline'
+                  });
+
+                  if (!confirmed) return;
+                  setRecentItems([]);
+                  clearRecentItems();
+
+                  loadingPage.show();
+                  await switchAccount(x.Username, x.Org);
+                  await fetchStatistic(x?.BpUserId ?? 0);
+                  bottomSheetRef.current?.close();
+                  loadingPage.hide();
+                }}
+              >
+                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
+              </TouchableOpacity>
+            )) : EmptyAccount(scales, colors)
+          )
         }
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Or</CText>
-        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(10) }} />
+        <Button
+          onPress={() => router.push({
+            pathname: "/pages/new_account",
+            params: {
+              org: activeTabSwitch
+            }
+          })}
+          title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(10) }}
+        />
       </AppBottomSheet>
     </>
   );
@@ -654,8 +693,9 @@ function ModuleButton({ iconName, title, badgeVal, onPress, scales }: ModuleButt
   </TouchableOpacity>;
 };
 
-export function Accounts({ data, activeUser, scales }: { data: UserAuthData, activeUser: string, scales: ResponsiveScale; }) {
+export function Accounts({ data, activeUser, scales }: { data: UserAuthData, activeUser?: UserAuthData, scales: ResponsiveScale; }) {
   const { rw, rh, rpm, rf } = scales;
+  const isSelected = (activeUser && activeUser.Username == data.Username && activeUser.Org == data.Org)
 
   return <View className="flex-row items-center bg-gray-300/20 border border-gray-400/15"
     style={{
@@ -672,7 +712,7 @@ export function Accounts({ data, activeUser, scales }: { data: UserAuthData, act
         marginRight: rpm(10)
       }}
     >
-      <CText className="font-semibold" style={{ color: "#fff", fontSize: rf(13) }}>JD</CText>
+      <Ionicons name="person-outline" size={rf(15)} color={"#fff"} />
     </View>
 
     <View className="flex-1">
@@ -680,6 +720,28 @@ export function Accounts({ data, activeUser, scales }: { data: UserAuthData, act
       <CText className="opacity-60" style={{ fontSize: rf(12) }}>{data.Email ? (data.Email.trim() !== "" ? data.Email : "Email not registered") : "Email not registered"}</CText>
     </View>
 
-    <Ionicons name={activeUser == data.Username ? "checkmark-circle" : "ellipse-outline"} size={rf(21)} color={activeUser == data.Username ? "#3b82f6" : "#9CA3AF"} />
+    <Ionicons name={isSelected ? "checkmark-circle" : "ellipse-outline"} size={rf(21)} color={isSelected ? "#3b82f6" : "#9CA3AF"} />
   </View>
-}
+};
+
+export function EmptyAccount(scales: ResponsiveScale, colors: ColorScheme): import("react").ReactNode {
+  const { rw, rh, rpm, rf } = scales;
+
+  return <View className="items-center justify-center bg-gray-300/20 border border-gray-400/15"
+    style={{
+      borderRadius: rpm(10),
+      paddingVertical: rpm(12),
+      marginBottom: rpm(14)
+    }}
+  >
+    <Ionicons name="person-circle-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(4) }} />
+
+    <CText className="font-semibold text-center" style={{ fontSize: rf(13) }}>
+      No Account Yet!
+    </CText>
+
+    <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(13) }}>
+      Theres no accounts registered on this organization.
+    </CText>
+  </View>;
+};

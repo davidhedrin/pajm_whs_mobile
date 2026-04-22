@@ -2,31 +2,38 @@ import Button from '@/components/button';
 import ErrorLable from '@/components/error-lable';
 import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
+import Select from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
-import { UserAuthData } from '@/lib/model-type';
+import { sistemOrgList, UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { ExecuteMinDelay, showToast } from '@/lib/utils';
+import { ExecuteMinDelay, orgLable, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import { Image, TouchableOpacity, View } from 'react-native';
 import { z } from "zod";
 
 const NewAccount = () => {
+  const params = useLocalSearchParams<{ org: string }>();
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [togglePass, setTogglePass] = useState(true);
+  const optOrg = sistemOrgList.map((org) => ({
+    label: `${org} - ${orgLable[org]}`,
+    value: org,
+  }));
+
   const regSchema = z.object({
     username: z.string().nonempty("Please enter your username"),
     password: z.string().nonempty("Please enter your password"),
-    // .min(8, "Password must be at least 8 char")
+    organization: z.string().nonempty("Please select organization"),
   });
 
   type RegFormData = z.infer<typeof regSchema>;
@@ -37,7 +44,8 @@ const NewAccount = () => {
     reValidateMode: "onChange",
     defaultValues: {
       username: "",
-      password: ""
+      password: "",
+      organization: params.org
     }
   });
 
@@ -46,16 +54,19 @@ const NewAccount = () => {
   const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = LoginApi<UserAuthData>(data.username, data.password);
+      const createReq = LoginApi<UserAuthData>(data.username, data.password, data.organization);
       const req = await ExecuteMinDelay(createReq, 1000);
       const res = req.Data;
-      if (res) await setAuth(res);
-      router.back();
-      showToast({
-        type: "success",
-        title: "Success Added",
-        message: "The new account added successfully."
-      });
+
+      if (res) {
+        await setAuth(res);
+        router.back();
+        showToast({
+          type: "success",
+          title: "Success Added",
+          message: "The new account added successfully."
+        });
+      }
     } catch (error: any) {
       showToast({
         type: "error",
@@ -131,6 +142,7 @@ const NewAccount = () => {
                       value={value}
                       onChangeText={onChange}
                       placeholder="Enter account username"
+                      autoCapitalize='none'
                     />
 
                     {errors.username && <ErrorLable err_msg={errors.username.message} />}
@@ -139,7 +151,7 @@ const NewAccount = () => {
               />
             </View>
 
-            <View>
+            <View style={{ marginBottom: rpm(10) }}>
               <Controller
                 control={control}
                 name="password"
@@ -155,6 +167,25 @@ const NewAccount = () => {
                     />
 
                     {errors.password && <ErrorLable err_msg={errors.password.message} />}
+                  </>
+                )}
+              />
+            </View>
+
+            <View>
+              <Controller
+                control={control}
+                name="organization"
+                render={({ field: { onChange, value } }) => (
+                  <>
+                    <Select
+                      options={optOrg}
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select organization"
+                    />
+
+                    {errors.organization && <ErrorLable err_msg={errors.organization.message} />}
                   </>
                 )}
               />

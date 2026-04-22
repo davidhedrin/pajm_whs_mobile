@@ -13,11 +13,9 @@ type AuthState = {
   isAuthLoaded: boolean;
 
   setAuth: (auth: UserAuthData) => Promise<void>;
-  switchAccount: (username: string) => Promise<void>;
-  logout: (username?: string) => Promise<void>;
+  switchAccount: (username: string, org: SistemOrg) => Promise<void>;
+  logout: (username?: string, org?: SistemOrg) => Promise<void>;
   loadAuth: () => Promise<void>;
-
-  setActiceOrg: (org: SistemOrg) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -33,17 +31,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { accounts } = get();
 
       // hapus kalau sudah ada (biar tidak duplicate)
-      const filtered = accounts.filter((a) => a.Username !== authData.Username);
+      const filtered = accounts.filter(
+        (a) => a.Username !== authData.Username || a.Org !== authData.Org,
+      );
 
       const newAccounts = [...filtered, authData];
 
       await AsyncStorage.setItem("accounts", JSON.stringify(newAccounts));
       await AsyncStorage.setItem("authData", authData.Username);
+      await AsyncStorage.setItem("activeOrg", authData.Org);
 
       set({
         accounts: newAccounts,
         authData,
         isAuthenticated: true,
+        activeOrg: authData.Org as SistemOrg,
       });
     } catch (e) {
       throw e;
@@ -52,11 +54,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  switchAccount: async (username: string) => {
+  switchAccount: async (username: string, org: SistemOrg) => {
     try {
       const { accounts } = get();
 
-      let selected = accounts.find((a) => a.Username === username);
+      let selected = accounts.find(
+        (a) => a.Username === username && a.Org === org,
+      );
       if (!selected) return;
 
       let updatedAccounts = [...accounts];
@@ -68,6 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const createReq = await LoginApi<UserAuthData>(
           selected.Username,
           "",
+          selected.Org,
           true,
         );
 
@@ -90,42 +95,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       // set active account
-      await AsyncStorage.setItem("activeAccount", selected.Username);
+      await AsyncStorage.setItem("authData", selected.Username);
+      await AsyncStorage.setItem("activeOrg", selected.Org);
 
       set({
         accounts: updatedAccounts,
         authData: selected,
         isAuthenticated: true,
+        activeOrg: selected.Org as SistemOrg,
       });
     } catch (e) {
       throw e;
     }
   },
 
-  logout: async (username?: string) => {
+  logout: async (username?: string, org?: SistemOrg) => {
     try {
       const { accounts, authData } = get();
 
       // logout semua account
-      if (!username) {
-        await AsyncStorage.multiRemove([
-          "accounts",
-          "authData",
-          "activeAccount",
-          "activeOrg"
-        ]);
+      if (!username || !org) {
+        await AsyncStorage.multiRemove(["accounts", "authData", "activeOrg"]);
 
         set({
           accounts: [],
           authData: null,
           isAuthenticated: false,
+          activeOrg: null,
         });
 
         return;
       }
 
       // logout 1 account
-      const newAccounts = accounts.filter((a) => a.Username !== username);
+      const newAccounts = accounts.filter(
+        (a) => a.Username !== username || a.Org !== org,
+      );
 
       await AsyncStorage.setItem("accounts", JSON.stringify(newAccounts));
 
@@ -136,10 +141,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (newActive) {
           await AsyncStorage.setItem("authData", newActive.Username);
-          await AsyncStorage.setItem("activeAccount", newActive.Username);
+          await AsyncStorage.setItem("activeOrg", newActive.Org);
         } else {
           await AsyncStorage.removeItem("authData");
-          await AsyncStorage.removeItem("activeAccount");
+          await AsyncStorage.removeItem("activeOrg");
         }
       }
 
@@ -147,6 +152,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts: newAccounts,
         authData: newActive,
         isAuthenticated: !!newActive,
+        activeOrg: newActive?.Org as SistemOrg,
       });
     } catch (e) {
       throw e;
@@ -164,6 +170,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           accounts: [],
           authData: null,
           isAuthenticated: false,
+          activeOrg: null,
         });
         return;
       }
@@ -171,7 +178,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const accounts: UserAuthData[] = JSON.parse(accountsStr);
 
       let authData =
-        accounts.find((a) => a.Username === activeUsername) || null;
+        accounts.find(
+          (a) => a.Username === activeUsername && a.Org === activeOrg,
+        ) || null;
 
       // 🔥 cek expired
       if (authData) {
@@ -181,6 +190,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const createReq = await LoginApi<UserAuthData>(
             authData.Username,
             "",
+            authData.Org,
             true,
           );
 
@@ -200,6 +210,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               accounts: updatedAccounts,
               authData,
               isAuthenticated: true,
+              activeOrg: authData.Org as SistemOrg,
             });
 
             return;
@@ -211,7 +222,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts,
         authData,
         isAuthenticated: !!authData,
-        activeOrg: activeOrg as SistemOrg
+        activeOrg: activeOrg as SistemOrg,
       });
     } catch (e) {
       throw e;
@@ -219,21 +230,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isAuthLoaded: true });
     }
   },
-
-  setActiceOrg: async (org: SistemOrg) => {
-    await AsyncStorage.setItem("activeOrg", org);
-    set({ activeOrg: org });
-  }
 }));
 
 export async function LoginApi<T>(
   username: string,
   password: string,
+  org: string,
   isRelogin = false,
 ): Promise<ApiResponse<T>> {
   try {
+    const BASE_URL =
+      org === "PAJM" ? Configs.BASE_URL_PAJM : Configs.BASE_URL_LCS;
+
     const res = await fetch(
-      `${Configs.BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx/Login`,
+      `${BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx/Login`,
       {
         method: "POST",
         headers: {
@@ -243,6 +253,7 @@ export async function LoginApi<T>(
         body: JSON.stringify({
           username,
           password,
+          org_code: org,
           is_relogin: isRelogin,
         }),
       },

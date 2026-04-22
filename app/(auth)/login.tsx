@@ -18,14 +18,13 @@ import { z } from "zod";
 const AuthLogin = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
-  const { setAuth, setActiceOrg } = useAuthStore();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [togglePass, setTogglePass] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const optOrg = sistemOrgList.map((org) => ({
     label: `${org} - ${orgLable[org]}`,
     value: org,
-    disabled: org === "LCS",
   }));
 
   const regSchema = z.object({
@@ -51,12 +50,10 @@ const AuthLogin = () => {
   const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = await LoginApi<UserAuthData>(data.username, data.password);
+      const createReq = await LoginApi<UserAuthData>(data.username, data.password, data.organization);
       const res = createReq.Data;
       if (res) {
-        await setActiceOrg(data.organization as any)
         await setAuth(res);
-
         showToast({
           type: "success",
           title: "Success Login",
@@ -119,6 +116,7 @@ const AuthLogin = () => {
                     value={value}
                     onChangeText={onChange}
                     placeholder="Enter your username"
+                    autoCapitalize='none'
                   />
 
                   {errors.username && <ErrorLable err_msg={errors.username.message} />}
@@ -173,8 +171,8 @@ const AuthLogin = () => {
         />
         {/* <Button onPress={async () => {
 
-          ClearAllStorage();
-          CheckAllStorage();
+          // ClearAllStorage();
+          // CheckAllStorage();
 
         }} title='Test' className='mb-10' /> */}
 

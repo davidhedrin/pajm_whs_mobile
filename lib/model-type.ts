@@ -31,6 +31,7 @@ export type UserAuthData = {
   Role: string;
   RoleId: number;
   Email: string;
+  Org: SistemOrg;
 };
 
 export type SourceStatisPrPo = "PR" | "PO";

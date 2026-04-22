@@ -8,11 +8,12 @@ import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import { ResponsiveScale, SistemOrg, sistemOrgList } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
+import { orgLable } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, Switch, TouchableOpacity, View } from 'react-native';
-import { Accounts } from '.';
+import { Accounts, EmptyAccount } from '.';
 
 const SettingScreen = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
@@ -23,25 +24,29 @@ const SettingScreen = () => {
   const router = useRouter();
   const loadingPage = useLoadingStore.getState();
   const { fetchStatistic } = useStatisticStore();
-  const { logout } = useAuthStore();
+  const logout = useAuthStore((s) => s.logout);
 
   const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg | null>(activeOrg);
+  const acoPajm = useMemo(() => accounts.filter(x => x.Org === "PAJM"), [accounts]);
+  const acoLcs = useMemo(() => accounts.filter(x => x.Org === "LCS"), [accounts]);
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
-  const confirmLogout = async () => {
+  const confirmLogout = async (isLogout: boolean = false) => {
     const confirmed = await showConfirm({
-      title: "Confirm Logout!",
-      message: "Are you sure you want to log out of your account?",
-      confirmText: "Yes, Logout",
+      title: `Confirm ${isLogout ? "Logout" : "Remove"}!`,
+      message: isLogout ? "Are you sure you want to remove all account to log out from app?" : "Are you sure you want to log out of your account?",
+      confirmText: isLogout ? "Yes, Logout" : "Yes, Remove",
       cancelText: "Cancel",
-      icon: 'log-out-outline'
+      icon: isLogout ? 'log-out-outline' : 'refresh-outline'
     });
 
     if (confirmed) {
-      await logout(authData?.Username ?? "");
+      if (isLogout === true) { await logout(); }
+      else { await logout(authData?.Username ?? undefined, authData?.Org ?? undefined); }
+
       await clearRecentItems();
-      router.replace("/(auth)/login");
+      // router.replace("/(auth)/login");
     }
   };
 
@@ -62,13 +67,13 @@ const SettingScreen = () => {
                 color: "#fff",
                 fontSize: rpm(28),
                 marginLeft: rpm(6),
-                marginBottom: rpm(20),
+                marginBottom: rpm(25),
               }}
             >Settings</CText>
           </View>
 
           {/* PROFILE HEADER */}
-          <View className="flex-row items-center" style={{ marginBottom: rpm(14) }}>
+          <View className="flex-row items-center" style={{ marginBottom: rpm(18) }}>
             <View
               className="bg-slate-700 rounded-full items-center justify-center"
               style={{
@@ -85,18 +90,21 @@ const SettingScreen = () => {
                   {authData?.Fullname ?? "Guest"}
                 </CText>
 
-                <View className="bg-blue-100 rounded-full" style={{ paddingHorizontal: rpm(10), paddingVertical: rpm(3) }}>
+                <View className="bg-blue-100 rounded-full" style={{ paddingHorizontal: rpm(7), paddingTop: rpm(2) }}>
                   <CText className="font-medium" style={{ color: "#2563eb", fontSize: rf(13) }}>
                     {authData?.Role ?? "Guest"}
                   </CText>
                 </View>
               </View>
 
-              <CText className="text-gray-500" style={{ color: "#fff", fontSize: rf(14) }}>
+              <CText style={{ color: "#fff", fontSize: rf(14) }}>
                 {authData?.Email ? (authData.Email.trim() !== "" ? authData.Email : "Email not registered") : "Email not registered"}
               </CText>
-            </View>
 
+              <CText style={{ color: "#fff", fontSize: rf(13) }}>
+                Org. {authData ? orgLable[authData.Org] : "-"}
+              </CText>
+            </View>
           </View>
         </View>
 
@@ -176,11 +184,22 @@ const SettingScreen = () => {
 
               {/* Logout */}
               <ItemMenu
-                onPressItem={confirmLogout}
+                onPressItem={() => confirmLogout()}
+                icon='refresh-outline'
+                colors={colors}
+                title='Remove Account'
+                desc='Sign Out your account and switch to nearest'
+                scales={scales}
+                isBordered={true}
+              />
+
+              {/* Logout All Account */}
+              <ItemMenu
+                onPressItem={() => confirmLogout(true)}
                 icon='log-out-outline'
                 colors={colors}
-                title='Logout'
-                desc='Sign out from your account'
+                title='Logout All Account'
+                desc='Sign out from all account registred'
                 scales={scales}
               />
             </View>
@@ -194,10 +213,7 @@ const SettingScreen = () => {
             }}
           >
             <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
-              PAJM Warehouse App
-            </CText>
-            <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
-              Version 1.0
+              Ⓒ 2026 - PAJM Warehouse App
             </CText>
           </View>
         </View>
@@ -246,37 +262,75 @@ const SettingScreen = () => {
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Registered Accounts</CText>
         {
-          accounts.map((x, i) => (
-            <TouchableOpacity
-              key={i}
-              onPress={async () => {
-                if (x.Username == authData?.Username) return;
+          activeTabSwitch === "PAJM" ? (
+            acoPajm.length > 0 ? acoPajm.map((x, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={async () => {
+                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
 
-                const confirmed = await showConfirm({
-                  title: "Confirm Switch!",
-                  message: "Are you sure you want to switch account? This action will delete recently viewed data!",
-                  confirmText: "Yes, Switch",
-                  cancelText: "Cancel",
-                  icon: 'swap-horizontal-outline'
-                });
+                  const confirmed = await showConfirm({
+                    title: "Confirm Switch!",
+                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                    confirmText: "Yes, Switch",
+                    cancelText: "Cancel",
+                    icon: 'swap-horizontal-outline'
+                  });
 
-                if (!confirmed) return;
-                loadingPage.show();
-                await clearRecentItems();
+                  if (!confirmed) return;
+                  loadingPage.show();
+                  await clearRecentItems();
 
-                await fetchStatistic(x?.BpUserId ?? 0);
-                await switchAccount(x.Username);
-                bottomSheetRef.current?.close();
-                loadingPage.hide();
-              }}
-            >
-              <Accounts data={x} activeUser={authData?.Username ?? ""} scales={scales} />
-            </TouchableOpacity>
-          ))
+                  await switchAccount(x.Username, x.Org);
+                  await fetchStatistic(x?.BpUserId ?? 0);
+                  bottomSheetRef.current?.close();
+                  loadingPage.hide();
+                }}
+              >
+                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
+              </TouchableOpacity>
+            )) : EmptyAccount(scales, colors)
+          ) : (
+            acoLcs.length > 0 ? acoLcs.map((x, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={async () => {
+                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
+
+                  const confirmed = await showConfirm({
+                    title: "Confirm Switch!",
+                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                    confirmText: "Yes, Switch",
+                    cancelText: "Cancel",
+                    icon: 'swap-horizontal-outline'
+                  });
+
+                  if (!confirmed) return;
+                  loadingPage.show();
+                  await clearRecentItems();
+
+                  await switchAccount(x.Username, x.Org);
+                  await fetchStatistic(x?.BpUserId ?? 0);
+                  bottomSheetRef.current?.close();
+                  loadingPage.hide();
+                }}
+              >
+                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
+              </TouchableOpacity>
+            )) : EmptyAccount(scales, colors)
+          )
         }
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Or</CText>
-        <Button onPress={() => router.push("/pages/new_account")} title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }} />
+        <Button
+          onPress={() => router.push({
+            pathname: "/pages/new_account",
+            params: {
+              org: activeTabSwitch
+            }
+          })}
+          title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }}
+        />
       </AppBottomSheet>
     </>
   )
