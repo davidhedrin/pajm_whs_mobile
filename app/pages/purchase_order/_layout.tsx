@@ -18,13 +18,6 @@ const PurchaseOrderLayout = () => {
         headerTitleStyle: {
           fontSize: rf(15),
         },
-        // headerRight: () => (
-        //   <TouchableOpacity
-        //     style={{ paddingEnd: rpm(6) }}
-        //   >
-        //     <Ionicons name="options-outline" size={rf(21)} color={colors.text} />
-        //   </TouchableOpacity>
-        // )
       }} />
 
       <Stack.Screen

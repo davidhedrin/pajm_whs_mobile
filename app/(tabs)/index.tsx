@@ -122,15 +122,11 @@ export default function Index() {
                 width: rw(36),
                 height: rh(36),
               }}
-              onPress={async () => {
-                // ClearAllStorage();
-                // CheckAllStorage();
-              }}
             >
               <Ionicons name="notifications-outline" size={rf(20)} color="white" />
 
               {/* Badge */}
-              <View
+              {/* <View
                 className="absolute bg-red-500 rounded-full items-center justify-center"
                 style={{
                   top: rpm(-3),
@@ -145,7 +141,7 @@ export default function Index() {
                 >
                   3
                 </CText>
-              </View>
+              </View> */}
             </TouchableOpacity>
           </View>
 
@@ -392,6 +388,7 @@ export default function Index() {
                 {
                   iconName: "cube-outline",
                   title: "Delivery Notes",
+                  onPress: () => router.push("/pages/delivery_note")
                 },
               ].map((item, index) => (
                 <ModuleButton
