@@ -102,14 +102,16 @@ export default function Index() {
                     className="font-regular"
                     style={{ fontSize: rf(12), lineHeight: rpm(16) }}
                   >
-                    Hello...
+                    Hello,
                   </CText>
 
                   <CText
                     className="font-medium"
-                    style={{ fontSize: rf(13), marginTop: rpm(2), lineHeight: rpm(16) }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{ fontSize: rf(13), marginTop: rpm(2), lineHeight: rpm(17), maxWidth: rw(50) }}
                   >
-                    {authData?.Fullname ? authData.Fullname.trim().split(" ")[0] : "Guest"}
+                    {authData?.Fullname ? authData.Fullname : "Guest"}
                   </CText>
                 </View>
               </View>

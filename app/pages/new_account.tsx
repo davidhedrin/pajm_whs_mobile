@@ -4,6 +4,7 @@ import Input from '@/components/input';
 import ScreenWrapper from '@/components/screen-wrapper';
 import Select from '@/components/select';
 import { CText } from '@/components/text';
+import { clearRecentItems } from '@/hooks/recently-halper';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { sistemOrgList, UserAuthData } from '@/lib/model-type';
@@ -59,6 +60,7 @@ const NewAccount = () => {
       const res = req.Data;
 
       if (res) {
+        await clearRecentItems();
         await setAuth(res);
         router.back();
         showToast({
