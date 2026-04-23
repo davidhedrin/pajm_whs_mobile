@@ -188,7 +188,7 @@ const SettingScreen = () => {
                 icon='refresh-outline'
                 colors={colors}
                 title='Remove Account'
-                desc='Sign Out your account and switch to nearest'
+                desc='Sign out your account and switch to nearest'
                 scales={scales}
                 isBordered={true}
               />

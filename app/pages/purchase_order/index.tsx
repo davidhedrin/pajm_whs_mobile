@@ -46,9 +46,9 @@ const PurchaseOrder = () => {
   const [openModalFilter, setOpenModalFilter] = useState(false);
   const DEFAULT_STATUS_FILTER = "ShowAllData";
   const statusOptions: OptionProps[] = [
-    { label: "All Data", value: DEFAULT_STATUS_FILTER },
-    { label: "On Progress", value: "ShowNotRespondedOnly" },
-    { label: "Finish Approval", value: "ShowRespondedOnly" },
+    // { label: "All Data", value: DEFAULT_STATUS_FILTER },
+    // { label: "On Progress", value: "ShowNotRespondedOnly" },
+    // { label: "Finish Approval", value: "ShowRespondedOnly" },
     { label: "Not Submitted", value: "ShowNotSubmittedOnly" },
     { label: "Submitted", value: "ShowSubmittedOnly" },
     { label: "Rejected", value: "ShowRejectedOnly" },
@@ -397,6 +397,7 @@ const PurchaseOrder = () => {
               setStatusFilter(DEFAULT_STATUS_FILTER);
               fatchDatas(true, DEFAULT_STATUS_FILTER);
             }}
+            isActice={statusFilter === DEFAULT_STATUS_FILTER}
           />
           <SummaryCard
             title="On Progress"
@@ -409,6 +410,7 @@ const PurchaseOrder = () => {
               setStatusFilter("ShowNotRespondedOnly");
               fatchDatas(true, "ShowNotRespondedOnly");
             }}
+            isActice={statusFilter === "ShowNotRespondedOnly"}
           />
           <SummaryCard
             title="Finish"
@@ -421,6 +423,7 @@ const PurchaseOrder = () => {
               setStatusFilter("ShowRespondedOnly");
               fatchDatas(true, "ShowRespondedOnly");
             }}
+            isActice={statusFilter === "ShowRespondedOnly"}
           />
         </View>
 
@@ -438,7 +441,7 @@ const PurchaseOrder = () => {
             <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Filter</CText>
 
             {
-              (statusFilter !== DEFAULT_STATUS_FILTER || startDate || endDate) && <View
+              (statusOptions.some(x => x.value === statusFilter) || startDate || endDate) && <View
                 className="absolute bg-red-500 rounded-full items-center justify-center"
                 style={{
                   top: rpm(0),

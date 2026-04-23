@@ -72,9 +72,9 @@ const PurchaseRequest = () => {
   const [openModalFilter, setOpenModalFilter] = useState(false);
   const DEFAULT_STATUS_FILTER = "ShowAllData";
   const statusOptions: OptionProps[] = [
-    { label: "All Data", value: DEFAULT_STATUS_FILTER },
-    { label: "On Progress", value: "ShowNotRespondedOnly" },
-    { label: "Finish Approval", value: "ShowRespondedOnly" },
+    // { label: "All Data", value: DEFAULT_STATUS_FILTER },
+    // { label: "On Progress", value: "ShowNotRespondedOnly" },
+    // { label: "Finish Approval", value: "ShowRespondedOnly" },
     { label: "Not Submitted", value: "ShowNotSubmittedOnly" },
     { label: "Submitted", value: "ShowSubmittedOnly" },
     { label: "Rejected", value: "ShowRejectedOnly" },
@@ -422,6 +422,7 @@ const PurchaseRequest = () => {
               setStatusFilter(DEFAULT_STATUS_FILTER);
               fatchDatas(true, DEFAULT_STATUS_FILTER);
             }}
+            isActice={statusFilter === DEFAULT_STATUS_FILTER}
           />
           <SummaryCard
             title="On Progress"
@@ -434,6 +435,7 @@ const PurchaseRequest = () => {
               setStatusFilter("ShowNotRespondedOnly");
               fatchDatas(true, "ShowNotRespondedOnly");
             }}
+            isActice={statusFilter === "ShowNotRespondedOnly"}
           />
           <SummaryCard
             title="Finish"
@@ -446,6 +448,7 @@ const PurchaseRequest = () => {
               setStatusFilter("ShowRespondedOnly");
               fatchDatas(true, "ShowRespondedOnly");
             }}
+            isActice={statusFilter === "ShowRespondedOnly"}
           />
         </View>
 
@@ -463,7 +466,7 @@ const PurchaseRequest = () => {
             <CText className="font-regular" style={{ fontSize: rf(13), marginLeft: rpm(6) }}>Filter</CText>
 
             {
-              (statusFilter !== DEFAULT_STATUS_FILTER || startDate || endDate) && <View
+              (statusOptions.some(x => x.value === statusFilter) || startDate || endDate) && <View
                 className="absolute bg-red-500 rounded-full items-center justify-center"
                 style={{
                   top: rpm(0),
@@ -963,11 +966,13 @@ type SummaryCardProps = {
   color_scheme: ColorScheme;
   scales: ResponsiveScale;
   onPress?: () => void;
+  isActice?: boolean;
 };
 
-export function SummaryCard({ title, count, color, icon, color_scheme, scales, onPress }: SummaryCardProps) {
+export function SummaryCard({ title, count, color, icon, color_scheme, scales, onPress, isActice }: SummaryCardProps) {
   const { scale, onPressIn, onPressOut } = useScaleAnimation(0.92);
   const { rpm, rf } = scales;
+  const activeSelect = isActice !== undefined ? isActice : false;
 
   return (
     <Pressable
@@ -981,9 +986,17 @@ export function SummaryCard({ title, count, color, icon, color_scheme, scales, o
           borderRadius: rpm(10),
           paddingVertical: rpm(8),
           paddingHorizontal: rpm(7),
-          backgroundColor: color
+          backgroundColor: color,
         }}
       >
+        {activeSelect && (
+          <Ionicons
+            className='absolute -top-1.5 -start-1.5'
+            name="checkmark-circle"
+            size={rf(17)} color={color_scheme.primary}
+          />
+        )}
+
         <Ionicons name={icon} size={rf(24)} color={color_scheme.text} />
         <View className='items-end'>
           <CText className="font-medium" style={{ fontSize: rf(12) }}>{title}</CText>
