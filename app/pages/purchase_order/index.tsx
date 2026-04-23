@@ -175,7 +175,7 @@ const PurchaseOrder = () => {
     );
   };
 
-  const handlePoAction = useCallback(async ({ action, doc_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
+  const handlePoAction = useCallback(async ({ action, doc_id, level, remark, doc_num, send_email }: { doc_num: string } & PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} application "${doc_num}"?`,
@@ -187,7 +187,7 @@ const PurchaseOrder = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PoAction({ action, doc_id, level, remark });
+      const reqDelay = await PoAction({ action, doc_id, level, remark, send_email });
       const prData = MappingPo(reqDelay.Data, authData?.BpUserId);
       handleUpdateItem(prData);
       showToast({
@@ -574,7 +574,7 @@ type ItemRowProps = {
   scales: ResponsiveScale;
   closeAllSwipe: () => void;
   toggleExpand: (id: number) => void;
-  handlePoAction: ({ action, doc_id, level, remark, doc_num }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
+  handlePoAction: ({ action, doc_id, level, remark, doc_num, send_email }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
 };
 
 const ItemRowFlatList = React.memo(({
@@ -763,7 +763,8 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PoNo
+                doc_num: item.PoNo,
+                send_email: true,
               });
             }}
           >
@@ -795,7 +796,8 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PoNo
+                doc_num: item.PoNo,
+                send_email: true,
               });
             }}
           >
@@ -910,14 +912,15 @@ export function CheckPoUserLevel(data: PoProps, curLevel?: ApproverLevel): Check
   } else return { show: false, msg: "However, you are currently not assigned to this application, Thank you!" };
 };
 
-export async function PoAction({ action, doc_id, level, remark }: PrPoActionProps) {
+export async function PoAction({ action, doc_id, level, remark, send_email }: PrPoActionProps) {
   const createReq = await callApi<any>({
     endpoint: "ApproveRejectPo",
     params: {
       action,
       po_id: doc_id,
       level: level - 1,
-      remark
+      remark,
+      send_email
     }
   });
 

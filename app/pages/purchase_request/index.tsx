@@ -201,7 +201,7 @@ const PurchaseRequest = () => {
     );
   };
 
-  const handlePrAction = useCallback(async ({ action, doc_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
+  const handlePrAction = useCallback(async ({ action, doc_id, level, remark, doc_num, send_email }: { doc_num: string } & PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} application "${doc_num}"?`,
@@ -213,7 +213,7 @@ const PurchaseRequest = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PrAction({ action, doc_id, level, remark });
+      const reqDelay = await PrAction({ action, doc_id, level, remark, send_email });
       const prData = MappingPr(reqDelay.Data, authData?.BpUserId);
       handleUpdateItem(prData);
       showToast({
@@ -599,7 +599,7 @@ type ItemRowProps = {
   scales: ResponsiveScale;
   closeAllSwipe: () => void;
   toggleExpand: (id: number) => void;
-  handlePrAction: ({ action, doc_id, level, remark, doc_num }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
+  handlePrAction: ({ action, doc_id, level, remark, doc_num, send_email }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
 };
 
 const ItemRowFlatList = React.memo(({
@@ -788,7 +788,8 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PrNo
+                doc_num: item.PrNo,
+                send_email: true
               });
             }}
           >
@@ -820,7 +821,8 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PrNo
+                doc_num: item.PrNo,
+                send_email: true
               });
             }}
           >
@@ -944,14 +946,15 @@ export function CheckPrUserLevel(data: PrProps, curLevel?: ApproverLevel): Check
   } else return { show: false, msg: "However, you are currently not assigned to this application, Thank you!" };
 };
 
-export async function PrAction({ action, doc_id, level, remark }: PrPoActionProps) {
+export async function PrAction({ action, doc_id, level, remark, send_email }: PrPoActionProps) {
   const createReq = await callApi<any>({
     endpoint: "ApproveRejectPr",
     params: {
       action,
       pr_id: doc_id,
       level: level - 1,
-      remark
+      remark,
+      send_email
     }
   });
 
@@ -1007,231 +1010,3 @@ export function SummaryCard({ title, count, color, icon, color_scheme, scales, o
     </Pressable>
   );
 };
-
-
-// Ol render item ---------------------------------------------------------------------
-
-// renderItem={({ item, index }: { item: PrProps; index: number }) => {
-//   const isExpanded = expandedId === item.Id;
-//   const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
-//   const checkAprLevel = checkAprUserLevel(item, getCurAprLevel);
-
-//   const content = (
-//     <TouchableOpacity className="shadow-sm"
-//       style={{
-//         paddingStart: rpm(12),
-//         paddingEnd: checkAprLevel.show ? rpm(8) : rpm(12),
-//         paddingVertical: rpm(10),
-//         backgroundColor: colors.surface
-//       }}
-//       onPress={() => {
-//         closeAllSwipe();
-//         router.push({
-//           pathname: "/pages/purchase_request/detail",
-//           params: {
-//             id: item.Id.toString(),
-//             doc_num: item.PrNo,
-//           } as PrPoDetailPageProps
-//         });
-//       }}
-//     >
-//       <View className="flex-row justify-between items-center" style={{ marginBottom: rpm(6) }}>
-//         <CText className="font-semibold text-gray-900" style={{ fontSize: rf(13) }}>
-//           {index + 1}. {item.PrNo}
-//         </CText>
-
-//         <View
-//           className="flex-row items-center rounded-full font-regular leading-none"
-//           style={[
-//             {
-//               paddingHorizontal: rpm(6),
-//               paddingVertical: rpm(5),
-//             },
-//             getStatusStyle(item.Status, colors)
-//           ]}
-//         >
-//           <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-//           <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
-//             {item.Status === '' ? "ON PROGRESS" : item.Status}
-//           </CText>
-//         </View>
-//       </View>
-
-//       <CText className="font-regular" style={{ fontSize: rf(13), marginBottom: rpm(3) }}>
-//         Req By: {item.User1Name}
-//       </CText>
-
-//       {/* 🔹 MAIN CONTENT */}
-//       <View className='flex-row justify-between items-end'>
-//         {
-//           item.DtmSubmit !== null ? <CText style={{ color: colors.textMuted, fontSize: rf(12) }}>
-//             Submit At: {formatDate(item.DtmSubmit, 'medium', 'short')}
-//           </CText> : <CText style={{ color: colors.danger, fontSize: rf(12) }}>NOT SUBMITTED YET</CText>
-//         }
-
-
-//         <TouchableOpacity onPress={() => toggleExpand(item.Id)} className='flex-row items-center'>
-//           <CText style={{ fontSize: rf(13) }}>{isExpanded ? "Dismiss" : "Expand"}</CText>
-//           <Ionicons
-//             name={isExpanded ? "chevron-up" : "chevron-down"}
-//             size={rf(17)}
-//             color={colors.text}
-//           />
-//         </TouchableOpacity>
-//       </View>
-
-//       {
-//         isExpanded && (
-//           <View className="border-t-2 border-gray-200"
-//             style={{
-//               marginTop: rpm(9),
-//               paddingTop: rpm(9)
-//             }}
-//           >
-//             {/* APPROVAL LIST */}
-//             {item.Approvers.map((a, i) => {
-//               const style = getStatusStyle(a.UserResponse, colors);
-
-//               return (
-//                 <View key={i} className="flex-row items-start"
-//                   style={{ marginBottom: i !== (item.Approvers.length - 1) ? rpm(8) : undefined }}
-//                 >
-//                   <View
-//                     className="rounded-full mr-3"
-//                     style={{
-//                       width: rw(5),
-//                       height: rh(5),
-//                       marginTop: rpm(7),
-//                       marginRight: rpm(8),
-//                       backgroundColor: colors.textMuted
-//                     }}
-//                   />
-
-//                   <View className="flex-1">
-//                     <View className="flex-row justify-between items-center">
-//                       <CText className="font-medium" style={{ fontSize: rf(13) }}>
-//                         Approval - {a.Level - 1}
-//                       </CText>
-
-//                       <CText
-//                         className="rounded-full"
-//                         style={[
-//                           {
-//                             paddingHorizontal: rpm(6),
-//                             paddingVertical: rpm(2),
-//                             fontSize: rf(11)
-//                           },
-//                           style
-//                         ]}
-//                       >
-//                         {a.UserResponse === '' ? "WAITING" : a.UserResponse}
-//                       </CText>
-//                     </View>
-
-//                     <View className="flex-row justify-between items-center">
-//                       <CText className="font-regular" style={{ fontSize: rf(12) }}>
-//                         {a.UserName}
-//                       </CText>
-
-//                       <CText className="font-regular" style={{ fontSize: rf(12) }}>
-//                         {a.DtmResponse !== null ? formatDate(a.DtmResponse, 'medium', 'short') : "-"}
-//                       </CText>
-//                     </View>
-//                   </View>
-//                 </View>
-//               );
-//             })}
-//           </View>
-//         )
-//       }
-//     </TouchableOpacity>
-//   );
-
-//   if (checkAprLevel.show) return <View className='border-b border-gray-300'
-//     style={{
-//       borderEndWidth: rpm(4),
-//       borderEndColor: colors.primary
-//     }}
-//   >
-//     <Swipeable
-//       ref={(ref) => {
-//         if (ref) swipeableRefs.current.set(item.Id.toString(), ref);
-//       }}
-//       // onSwipeableOpen={closeAllSwipe}
-//       overshootRight={false}
-//       renderRightActions={() => (
-//         <View className="w-auto flex-col">
-//           <TouchableOpacity
-//             className="flex-1 items-center justify-center"
-//             style={{
-//               backgroundColor: colors.success,
-//               paddingHorizontal: rpm(16)
-//             }}
-//             onPress={async () => {
-//               swipeableRefs.current.get(item.Id.toString())?.close();
-
-//               if (getCurAprLevel) handlePrAction({
-//                 action: 'APPROVED',
-//                 level: getCurAprLevel.Level,
-//                 pr_id: item.Id,
-//                 remark: "",
-//                 doc_num: item.PrNo
-//               });
-//             }}
-//           >
-//             <View className='flex-row items-center'>
-//               <Ionicons name='checkmark-outline' size={rf(17)} color={colors.surface} />
-//               <CText className="font-medium"
-//                 style={{
-//                   marginLeft: rpm(2),
-//                   color: colors.surface,
-//                   fontSize: rf(13)
-//                 }}
-//               >
-//                 Approve
-//               </CText>
-//             </View>
-//           </TouchableOpacity>
-
-//           <TouchableOpacity
-//             className="flex-1 items-center justify-center"
-//             style={{
-//               backgroundColor: colors.danger,
-//               paddingHorizontal: rpm(16)
-//             }}
-//             onPress={async () => {
-//               swipeableRefs.current.get(item.Id.toString())?.close();
-
-//               if (getCurAprLevel) handlePrAction({
-//                 action: 'REJECTED',
-//                 level: getCurAprLevel.Level,
-//                 pr_id: item.Id,
-//                 remark: "",
-//                 doc_num: item.PrNo
-//               });
-//             }}
-//           >
-//             <View className='flex-row items-center'>
-//               <Ionicons name='close-outline' size={rf(17)} color={colors.surface} />
-//               <CText className="font-medium"
-//                 style={{
-//                   marginLeft: rpm(2),
-//                   color: colors.surface,
-//                   fontSize: rf(13)
-//                 }}
-//               >
-//                 Reject
-//               </CText>
-//             </View>
-//           </TouchableOpacity>
-//         </View>
-//       )}
-//     >
-//       {content}
-//     </Swipeable>
-//   </View>
-
-//   return <View className='border-b border-gray-300'>
-//     {content}
-//   </View>
-// }}

@@ -12,7 +12,7 @@ import { formatDate, formatMoney, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, TouchableOpacity, View } from 'react-native';
 import { CheckPoUserLevel, MappingPo, PoAction } from '.';
 import { getStatusStyle } from '../purchase_request';
 
@@ -29,6 +29,7 @@ const PoDetail = () => {
   const [dataPo, setDataPo] = useState<PoProps | null>(null);
   const [curAprLevel, setCurAprLevel] = useState<ApproverLevel | null>(null);
   const [remark, setRemark] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
   const [resCheckAprLevel, setResCheckAprLevel] = useState<CheckAprLevelProps | null>(null);
 
   const [grandTotalItems, setGrandTotalItems] = useState(0);
@@ -74,7 +75,7 @@ const PoDetail = () => {
     fatchDatas(params.id);
   }, []);
 
-  const handlePoAction = async ({ action, doc_id, level, remark }: PrPoActionProps) => {
+  const handlePoAction = async ({ action, doc_id, level, remark, send_email }: PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} this application? You can't undo this action!`,
@@ -86,7 +87,7 @@ const PoDetail = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PoAction({ action, doc_id, level, remark });
+      const reqDelay = await PoAction({ action, doc_id, level, remark, send_email });
       await fatchDatas(doc_id.toString());
       showToast({
         type: "success",
@@ -149,7 +150,7 @@ const PoDetail = () => {
               borderTopWidth: rpm(3),
               backgroundColor: colors.surface,
               borderColor: colors.primary,
-              marginBottom: rpm(16)
+              marginBottom: rpm(14)
             }}
           >
             <View
@@ -266,13 +267,13 @@ const PoDetail = () => {
           {
             resCheckAprLevel && (
               resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
-                <View style={{ marginBottom: rpm(10) }}>
-                  <CText
-                    className="font-medium leading-none"
-                    style={{ fontSize: rf(13), marginBottom: rpm(6) }}
-                  >
-                    Remark
+                <View className='items-center' style={{ marginBottom: rpm(6) }}>
+                  <CText className='font-medium-i text-justify'>
+                    You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPo.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!
                   </CText>
+                </View>
+
+                <View style={{ marginBottom: rpm(14) }}>
                   <Input
                     value={remark}
                     onChangeText={(val) => setRemark(val)}
@@ -282,12 +283,29 @@ const PoDetail = () => {
                   />
                 </View>
 
-                <View className='items-center' style={{ marginBottom: rpm(6) }}>
-                  <CText className='font-medium-i text-center'>
-                    You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPo.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!
-                  </CText>
-                </View>
+                <View style={{ marginBottom: rpm(12) }}>
+                  <Pressable
+                    onPress={() => setSendEmail(!sendEmail)}
+                    className="flex-row items-start gap-2"
+                  >
+                    {/* Checkbox */}
+                    <View className={`rounded border-2 items-center justify-center ${sendEmail ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}
+                      style={{
+                        width: rpm(17),
+                        height: rpm(17)
+                      }}
+                    >
+                      {sendEmail && (
+                        <Ionicons name="checkmark" size={14} color="white" />
+                      )}
+                    </View>
 
+                    {/* Title */}
+                    <CText className='font-medium' style={{ fontSize: rf(13), color: sendEmail ? colors.text : colors.textMuted }}>
+                      Send email on my response.
+                    </CText>
+                  </Pressable>
+                </View>
 
                 <View className="flex-row overflow-hidden self-center"
                   style={{ borderRadius: rpm(10) }}
@@ -304,7 +322,8 @@ const PoDetail = () => {
                         action: 'APPROVED',
                         level: curAprLevel.Level,
                         doc_id: dataPo.Id,
-                        remark: remark.trim()
+                        remark: remark.trim(),
+                        send_email: sendEmail
                       });
                     }}
                   >
@@ -328,7 +347,8 @@ const PoDetail = () => {
                         action: 'REJECTED',
                         level: curAprLevel.Level,
                         doc_id: dataPo.Id,
-                        remark: remark.trim()
+                        remark: remark.trim(),
+                        send_email: sendEmail
                       });
                     }}
                   >
@@ -338,7 +358,7 @@ const PoDetail = () => {
                     </CText>
                   </TouchableOpacity>
                 </View>
-              </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-center underline'>{resCheckAprLevel.msg}</CText>
+              </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-justify underline'>{resCheckAprLevel.msg}</CText>
             )
           }
 

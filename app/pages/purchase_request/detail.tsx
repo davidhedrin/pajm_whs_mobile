@@ -12,7 +12,7 @@ import { formatDate, formatMoney, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, TouchableOpacity, View } from 'react-native';
 import { CheckPrUserLevel, getStatusStyle, MappingPr, PrAction } from '.';
 
 const PRDetail = () => {
@@ -28,6 +28,7 @@ const PRDetail = () => {
   const [dataPr, setDataPr] = useState<PrProps | null>(null);
   const [curAprLevel, setCurAprLevel] = useState<ApproverLevel | null>(null);
   const [remark, setRemark] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
   const [resCheckAprLevel, setResCheckAprLevel] = useState<CheckAprLevelProps | null>(null);
 
   const [grandTotalItems, setGrandTotalItems] = useState(0);
@@ -70,7 +71,7 @@ const PRDetail = () => {
     fatchDatas(params.id);
   }, []);
 
-  const handlePrAction = async ({ action, doc_id, level, remark }: PrPoActionProps) => {
+  const handlePrAction = async ({ action, doc_id, level, remark, send_email }: PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} this application? You can't undo this action!`,
@@ -82,7 +83,7 @@ const PRDetail = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PrAction({ action, doc_id, level, remark });
+      const reqDelay = await PrAction({ action, doc_id, level, remark, send_email });
       await fatchDatas(doc_id.toString());
       showToast({
         type: "success",
@@ -147,7 +148,7 @@ const PRDetail = () => {
               backgroundColor: colors.surface,
               borderColor: colors.primary,
               padding: rpm(8),
-              marginBottom: rpm(16)
+              marginBottom: rpm(14)
             }}
           >
             <View style={{ marginBottom: rpm(4) }}>
@@ -205,13 +206,13 @@ const PRDetail = () => {
           {
             resCheckAprLevel && (
               resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
-                <View style={{ marginBottom: rpm(10) }}>
-                  <CText
-                    className="font-medium leading-none"
-                    style={{ fontSize: rf(13), marginBottom: rpm(6) }}
-                  >
-                    Remark
+                <View className='items-center' style={{ marginBottom: rpm(10) }}>
+                  <CText className='font-medium-i text-justify'>
+                    You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPr.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!
                   </CText>
+                </View>
+
+                <View style={{ marginBottom: rpm(14) }}>
                   <Input
                     value={remark}
                     onChangeText={(val) => setRemark(val)}
@@ -220,11 +221,28 @@ const PRDetail = () => {
                     numberOfLines={3}
                   />
                 </View>
+                <View style={{ marginBottom: rpm(12) }}>
+                  <Pressable
+                    onPress={() => setSendEmail(!sendEmail)}
+                    className="flex-row items-start gap-2"
+                  >
+                    {/* Checkbox */}
+                    <View className={`rounded border-2 items-center justify-center ${sendEmail ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}
+                      style={{ 
+                        width: rpm(17),
+                        height: rpm(17)
+                       }}
+                    >
+                      {sendEmail && (
+                        <Ionicons name="checkmark" size={14} color="white" />
+                      )}
+                    </View>
 
-                <View className='items-center' style={{ marginBottom: rpm(6) }}>
-                  <CText className='font-medium-i text-center'>
-                    You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPr.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!
-                  </CText>
+                    {/* Title */}
+                    <CText className='font-medium' style={{ fontSize: rf(13), color: sendEmail ? colors.text : colors.textMuted }}>
+                      Send email on my response.
+                    </CText>
+                  </Pressable>
                 </View>
 
                 <View className="flex-row overflow-hidden self-center"
@@ -242,7 +260,8 @@ const PRDetail = () => {
                         action: 'APPROVED',
                         level: curAprLevel.Level,
                         doc_id: dataPr.Id,
-                        remark: remark.trim()
+                        remark: remark.trim(),
+                        send_email: sendEmail
                       });
                     }}
                   >
@@ -266,7 +285,8 @@ const PRDetail = () => {
                         action: 'REJECTED',
                         level: curAprLevel.Level,
                         doc_id: dataPr.Id,
-                        remark: remark.trim()
+                        remark: remark.trim(),
+                        send_email: sendEmail
                       });
                     }}
                   >
@@ -276,7 +296,7 @@ const PRDetail = () => {
                     </CText>
                   </TouchableOpacity>
                 </View>
-              </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-center underline'>{resCheckAprLevel.msg}</CText>
+              </View> : resCheckAprLevel.msg !== null && <CText style={{ marginBottom: rpm(14) }} className='font-medium-i text-justify underline'>{resCheckAprLevel.msg}</CText>
             )
           }
 

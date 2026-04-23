@@ -135,4 +135,5 @@ export type PrPoActionProps = {
   doc_id: number;
   level: number;
   remark: string;
+  send_email: boolean;
 };

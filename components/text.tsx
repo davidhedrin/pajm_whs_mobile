@@ -6,8 +6,8 @@ export function CText({ className, ...props }: { className?: string } & TextProp
 
   return (
     <Text
-      className={`${className ?? ''} font-regular`}
       {...props}
+      className={`${className ?? ''} font-regular`}
       style={[{ color: colors.text }, props.style]}
     />
   );
