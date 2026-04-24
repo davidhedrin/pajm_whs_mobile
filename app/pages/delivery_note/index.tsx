@@ -1,4 +1,5 @@
 import ScreenWrapper from '@/components/screen-wrapper';
+import UnderConsSvg from '@/components/svg/under-construction';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
 import { useResposiveScale } from '@/lib/resposive';
@@ -20,7 +21,7 @@ const DeliveryNotes = () => {
           marginTop: rpm(-35)
         }}
       >
-        <Ionicons name="construct-outline" size={rf(40)} color={colors.textMuted} />
+        <UnderConsSvg  width={rw(240)} height={rh(140)} />
 
         <View className='items-center' style={{ paddingVertical: rpm(60) }}>
           <CText className='font-semibold' style={{ fontSize: rf(15) }}>COMMING SOON!</CText>

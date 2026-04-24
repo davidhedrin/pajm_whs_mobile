@@ -110,8 +110,8 @@ const NewAccount = () => {
             source={require("../../assets/images/splash-icon.png")}
             resizeMode="contain"
             style={{
-              width: rw(80),
-              height: rh(80),
+              width: rw(65),
+              height: rh(65),
               marginBottom: rpm(30)
             }}
           />

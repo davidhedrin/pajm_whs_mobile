@@ -1,5 +1,6 @@
 import AppBottomSheet, { BottomSheetRef } from '@/components/bottom-sheet';
 import Button from '@/components/button';
+import CopywriteFooter from '@/components/c-footer';
 import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
 import { clearRecentItems } from '@/hooks/recently-halper';
@@ -158,7 +159,7 @@ const SettingScreen = () => {
               {/* Dark Mode */}
               <View className="flex-row items-center border-b border-gray-200"
                 style={{
-                  paddingVertical: rpm(9)
+                  paddingVertical: rpm(10)
                 }}
               >
                 <Ionicons name="moon-outline" size={rf(18)} color={colors.text} />
@@ -206,16 +207,7 @@ const SettingScreen = () => {
           </View>
 
           {/* FOOTER VERSION */}
-          <View className="items-center"
-            style={{
-              paddingTop: rpm(20),
-              paddingBottom: rpm(14)
-            }}
-          >
-            <CText className="font-regular" style={{ color: colors.textMuted, fontSize: rf(12) }}>
-              Ⓒ 2026 - PAJM Warehouse App
-            </CText>
-          </View>
+          <CopywriteFooter />
         </View>
       </ScreenWrapper>
 
@@ -348,13 +340,13 @@ type ItemMenuProps = {
   isBordered?: boolean
 };
 
-function ItemMenu({ title, desc, onPressItem, colors, scales, icon, isBordered = false }: ItemMenuProps) {
+export function ItemMenu({ title, desc, onPressItem, colors, scales, icon, isBordered = false }: ItemMenuProps) {
   const { rpm, rf } = scales;
 
   return <View className={`${isBordered ? "border-b border-gray-200" : ""}`}>
     <TouchableOpacity onPress={onPressItem} className='flex-row items-center'
       style={{
-        paddingVertical: rpm(12)
+        paddingVertical: rpm(10)
       }}
     >
       {icon && <Ionicons name={icon} size={rf(19)} color={colors.text}

@@ -3,7 +3,7 @@ import { useResposiveScale } from "@/lib/resposive";
 import { Stack } from "expo-router";
 
 const PurchaseRequestLayout = () => {
-  const { rw, rh, rpm, rf } = useResposiveScale();
+  const { rf } = useResposiveScale();
   const { colors } = useTheme();
 
   return (

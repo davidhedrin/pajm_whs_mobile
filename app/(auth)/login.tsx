@@ -71,14 +71,14 @@ const AuthLogin = () => {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper edges={['bottom']}>
       <View className='flex-1 justify-center items-center px-5'>
         <Image
           source={require("../../assets/images/splash-icon.png")}
           resizeMode="contain"
           style={{
-            width: rw(80),
-            height: rh(80),
+            width: rw(65),
+            height: rh(65),
             marginBottom: rpm(30)
           }}
         />
@@ -184,6 +184,8 @@ const AuthLogin = () => {
         >
           Enter your account credential login to continue explore!
         </CText>
+
+        
       </View>
     </ScreenWrapper>
   )
