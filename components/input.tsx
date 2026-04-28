@@ -16,6 +16,7 @@ import {
 type GroupProps = {
   content?: React.ReactNode;
   bgColor?: ColorValue | undefined;
+  action?: () => void;
 };
 
 type InputProps = TextInputProps & {
@@ -31,7 +32,7 @@ type InputProps = TextInputProps & {
 
   onPressPrefixIcon?: () => void;
   onPressSuffixIcon?: () => void;
-  
+
   style?: StyleProp<ViewStyle>
 };
 
@@ -55,7 +56,10 @@ const Input: React.FC<InputProps> = ({
 
       {/* PREFIX GROUP */}
       {prefixGroup && (
-        <View className="justify-center border border-gray-300/80 focus:border-2 border-e-0"
+        <TouchableOpacity
+          className="justify-center border border-gray-300/80 focus:border-2 border-e-0"
+          activeOpacity={prefixGroup.action !== undefined ? 0.2 : 1}
+          onPress={() => { if (prefixGroup.action) prefixGroup.action() }}
           style={{
             paddingHorizontal: rpm(10),
             borderTopLeftRadius: rpm(10),
@@ -68,7 +72,7 @@ const Input: React.FC<InputProps> = ({
           ) : (
             prefixGroup.content
           )}
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* MAIN INPUT CONTAINER */}
@@ -133,7 +137,10 @@ const Input: React.FC<InputProps> = ({
 
       {/* SUFFIX GROUP */}
       {suffixGroup && (
-        <View className="justify-center border border-gray-300/80 focus:border-2 border-s-0"
+        <TouchableOpacity
+          className="justify-center border border-gray-300/80 focus:border-2 border-s-0"
+          activeOpacity={suffixGroup.action !== undefined ? 0.2 : 1}
+          onPress={() => { if (suffixGroup.action) suffixGroup.action() }}
           style={{
             paddingHorizontal: rpm(10),
             borderTopRightRadius: rpm(10),
@@ -146,7 +153,7 @@ const Input: React.FC<InputProps> = ({
           ) : (
             suffixGroup.content
           )}
-        </View>
+        </TouchableOpacity>
       )}
     </View>
   );

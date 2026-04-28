@@ -2,7 +2,7 @@ import useTheme from '@/hooks/use-theme';
 import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { CText } from './text';
 
 type typeAlert = "success" | "primary" | "warning" | "danger" | "shadow";
@@ -11,12 +11,14 @@ const Alert = ({
   type,
   icon,
   title = "Title Alert!",
-  msg = "Description of alert"
+  msg = "Description of alert",
+  closeBtn
 }: {
   type: typeAlert,
   icon?: keyof typeof Ionicons.glyphMap,
   title?: string,
-  msg?: string
+  msg?: string,
+  closeBtn?: () => void;
 }) => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
@@ -31,6 +33,15 @@ const Alert = ({
         paddingVertical: rpm(12)
       }}
     >
+      {
+        closeBtn && <TouchableOpacity
+          className='absolute top-1.5 right-1.5'
+          onPress={closeBtn}
+        >
+          <Ionicons name='close-circle-outline' size={rf(19)} color={colors.textMuted} />
+        </TouchableOpacity>
+      }
+
       <View className="flex-row items-center">
         {
           icon && <View className="shrink-0">

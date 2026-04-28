@@ -4,13 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ColorValue,
-  FlatList,
-  Modal,
   Pressable,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import BaseModal from './modal';
 import { CText } from './text';
 
 export type OptionProps = {
@@ -22,6 +21,12 @@ export type OptionProps = {
 type GroupProps = {
   content?: React.ReactNode;
   bgColor?: ColorValue | undefined;
+  action?: () => void;
+};
+
+type EmptyInfoProps = {
+  title?: string;
+  message?: string;
 };
 
 type SelectProps = {
@@ -36,6 +41,8 @@ type SelectProps = {
   suffixGroup?: GroupProps;
   prefixIcon?: keyof typeof Ionicons.glyphMap;
   onPressPrefixIcon?: () => void;
+
+  emptyInfo?: EmptyInfoProps;
 };
 
 const Select: React.FC<SelectProps> = ({
@@ -48,6 +55,7 @@ const Select: React.FC<SelectProps> = ({
   suffixGroup,
   prefixIcon,
   onPressPrefixIcon,
+  emptyInfo,
 }) => {
   const { rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
@@ -60,7 +68,10 @@ const Select: React.FC<SelectProps> = ({
 
       {/* PREFIX GROUP */}
       {prefixGroup && (
-        <View className="justify-center border border-gray-300/80 border-e-0"
+        <TouchableOpacity
+          className="justify-center border border-gray-300/80 border-e-0"
+          activeOpacity={prefixGroup.action !== undefined ? 0.2 : 1}
+          onPress={() => { if (prefixGroup.action) prefixGroup.action() }}
           style={{
             paddingHorizontal: rpm(10),
             borderTopLeftRadius: rpm(10),
@@ -73,7 +84,7 @@ const Select: React.FC<SelectProps> = ({
           ) : (
             prefixGroup.content
           )}
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* MAIN SELECT */}
@@ -126,89 +137,90 @@ const Select: React.FC<SelectProps> = ({
         </Pressable>
 
         {/* Modal */}
-        <Modal transparent visible={visible} animationType="fade">
-          <Pressable
-            className="flex-1 bg-black/20 justify-center"
-            onPress={() => setVisible(false)}
+        <BaseModal
+          visible={visible}
+          onClose={setVisible}
+        >
+          <View className="border-gray-200"
             style={{
-              paddingHorizontal: rpm(17)
+              borderBottomWidth: rpm(1),
+              paddingBottom: rpm(6),
+              marginBottom: rpm(4)
             }}
           >
-            <Pressable onPress={(e) => e.stopPropagation()}>
-              <View className="overflow-hidden"
+            <CText
+              className="text-gray-700"
+              style={{ fontFamily: 'PoppinsMedium', fontSize: rf(13) }}
+            >
+              {placeholder}
+            </CText>
+          </View>
+
+          <View style={{ paddingTop: rpm(6), maxHeight: rh(240) }}>
+            {
+              options.length > 0 ? options.map((item, i) => {
+                const isSelected = item.value === value;
+                const isDisabled = item.disabled;
+
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    disabled={isDisabled}
+                    className={`${isDisabled ? 'opacity-50' : ''}`}
+                    style={{
+                      paddingHorizontal: isSelected ? rpm(10) : undefined,
+                      paddingVertical: rpm(10),
+                      borderRadius: rpm(10),
+                      backgroundColor: isSelected ? colors.bg_primary : undefined
+                    }}
+                    onPress={() => {
+                      if (isDisabled) return;
+
+                      onChange?.(item.value);
+                      setVisible(false);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: rf(13),
+                        fontFamily: 'PoppinsMedium',
+                        color: isDisabled ? colors.textMuted : isSelected ? colors.primary : colors.text
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }) : <View className="items-center justify-center"
                 style={{
-                  borderRadius: rpm(10),
-                  backgroundColor: colors.surface
+                  paddingVertical: rpm(10),
                 }}
               >
+                <Ionicons name="folder-open-outline" size={rf(38)} color="#9CA3AF" style={{ marginBottom: rpm(10) }} />
 
-                {/* Header */}
-                <View className="border-gray-200"
-                  style={{
-                    borderBottomWidth: rpm(1),
-                    paddingHorizontal: rpm(13),
-                    paddingVertical: rpm(10)
-                  }}
-                >
-                  <CText
-                    className="text-gray-700"
-                    style={{ fontFamily: 'PoppinsMedium', fontSize: rf(13) }}
-                  >
-                    {placeholder}
-                  </CText>
-                </View>
+                <CText className="font-semibold text-center" style={{ fontSize: rf(13) }}>
+                  {
+                    emptyInfo?.title ?? "No data found."
+                  }
+                </CText>
 
-                {/* List */}
-                <View style={{ paddingVertical: rpm(6), maxHeight: rh(240) }}>
-                  <FlatList
-                    data={options}
-                    keyExtractor={(item) => item.value}
-                    renderItem={({ item }) => {
-                      const isSelected = item.value === value;
-                      const isDisabled = item.disabled;
-
-                      return (
-                        <TouchableOpacity
-                          disabled={isDisabled}
-                          className={`${isDisabled ? 'opacity-50' : ''}`}
-                          style={{
-                            marginHorizontal: rpm(6),
-                            paddingHorizontal: rpm(10),
-                            paddingVertical: rpm(10),
-                            borderRadius: rpm(10),
-                            backgroundColor: isSelected ? colors.bg_primary : undefined
-                          }}
-                          onPress={() => {
-                            if (isDisabled) return;
-
-                            onChange?.(item.value);
-                            setVisible(false);
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontSize: rf(13),
-                              fontFamily: 'PoppinsMedium',
-                              color: isDisabled ? colors.textMuted : isSelected ? colors.primary : colors.text
-                            }}
-                          >
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    }}
-                  />
-                </View>
-
+                <CText className="font-regular text-center" style={{ color: colors.textMuted, fontSize: rf(13) }}>
+                  {
+                    emptyInfo?.message ?? "There no options data to display."
+                  }
+                </CText>
               </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
+            }
+          </View>
+        </BaseModal>
       </View>
 
       {/* SUFFIX GROUP */}
       {suffixGroup && (
-        <View className="justify-center border border-gray-300/80"
+        <TouchableOpacity
+          className="justify-center border border-gray-300/80"
+          activeOpacity={suffixGroup.action !== undefined ? 0.2 : 1}
+          onPress={() => { if (suffixGroup.action) suffixGroup.action() }}
           style={{
             paddingHorizontal: rpm(10),
             borderTopRightRadius: rpm(10),
@@ -221,7 +233,7 @@ const Select: React.FC<SelectProps> = ({
           ) : (
             suffixGroup.content
           )}
-        </View>
+        </TouchableOpacity>
       )}
 
     </View>

@@ -1,12 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import Toast, { ToastType } from "react-native-toast-message";
-import { SistemOrg } from "./model-type";
-
-export const orgLable: Record<SistemOrg, string> = {
-  PAJM: "Pemalang Aji Jaya Maritimindo",
-  LCS: "Lentera Cipta Samudra"
-};
 
 export async function CheckAllStorage() {
   const keys = await AsyncStorage.getAllKeys();

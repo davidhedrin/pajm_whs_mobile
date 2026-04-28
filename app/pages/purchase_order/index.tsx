@@ -487,12 +487,11 @@ const PurchaseOrder = () => {
           onChangeText={(val) => setInputSearchFilter(val)}
           placeholder="Document number or request name..."
           suffixGroup={{
-            content: <TouchableOpacity onPress={async () => {
+            content: <Ionicons name='search-outline' size={rf(18)} color={"#fff"} />,
+            bgColor: colors.primary,
+            action: () => {
               fatchDatas(true);
-            }}>
-              <Ionicons name='search-outline' size={rf(18)} color={"#fff"} />
-            </TouchableOpacity>,
-            bgColor: colors.primary
+            }
           }}
         />
       </View>

@@ -5,10 +5,10 @@ import ScreenWrapper from '@/components/screen-wrapper';
 import Select from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
-import { LoginApi, useAuthStore } from '@/hooks/zustand';
-import { sistemOrgList, UserAuthData } from '@/lib/model-type';
+import { LoginApi, useAuthStore, useOrgStore } from '@/hooks/zustand';
+import { UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { orgLable, showToast } from '@/lib/utils';
+import { showToast } from '@/lib/utils';
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
@@ -21,10 +21,11 @@ const AuthLogin = () => {
   const setAuth = useAuthStore((s) => s.setAuth);
   const [togglePass, setTogglePass] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const allOrgs = useOrgStore((s) => s.allOrgs);
 
-  const optOrg = sistemOrgList.map((org) => ({
-    label: `${org} - ${orgLable[org]}`,
-    value: org,
+  const optOrg = allOrgs.map((org) => ({
+    label: `${org.key} - ${org.name}`,
+    value: org.key,
   }));
 
   const regSchema = z.object({
@@ -155,6 +156,10 @@ const AuthLogin = () => {
                     value={value}
                     onChange={onChange}
                     placeholder="Select your organization"
+                    emptyInfo={{
+                      title: "No data found",
+                      message: "Add and manage organization data on cofing"
+                    }}
                   />
 
                   {errors.organization && <ErrorLable err_msg={errors.organization.message} />}
@@ -164,7 +169,7 @@ const AuthLogin = () => {
           </View>
         </View>
 
-        <Button onPress={(handleSubmit(fatchData))} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='w-full'
+        <Button onPress={handleSubmit(fatchData)} title='Sign in' isLoading={isLoading} loadingTitle='Signing in...' className='w-full'
           style={{
             marginBottom: rpm(30)
           }}
@@ -185,7 +190,7 @@ const AuthLogin = () => {
           Enter your account credential login to continue explore!
         </CText>
 
-        
+
       </View>
     </ScreenWrapper>
   )

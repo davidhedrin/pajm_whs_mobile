@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { GlobalConfirmModal } from "@/components/confirm-alert";
 import LoadingOverlay from "@/components/loading";
-import { useAuthStore } from "@/hooks/zustand";
+import { useAuthStore, useOrgStore } from "@/hooks/zustand";
 import { useResposiveScale } from "@/lib/resposive";
 import { toastConfigs } from "@/lib/toast-config";
 import Toast from 'react-native-toast-message';
@@ -18,6 +18,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const scales = useResposiveScale();
   const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
+  const loadOrg = useOrgStore((s) => s.loadOrg);
   const segments = useSegments();
   const router = useRouter();
 
@@ -36,6 +37,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const load = async () => {
+      await loadOrg();
       await loadAuth();
     };
 
@@ -45,7 +47,6 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       if (!isAuthLoaded || !fontsLoaded) return;
-
       const inAuthGroup = segments[0] === "(auth)";
 
       if (!isAuthenticated && !inAuthGroup) {
@@ -67,7 +68,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }} />
 
-      <Toast config={toastConfigs({scales})} />
+      <Toast config={toastConfigs({ scales })} />
       <GlobalConfirmModal />
 
       <LoadingOverlay />

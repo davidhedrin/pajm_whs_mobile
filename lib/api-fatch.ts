@@ -47,7 +47,7 @@ export async function callApi<T>({
             `${Configs.COOKIE_PREFIX}=${createReq.Data.Token}`;
           setAuth(createReq.Data);
         } else {
-          logout(authData.Username);
+          logout(authData);
         }
       } else {
         finalHeaders["Cookie"] = `${Configs.COOKIE_PREFIX}=${authData.Token}`;

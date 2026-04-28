@@ -1,5 +1,8 @@
-export const sistemOrgList = ["PAJM", "LCS"] as const;
-export type SistemOrg = (typeof sistemOrgList)[number];
+export type SistemOrg = {
+  key: string;
+  name: string;
+  url: string;
+};
 
 export type ResponsiveScale = {
   rw: (size: number) => number;
@@ -31,7 +34,7 @@ export type UserAuthData = {
   Role: string;
   RoleId: number;
   Email: string;
-  Org: SistemOrg;
+  Org: string;
 };
 
 export type SourceStatisPrPo = "PR" | "PO";

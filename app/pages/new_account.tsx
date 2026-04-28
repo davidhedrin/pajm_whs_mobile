@@ -6,10 +6,10 @@ import Select from '@/components/select';
 import { CText } from '@/components/text';
 import { clearRecentItems } from '@/hooks/recently-halper';
 import useTheme from '@/hooks/use-theme';
-import { LoginApi, useAuthStore } from '@/hooks/zustand';
-import { sistemOrgList, UserAuthData } from '@/lib/model-type';
+import { LoginApi, useAuthStore, useOrgStore } from '@/hooks/zustand';
+import { UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { ExecuteMinDelay, orgLable, showToast } from '@/lib/utils';
+import { ExecuteMinDelay, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -24,11 +24,12 @@ const NewAccount = () => {
   const { colors } = useTheme();
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const allOrgs = useOrgStore((s) => s.allOrgs);
 
   const [togglePass, setTogglePass] = useState(true);
-  const optOrg = sistemOrgList.map((org) => ({
-    label: `${org} - ${orgLable[org]}`,
-    value: org,
+  const optOrg = allOrgs.map((org) => ({
+    label: `${org.key} - ${org.name}`,
+    value: org.key,
   }));
 
   const regSchema = z.object({

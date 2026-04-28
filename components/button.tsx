@@ -59,7 +59,7 @@ const Button = ({
 
         {prefixIcon && <Ionicons name={prefixIcon} size={rf(17)} color={titleColor} />}
         <CText
-          className={`font-regular text-center ${(suffixIcon || prefixIcon) ? "top-0.5" : "top-1"}`}
+          className={`font-regular text-center top-0.5`}
           style={{ color: titleColor, fontSize: rf(13) }}
         >
           {isLoading ? loadingTitle : title}

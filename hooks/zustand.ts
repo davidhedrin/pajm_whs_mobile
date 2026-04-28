@@ -7,14 +7,13 @@ import { create } from "zustand";
 type AuthState = {
   accounts: UserAuthData[];
   authData: UserAuthData | null;
-  activeOrg: SistemOrg | null;
 
   isAuthenticated: boolean;
   isAuthLoaded: boolean;
 
   setAuth: (auth: UserAuthData) => Promise<void>;
-  switchAccount: (username: string, org: SistemOrg) => Promise<void>;
-  logout: (username?: string, org?: SistemOrg) => Promise<void>;
+  switchAccount: (auth: UserAuthData) => Promise<void>;
+  logout: (auth?: UserAuthData) => Promise<void>;
   loadAuth: () => Promise<void>;
 };
 
@@ -38,14 +37,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const newAccounts = [...filtered, authData];
 
       await AsyncStorage.setItem("accounts", JSON.stringify(newAccounts));
-      await AsyncStorage.setItem("authData", authData.Username);
-      await AsyncStorage.setItem("activeOrg", authData.Org);
+      await AsyncStorage.setItem(
+        "authData",
+        JSON.stringify({
+          username: authData.Username,
+          org: authData.Org,
+        }),
+      );
 
       set({
         accounts: newAccounts,
         authData,
         isAuthenticated: true,
-        activeOrg: authData.Org as SistemOrg,
       });
     } catch (e) {
       throw e;
@@ -54,12 +57,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  switchAccount: async (username: string, org: SistemOrg) => {
+  switchAccount: async (authData) => {
     try {
       const { accounts } = get();
 
       let selected = accounts.find(
-        (a) => a.Username === username && a.Org === org,
+        (a) => a.Username === authData.Username && a.Org === authData.Org,
       );
       if (!selected) return;
 
@@ -95,33 +98,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       // set active account
-      await AsyncStorage.setItem("authData", selected.Username);
-      await AsyncStorage.setItem("activeOrg", selected.Org);
+      await AsyncStorage.setItem(
+        "authData",
+        JSON.stringify({
+          username: selected.Username,
+          org: selected.Org,
+        }),
+      );
 
       set({
         accounts: updatedAccounts,
         authData: selected,
         isAuthenticated: true,
-        activeOrg: selected.Org as SistemOrg,
       });
     } catch (e) {
       throw e;
     }
   },
 
-  logout: async (username?: string, org?: SistemOrg) => {
+  logout: async (userData) => {
     try {
       const { accounts, authData } = get();
 
       // logout semua account
-      if (!username || !org) {
-        await AsyncStorage.multiRemove(["accounts", "authData", "activeOrg"]);
+      if (!userData) {
+        await AsyncStorage.multiRemove(["accounts", "authData"]);
 
         set({
           accounts: [],
           authData: null,
           isAuthenticated: false,
-          activeOrg: null,
         });
 
         return;
@@ -129,22 +135,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // logout 1 account
       const newAccounts = accounts.filter(
-        (a) => a.Username !== username || a.Org !== org,
+        (a) => a.Username !== userData.Username || a.Org !== userData.Org,
       );
 
       await AsyncStorage.setItem("accounts", JSON.stringify(newAccounts));
 
       let newActive = authData;
 
-      if (authData?.Username === username) {
+      if (authData?.Username === userData.Username) {
         newActive = newAccounts[0] || null;
 
         if (newActive) {
-          await AsyncStorage.setItem("authData", newActive.Username);
-          await AsyncStorage.setItem("activeOrg", newActive.Org);
+          await AsyncStorage.setItem(
+            "authData",
+            JSON.stringify({
+              username: newActive.Username,
+              org: newActive.Org,
+            }),
+          );
         } else {
           await AsyncStorage.removeItem("authData");
-          await AsyncStorage.removeItem("activeOrg");
         }
       }
 
@@ -152,7 +162,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts: newAccounts,
         authData: newActive,
         isAuthenticated: !!newActive,
-        activeOrg: newActive?.Org as SistemOrg,
       });
     } catch (e) {
       throw e;
@@ -162,24 +171,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loadAuth: async () => {
     try {
       const accountsStr = await AsyncStorage.getItem("accounts");
-      const activeUsername = await AsyncStorage.getItem("authData");
-      const activeOrg = await AsyncStorage.getItem("activeOrg");
+      const activeAuth = await AsyncStorage.getItem("authData");
 
-      if (!accountsStr) {
+      if (!accountsStr || !activeAuth) {
         set({
           accounts: [],
           authData: null,
           isAuthenticated: false,
-          activeOrg: null,
         });
         return;
       }
 
+      const activeAuthData: { username: string; org: string } =
+        JSON.parse(activeAuth);
       const accounts: UserAuthData[] = JSON.parse(accountsStr);
 
       let authData =
         accounts.find(
-          (a) => a.Username === activeUsername && a.Org === activeOrg,
+          (a) =>
+            a.Username === activeAuthData.username &&
+            a.Org === activeAuthData.org,
         ) || null;
 
       // 🔥 cek expired
@@ -210,7 +221,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               accounts: updatedAccounts,
               authData,
               isAuthenticated: true,
-              activeOrg: authData.Org as SistemOrg,
             });
 
             return;
@@ -222,7 +232,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts,
         authData,
         isAuthenticated: !!authData,
-        activeOrg: activeOrg as SistemOrg,
       });
     } catch (e) {
       throw e;
@@ -317,4 +326,80 @@ export const useLoadingStore = create<LoadingStore>((set) => ({
 
   show: () => set({ visible: true }),
   hide: () => set({ visible: false }),
+}));
+
+type OrganizationProps = {
+  activeOrg: SistemOrg | null;
+  allOrgs: SistemOrg[];
+
+  setOrg: (org: SistemOrg) => Promise<void>;
+  addOrg: (org: SistemOrg) => Promise<void>;
+  deleteOrg: (org: SistemOrg) => Promise<void>;
+  loadOrg: () => Promise<void>;
+};
+
+export const useOrgStore = create<OrganizationProps>((set, get) => ({
+  activeOrg: null,
+  allOrgs: [],
+
+  setOrg: async (org) => {
+    try {
+      await AsyncStorage.setItem("activeOrg", JSON.stringify(org));
+      set({ activeOrg: org });
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  addOrg: async (org) => {
+    try {
+      const { allOrgs } = get();
+      const filtered = allOrgs.filter((a) => a.key !== org.key);
+
+      const newOrgs = [...filtered, org];
+
+      await AsyncStorage.setItem("allOrgs", JSON.stringify(newOrgs));
+      set({ allOrgs: newOrgs });
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  deleteOrg: async (org) => {
+    try {
+      const { allOrgs } = get();
+
+      const newOrgs = allOrgs.filter((a) => a.key !== org.key);
+      await AsyncStorage.setItem("allOrgs", JSON.stringify(newOrgs));
+
+      set({ allOrgs: newOrgs });
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  loadOrg: async () => {
+    try {
+      const allOrgStr = await AsyncStorage.getItem("allOrgs");
+      const activeOrg = await AsyncStorage.getItem("activeOrg");
+
+      if (!allOrgStr) {
+        set({
+          activeOrg: null,
+          allOrgs: [],
+        });
+        return;
+      }
+
+      const allOrgs: SistemOrg[] = JSON.parse(allOrgStr);
+      let findOrg = allOrgs.find((a) => a.key === activeOrg) || null;
+
+      set({
+        activeOrg: findOrg,
+        allOrgs: allOrgs,
+      });
+    } catch (e) {
+      throw e;
+    }
+  },
 }));
