@@ -7,19 +7,18 @@ import { clearRecentItems } from '@/hooks/recently-halper';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
-import { ResponsiveScale, SistemOrg, sistemOrgList } from '@/lib/model-type';
+import { ResponsiveScale, SistemOrg, UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { orgLable } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, Switch, TouchableOpacity, View } from 'react-native';
 import { Accounts, EmptyAccount } from '.';
 
 const SettingScreen = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
-  const { authData, accounts, activeOrg, switchAccount } = useAuthStore();
+  const { authData, accounts, activeOrg, allOrgs, switchAccount } = useAuthStore();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { showConfirm } = useConfirmStore();
   const router = useRouter();
@@ -27,9 +26,13 @@ const SettingScreen = () => {
   const { fetchStatistic } = useStatisticStore();
   const logout = useAuthStore((s) => s.logout);
 
-  const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg | null>(activeOrg);
-  const acoPajm = useMemo(() => accounts.filter(x => x.Org === "PAJM"), [accounts]);
-  const acoLcs = useMemo(() => accounts.filter(x => x.Org === "LCS"), [accounts]);
+  const [activeTabOrg, setActiveTabOrg] = useState<SistemOrg | null>(activeOrg);
+  const [accountsToShow, setAccountsToShow] = useState<UserAuthData[]>(accounts.filter(x => x.Org === activeOrg?.key));
+  const handleChangeOrg = (org: SistemOrg | null) => {
+    const filterAccount = accounts.filter(x => x.Org === org?.key);
+    setAccountsToShow(filterAccount);
+    setActiveTabOrg(org);
+  };
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
@@ -44,10 +47,9 @@ const SettingScreen = () => {
 
     if (confirmed) {
       if (isLogout === true) { await logout(); }
-      else { await logout(authData?.Username ?? undefined, authData?.Org ?? undefined); }
+      else { await logout(authData ?? undefined); }
 
       await clearRecentItems();
-      // router.replace("/(auth)/login");
     }
   };
 
@@ -103,7 +105,7 @@ const SettingScreen = () => {
               </CText>
 
               <CText style={{ color: "#fff", fontSize: rf(13) }}>
-                Org. {authData ? orgLable[authData.Org] : "-"}
+                Org. {activeOrg ? activeOrg.name : "-"}
               </CText>
             </View>
           </View>
@@ -124,7 +126,7 @@ const SettingScreen = () => {
                 }}
                 titleColor={colors.text}
                 onPress={() => {
-                  setActiveTabSwitch(activeOrg);
+                  setActiveTabOrg(activeOrg);
                   bottomSheetRef.current?.open();
                 }}
               />
@@ -220,97 +222,69 @@ const SettingScreen = () => {
               borderRadius: rpm(10)
             }}
           >
-            {sistemOrgList.map((tab) => {
-              const isActive = activeTabSwitch === tab;
+            {
+              allOrgs.map((tab, i) => {
+                const isActive = activeTabOrg?.key === tab.key;
 
-              return (
-                <Pressable
-                  key={tab}
-                  onPress={() => setActiveTabSwitch(tab as any)}
-                  className="flex-1 items-center"
-                  style={{
-                    paddingVertical: rpm(10)
-                  }}
-                >
-                  <CText className="font-semibold leading-none" style={{ color: isActive ? colors.primary : colors.textMuted, fontSize: rf(13) }}>
-                    PT. {tab}
-                  </CText>
+                return (
+                  <Pressable
+                    key={i}
+                    onPress={() => handleChangeOrg(tab)}
+                    className="flex-1 items-center"
+                    style={{
+                      paddingVertical: rpm(10)
+                    }}
+                  >
+                    <CText className="font-semibold leading-none" style={{ color: isActive ? colors.primary : colors.textMuted, fontSize: rf(13) }}>
+                      PT. {tab.key}
+                    </CText>
 
-                  {isActive && (
-                    <View className="rounded-full"
-                      style={{
-                        width: rpm(20),
-                        height: rpm(3),
-                        backgroundColor: colors.primary,
-                        marginTop: rpm(5)
-                      }}
-                    />
-                  )}
-                </Pressable>
-              );
-            })}
+                    {isActive && (
+                      <View className="rounded-full"
+                        style={{
+                          width: rpm(20),
+                          height: rpm(3),
+                          backgroundColor: colors.primary,
+                          marginTop: rpm(5)
+                        }}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })
+            }
           </View>
         </View>
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Registered Accounts</CText>
         {
-          activeTabSwitch === "PAJM" ? (
-            acoPajm.length > 0 ? acoPajm.map((x, i) => (
-              <TouchableOpacity
-                key={i}
-                onPress={async () => {
-                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
+          accountsToShow.length > 0 ? accountsToShow.map((x, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={async () => {
+                if (x.Username == authData?.Username && x.Org === authData?.Org) return;
 
-                  const confirmed = await showConfirm({
-                    title: "Confirm Switch!",
-                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
-                    confirmText: "Yes, Switch",
-                    cancelText: "Cancel",
-                    icon: 'swap-horizontal-outline'
-                  });
+                const confirmed = await showConfirm({
+                  title: "Confirm Switch!",
+                  message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                  confirmText: "Yes, Switch",
+                  cancelText: "Cancel",
+                  icon: 'swap-horizontal-outline'
+                });
 
-                  if (!confirmed) return;
-                  loadingPage.show();
-                  await clearRecentItems();
+                if (!confirmed) return;
+                loadingPage.show();
+                await clearRecentItems();
 
-                  await switchAccount(x.Username, x.Org);
-                  await fetchStatistic(x?.BpUserId ?? 0);
-                  bottomSheetRef.current?.close();
-                  loadingPage.hide();
-                }}
-              >
-                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
-              </TouchableOpacity>
-            )) : EmptyAccount(scales, colors)
-          ) : (
-            acoLcs.length > 0 ? acoLcs.map((x, i) => (
-              <TouchableOpacity
-                key={i}
-                onPress={async () => {
-                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
-
-                  const confirmed = await showConfirm({
-                    title: "Confirm Switch!",
-                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
-                    confirmText: "Yes, Switch",
-                    cancelText: "Cancel",
-                    icon: 'swap-horizontal-outline'
-                  });
-
-                  if (!confirmed) return;
-                  loadingPage.show();
-                  await clearRecentItems();
-
-                  await switchAccount(x.Username, x.Org);
-                  await fetchStatistic(x?.BpUserId ?? 0);
-                  bottomSheetRef.current?.close();
-                  loadingPage.hide();
-                }}
-              >
-                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
-              </TouchableOpacity>
-            )) : EmptyAccount(scales, colors)
-          )
+                await switchAccount(x);
+                await fetchStatistic(x?.BpUserId ?? 0);
+                bottomSheetRef.current?.close();
+                loadingPage.hide();
+              }}
+            >
+              <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
+            </TouchableOpacity>
+          )) : EmptyAccount(scales, colors)
         }
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Or</CText>
@@ -318,7 +292,7 @@ const SettingScreen = () => {
           onPress={() => router.push({
             pathname: "/pages/new_account",
             params: {
-              org: activeTabSwitch
+              org: activeTabOrg?.key
             }
           })}
           title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(30) }}

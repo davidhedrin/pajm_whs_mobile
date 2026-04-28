@@ -6,7 +6,7 @@ import Select from '@/components/select';
 import { CText } from '@/components/text';
 import { clearRecentItems } from '@/hooks/recently-halper';
 import useTheme from '@/hooks/use-theme';
-import { LoginApi, useAuthStore, useOrgStore } from '@/hooks/zustand';
+import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, showToast } from '@/lib/utils';
@@ -23,8 +23,7 @@ const NewAccount = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const allOrgs = useOrgStore((s) => s.allOrgs);
+  const {setAuth, allOrgs} = useAuthStore();
 
   const [togglePass, setTogglePass] = useState(true);
   const optOrg = allOrgs.map((org) => ({
@@ -56,11 +55,14 @@ const NewAccount = () => {
   const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = LoginApi<UserAuthData>(data.username, data.password, data.organization);
+      const findOrg = allOrgs.find(x => x.key === data.organization);
+      if(!findOrg) throw new Error("Organization data is not found!");
+
+      const createReq = LoginApi<UserAuthData>(data.username, data.password, data.organization, findOrg.url);
       const req = await ExecuteMinDelay(createReq, 1000);
       const res = req.Data;
 
-      if (res) {
+      if (res && findOrg) {
         await clearRecentItems();
         await setAuth(res);
         router.back();

@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { GlobalConfirmModal } from "@/components/confirm-alert";
 import LoadingOverlay from "@/components/loading";
-import { useAuthStore, useOrgStore } from "@/hooks/zustand";
+import { useAuthStore } from "@/hooks/zustand";
 import { useResposiveScale } from "@/lib/resposive";
 import { toastConfigs } from "@/lib/toast-config";
 import Toast from 'react-native-toast-message';
@@ -18,7 +18,6 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const scales = useResposiveScale();
   const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
-  const loadOrg = useOrgStore((s) => s.loadOrg);
   const segments = useSegments();
   const router = useRouter();
 
@@ -37,7 +36,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     const load = async () => {
-      await loadOrg();
       await loadAuth();
     };
 

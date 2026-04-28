@@ -20,15 +20,14 @@ export async function callApi<T>({
   try {
     const { authData, activeOrg, setAuth, logout } = useAuthStore.getState();
 
+    if (!activeOrg) throw new Error("Organization active is not found!");
     let finalHeaders: Record<string, string> = {
       Accept: "application/json",
       "Content-Type": "application/json",
       ...headers,
     };
 
-    const BASE_URL =
-      activeOrg === "PAJM" ? Configs.BASE_URL_PAJM : Configs.BASE_URL_LCS;
-    const ENDPOINT_URL = `${BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx`;
+    const ENDPOINT_URL = `${activeOrg.url}/WebServicesNoCred/MobileJsonWebService.asmx`;
     if (isCredentian) {
       if (authData === null) throw new Error("Credential is not found!");
       if (authData.Token === null) throw new Error("Credential is not found!");
@@ -39,6 +38,7 @@ export async function callApi<T>({
           authData.Username,
           "",
           authData.Org,
+          activeOrg.url,
           true,
         );
 

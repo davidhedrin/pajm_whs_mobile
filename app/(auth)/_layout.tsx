@@ -22,9 +22,7 @@ const AuthLayout = () => {
         headerTintColor: colors.text,
         headerRight: () => (
           <TouchableOpacity
-            onPress={() => {
-              router.push('/(auth)/config');
-            }}
+            onPress={() => router.push('/(auth)/config')}
             style={{ paddingEnd: rpm(6) }}
           >
             <Ionicons name="settings-outline" size={rf(21)} color={colors.text} />

@@ -8,7 +8,7 @@ import ScreenWrapper from '@/components/screen-wrapper';
 import HelloSvg from '@/components/svg/hello';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
-import { useConfirmStore, useOrgStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore } from '@/hooks/zustand';
 import { SistemOrg } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, useDefaultState } from '@/lib/utils';
@@ -25,7 +25,7 @@ const LoginConfig = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
-  const { allOrgs, addOrg, deleteOrg } = useOrgStore();
+  const { allOrgs, addOrg, deleteOrg } = useAuthStore();
   const { showConfirm } = useConfirmStore();
   const router = useRouter();
 

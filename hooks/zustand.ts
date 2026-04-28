@@ -1,4 +1,3 @@
-import Configs from "@/lib/config";
 import { ApiResponse, SistemOrg, UserAuthData } from "@/lib/model-type";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,19 +14,29 @@ type AuthState = {
   switchAccount: (auth: UserAuthData) => Promise<void>;
   logout: (auth?: UserAuthData) => Promise<void>;
   loadAuth: () => Promise<void>;
+
+  activeOrg: SistemOrg | null;
+  allOrgs: SistemOrg[];
+
+  addOrg: (org: SistemOrg) => Promise<void>;
+  deleteOrg: (org?: SistemOrg) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   accounts: [],
   authData: null,
+
   activeOrg: null,
+  allOrgs: [],
 
   isAuthenticated: false,
   isAuthLoaded: false,
 
   setAuth: async (authData) => {
     try {
-      const { accounts } = get();
+      const { accounts, allOrgs } = get();
+      const findOrg = allOrgs.find((x) => x.key === authData.Org);
+      if (!findOrg) throw new Error("Organization is not found!");
 
       // hapus kalau sudah ada (biar tidak duplicate)
       const filtered = accounts.filter(
@@ -44,11 +53,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           org: authData.Org,
         }),
       );
+      await AsyncStorage.setItem("activeOrg", JSON.stringify(findOrg));
 
       set({
         accounts: newAccounts,
         authData,
         isAuthenticated: true,
+        activeOrg: findOrg,
       });
     } catch (e) {
       throw e;
@@ -59,11 +70,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   switchAccount: async (authData) => {
     try {
-      const { accounts } = get();
+      const { accounts, allOrgs } = get();
 
       let selected = accounts.find(
         (a) => a.Username === authData.Username && a.Org === authData.Org,
       );
+      const findOrg = allOrgs.find((x) => x.key === selected?.Org);
+      if (!findOrg) throw new Error("Organization is not found!");
       if (!selected) return;
 
       let updatedAccounts = [...accounts];
@@ -76,6 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           selected.Username,
           "",
           selected.Org,
+          findOrg.url,
           true,
         );
 
@@ -105,11 +119,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           org: selected.Org,
         }),
       );
+      await AsyncStorage.setItem("activeOrg", JSON.stringify(findOrg));
 
       set({
         accounts: updatedAccounts,
         authData: selected,
         isAuthenticated: true,
+        activeOrg: findOrg,
       });
     } catch (e) {
       throw e;
@@ -118,16 +134,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async (userData) => {
     try {
-      const { accounts, authData } = get();
+      const { accounts, authData, allOrgs } = get();
 
       // logout semua account
       if (!userData) {
-        await AsyncStorage.multiRemove(["accounts", "authData"]);
+        await AsyncStorage.multiRemove(["accounts", "authData", "activeOrg"]);
 
         set({
           accounts: [],
           authData: null,
           isAuthenticated: false,
+          activeOrg: null,
         });
 
         return;
@@ -137,15 +154,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const newAccounts = accounts.filter(
         (a) => a.Username !== userData.Username || a.Org !== userData.Org,
       );
-
-      await AsyncStorage.setItem("accounts", JSON.stringify(newAccounts));
+      if (newAccounts.length > 0)
+        await AsyncStorage.setItem("accounts", JSON.stringify(newAccounts));
+      else await AsyncStorage.removeItem("accounts");
 
       let newActive = authData;
+      let newActiveOrg = null;
 
       if (authData?.Username === userData.Username) {
         newActive = newAccounts[0] || null;
 
         if (newActive) {
+          const findOrg = allOrgs.find((x) => x.key === newActive?.Org);
+          if (!findOrg) throw new Error("Organization is not found!");
+          newActiveOrg = findOrg;
+
           await AsyncStorage.setItem(
             "authData",
             JSON.stringify({
@@ -153,8 +176,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               org: newActive.Org,
             }),
           );
+          await AsyncStorage.setItem("activeOrg", JSON.stringify(findOrg));
         } else {
           await AsyncStorage.removeItem("authData");
+          await AsyncStorage.removeItem("activeOrg");
         }
       }
 
@@ -162,6 +187,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts: newAccounts,
         authData: newActive,
         isAuthenticated: !!newActive,
+        activeOrg: newActiveOrg,
       });
     } catch (e) {
       throw e;
@@ -170,8 +196,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadAuth: async () => {
     try {
-      const accountsStr = await AsyncStorage.getItem("accounts");
-      const activeAuth = await AsyncStorage.getItem("authData");
+      const asyncStorageKeys = ["allOrgs", "activeOrg", "accounts", "authData"];
+      const asyncStorageResults = await AsyncStorage.multiGet(asyncStorageKeys);
+      const asyncStorageDatas = Object.fromEntries(asyncStorageResults);
+
+      const allOrgStr = asyncStorageDatas.allOrgs;
+      const activeOrgStr = asyncStorageDatas.activeOrg;
+      const accountsStr = asyncStorageDatas.accounts;
+      const activeAuth = asyncStorageDatas.authData;
+
+      if (!allOrgStr) {
+        set({
+          accounts: [],
+          authData: null,
+          isAuthenticated: false,
+          activeOrg: null,
+          allOrgs: [],
+        });
+        return;
+      }
+      const allOrgs: SistemOrg[] = JSON.parse(allOrgStr);
+      let activeOrg = activeOrgStr ? JSON.parse(activeOrgStr) : null;
+
+      set({
+        activeOrg,
+        allOrgs,
+      });
 
       if (!accountsStr || !activeAuth) {
         set({
@@ -195,6 +245,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // 🔥 cek expired
       if (authData) {
+        const findOrg = allOrgs.find((x) => x.key === authData?.Org);
+        if (!findOrg) throw new Error("Organization is not found!");
+        activeOrg = findOrg;
+
         const expirationDate = new Date(authData.ExpiredAt);
 
         if (expirationDate <= new Date()) {
@@ -202,6 +256,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             authData.Username,
             "",
             authData.Org,
+            activeOrg.url,
             true,
           );
 
@@ -232,11 +287,53 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         accounts,
         authData,
         isAuthenticated: !!authData,
+        activeOrg: activeOrg,
       });
     } catch (e) {
       throw e;
     } finally {
       set({ isAuthLoaded: true });
+    }
+  },
+
+  //-----------------------------------------------------------------------------------
+
+  addOrg: async (org) => {
+    try {
+      const { allOrgs } = get();
+      const filtered = allOrgs.filter((a) => a.key !== org.key);
+
+      const newOrgs = [...filtered, org];
+
+      await AsyncStorage.setItem("allOrgs", JSON.stringify(newOrgs));
+      set({ allOrgs: newOrgs });
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  deleteOrg: async (org) => {
+    try {
+      const { allOrgs } = get();
+
+      // delete semua org
+      if (!org) {
+        await AsyncStorage.multiRemove(["allOrgs", "activeOrg"]);
+
+        set({
+          activeOrg: null,
+          allOrgs: [],
+        });
+
+        return;
+      }
+
+      const newOrgs = allOrgs.filter((a) => a.key !== org.key);
+      await AsyncStorage.setItem("allOrgs", JSON.stringify(newOrgs));
+
+      set({ allOrgs: newOrgs });
+    } catch (e) {
+      throw e;
     }
   },
 }));
@@ -245,14 +342,12 @@ export async function LoginApi<T>(
   username: string,
   password: string,
   org: string,
+  base_url: string,
   isRelogin = false,
 ): Promise<ApiResponse<T>> {
   try {
-    const BASE_URL =
-      org === "PAJM" ? Configs.BASE_URL_PAJM : Configs.BASE_URL_LCS;
-
     const res = await fetch(
-      `${BASE_URL}/WebServicesNoCred/MobileJsonWebService.asmx/Login`,
+      `${base_url}/WebServicesNoCred/MobileJsonWebService.asmx/Login`,
       {
         method: "POST",
         headers: {
@@ -326,80 +421,4 @@ export const useLoadingStore = create<LoadingStore>((set) => ({
 
   show: () => set({ visible: true }),
   hide: () => set({ visible: false }),
-}));
-
-type OrganizationProps = {
-  activeOrg: SistemOrg | null;
-  allOrgs: SistemOrg[];
-
-  setOrg: (org: SistemOrg) => Promise<void>;
-  addOrg: (org: SistemOrg) => Promise<void>;
-  deleteOrg: (org: SistemOrg) => Promise<void>;
-  loadOrg: () => Promise<void>;
-};
-
-export const useOrgStore = create<OrganizationProps>((set, get) => ({
-  activeOrg: null,
-  allOrgs: [],
-
-  setOrg: async (org) => {
-    try {
-      await AsyncStorage.setItem("activeOrg", JSON.stringify(org));
-      set({ activeOrg: org });
-    } catch (e) {
-      throw e;
-    }
-  },
-
-  addOrg: async (org) => {
-    try {
-      const { allOrgs } = get();
-      const filtered = allOrgs.filter((a) => a.key !== org.key);
-
-      const newOrgs = [...filtered, org];
-
-      await AsyncStorage.setItem("allOrgs", JSON.stringify(newOrgs));
-      set({ allOrgs: newOrgs });
-    } catch (e) {
-      throw e;
-    }
-  },
-
-  deleteOrg: async (org) => {
-    try {
-      const { allOrgs } = get();
-
-      const newOrgs = allOrgs.filter((a) => a.key !== org.key);
-      await AsyncStorage.setItem("allOrgs", JSON.stringify(newOrgs));
-
-      set({ allOrgs: newOrgs });
-    } catch (e) {
-      throw e;
-    }
-  },
-
-  loadOrg: async () => {
-    try {
-      const allOrgStr = await AsyncStorage.getItem("allOrgs");
-      const activeOrg = await AsyncStorage.getItem("activeOrg");
-
-      if (!allOrgStr) {
-        set({
-          activeOrg: null,
-          allOrgs: [],
-        });
-        return;
-      }
-
-      const allOrgs: SistemOrg[] = JSON.parse(allOrgStr);
-      let findOrg = allOrgs.find((a) => a.key === activeOrg) || null;
-
-      set({
-        activeOrg: findOrg,
-        allOrgs: allOrgs,
-      });
-    } catch (e) {
-      throw e;
-    }
-  },
 }));

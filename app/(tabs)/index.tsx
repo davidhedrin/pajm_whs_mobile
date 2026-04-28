@@ -9,25 +9,29 @@ import Button from "@/components/button";
 import { clearRecentItems, getRecentItems, RecentItem } from "@/hooks/recently-halper";
 import { useStatisticStore } from "@/hooks/statistic-zustand";
 import { useAuthStore, useConfirmStore, useLoadingStore } from "@/hooks/zustand";
-import { ResponsiveScale, SistemOrg, sistemOrgList, UserAuthData } from "@/lib/model-type";
+import { ResponsiveScale, SistemOrg, UserAuthData } from "@/lib/model-type";
 import { useResposiveScale } from "@/lib/resposive";
-import { formatDate, showToast } from "@/lib/utils";
+import { CheckAllStorage, formatDate, showToast } from "@/lib/utils";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function Index() {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const scales = useResposiveScale();
-  const { authData, accounts, activeOrg, switchAccount } = useAuthStore();
+  const { authData, accounts, activeOrg, allOrgs, switchAccount } = useAuthStore();
   const { colors } = useTheme();
   const { showConfirm } = useConfirmStore();
   const router = useRouter();
   const { dataStPr, dataStPo, fetchStatistic } = useStatisticStore();
   const loadingPage = useLoadingStore.getState();
 
-  const [activeTabSwitch, setActiveTabSwitch] = useState<SistemOrg | null>(activeOrg);
-  const acoPajm = useMemo(() => accounts.filter(x => x.Org === "PAJM"), [accounts]);
-  const acoLcs = useMemo(() => accounts.filter(x => x.Org === "LCS"), [accounts]);
+  const [activeTabOrg, setActiveTabOrg] = useState<SistemOrg | null>(activeOrg);
+  const [accountsToShow, setAccountsToShow] = useState<UserAuthData[]>(accounts.filter(x => x.Org === activeOrg?.key));
+  const handleChangeOrg = (org: SistemOrg | null) => {
+    const filterAccount = accounts.filter(x => x.Org === org?.key);
+    setAccountsToShow(filterAccount);
+    setActiveTabOrg(org);
+  };
 
   const bottomSheetRef = useRef<BottomSheetRef>(null);
 
@@ -75,7 +79,8 @@ export default function Index() {
 
             {/* Profile Section */}
             <TouchableOpacity onPress={() => {
-              setActiveTabSwitch(activeOrg);
+              setActiveTabOrg(activeOrg);
+              handleChangeOrg(activeOrg);
               bottomSheetRef.current?.open();
             }}>
               <View
@@ -124,6 +129,12 @@ export default function Index() {
                 width: rw(36),
                 height: rh(36),
               }}
+              onPress={async () => {
+
+                // ClearAllStorage();
+                CheckAllStorage();
+
+              }}
             >
               <Ionicons name="notifications-outline" size={rf(20)} color="white" />
 
@@ -160,7 +171,7 @@ export default function Index() {
               </CText>
 
               <CText className="font-semibold" style={{ fontSize: rf(21), marginTop: rpm(4) }}>
-                <Text className="font-semibold text-red-500">{activeOrg}</Text> Warehouse
+                <Text className="font-semibold text-red-500">{activeOrg?.key ?? "System"}</Text> Warehouse
               </CText>
 
               <CText
@@ -522,99 +533,70 @@ export default function Index() {
               borderRadius: rpm(10)
             }}
           >
-            {sistemOrgList.map((tab) => {
-              const isActive = activeTabSwitch === tab;
+            {
+              allOrgs.map((tab, i) => {
+                const isActive = activeTabOrg?.key === tab.key;
 
-              return (
-                <Pressable
-                  key={tab}
-                  onPress={() => setActiveTabSwitch(tab as any)}
-                  className="flex-1 items-center"
-                  style={{
-                    paddingVertical: rpm(10)
-                  }}
-                >
-                  <CText className="font-semibold leading-none" style={{ color: isActive ? colors.primary : colors.textMuted, fontSize: rf(13) }}>
-                    PT. {tab}
-                  </CText>
+                return (
+                  <Pressable
+                    key={i}
+                    onPress={() => handleChangeOrg(tab)}
+                    className="flex-1 items-center"
+                    style={{
+                      paddingVertical: rpm(10)
+                    }}
+                  >
+                    <CText className="font-semibold leading-none" style={{ color: isActive ? colors.primary : colors.textMuted, fontSize: rf(13) }}>
+                      PT. {tab.key}
+                    </CText>
 
-                  {isActive && (
-                    <View className="rounded-full"
-                      style={{
-                        width: rpm(20),
-                        height: rpm(3),
-                        backgroundColor: colors.primary,
-                        marginTop: rpm(5)
-                      }}
-                    />
-                  )}
-                </Pressable>
-              );
-            })}
+                    {isActive && (
+                      <View className="rounded-full"
+                        style={{
+                          width: rpm(20),
+                          height: rpm(3),
+                          backgroundColor: colors.primary,
+                          marginTop: rpm(5)
+                        }}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })
+            }
           </View>
         </View>
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Registered Accounts</CText>
         {
-          activeTabSwitch === "PAJM" ? (
-            acoPajm.length > 0 ? acoPajm.map((x, i) => (
-              <TouchableOpacity
-                key={i}
-                onPress={async () => {
-                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
+          accountsToShow.length > 0 ? accountsToShow.map((x, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={async () => {
+                if (x.Username == authData?.Username && x.Org === authData?.Org) return;
 
-                  const confirmed = await showConfirm({
-                    title: "Confirm Switch!",
-                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
-                    confirmText: "Yes, Switch",
-                    cancelText: "Cancel",
-                    icon: 'swap-horizontal-outline'
-                  });
+                const confirmed = await showConfirm({
+                  title: "Confirm Switch!",
+                  message: "Are you sure you want to switch account? This action will delete recently viewed data!",
+                  confirmText: "Yes, Switch",
+                  cancelText: "Cancel",
+                  icon: 'swap-horizontal-outline'
+                });
 
-                  if (!confirmed) return;
-                  setRecentItems([]);
-                  clearRecentItems();
+                if (!confirmed) return;
+                setRecentItems([]);
+                clearRecentItems();
 
-                  loadingPage.show();
-                  await switchAccount(x.Username, x.Org);
-                  await fetchStatistic(x?.BpUserId ?? 0);
-                  bottomSheetRef.current?.close();
-                  loadingPage.hide();
-                }}
-              >
-                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
-              </TouchableOpacity>
-            )) : EmptyAccount(scales, colors)
-          ) : (
-            acoLcs.length > 0 ? acoLcs.map((x, i) => (
-              <TouchableOpacity
-                key={i}
-                onPress={async () => {
-                  if (x.Username == authData?.Username && x.Org === authData?.Org) return;
-
-                  const confirmed = await showConfirm({
-                    title: "Confirm Switch!",
-                    message: "Are you sure you want to switch account? This action will delete recently viewed data!",
-                    confirmText: "Yes, Switch",
-                    cancelText: "Cancel",
-                    icon: 'swap-horizontal-outline'
-                  });
-
-                  if (!confirmed) return;
-                  setRecentItems([]);
-                  clearRecentItems();
-
-                  loadingPage.show();
-                  await switchAccount(x.Username, x.Org);
-                  await fetchStatistic(x?.BpUserId ?? 0);
-                  bottomSheetRef.current?.close();
-                  loadingPage.hide();
-                }}
-              >
-                <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
-              </TouchableOpacity>
-            )) : EmptyAccount(scales, colors)
-          )
+                loadingPage.show();
+                await switchAccount(x);
+                await fetchStatistic(x?.BpUserId ?? 0);
+                bottomSheetRef.current?.close();
+                loadingPage.hide();
+              }}
+            >
+              <Accounts data={x} activeUser={authData ?? undefined} scales={scales} />
+            </TouchableOpacity>
+          )) : EmptyAccount(scales, colors)
         }
 
         <CText className="text-center" style={{ paddingBottom: rpm(6), color: colors.textMuted }}>Or</CText>
@@ -622,7 +604,7 @@ export default function Index() {
           onPress={() => router.push({
             pathname: "/pages/new_account",
             params: {
-              org: activeTabSwitch
+              org: activeOrg?.key
             }
           })}
           title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(10) }}

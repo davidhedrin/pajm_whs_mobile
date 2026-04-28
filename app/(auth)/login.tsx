@@ -5,7 +5,7 @@ import ScreenWrapper from '@/components/screen-wrapper';
 import Select from '@/components/select';
 import { CText } from '@/components/text';
 import useTheme from '@/hooks/use-theme';
-import { LoginApi, useAuthStore, useOrgStore } from '@/hooks/zustand';
+import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
 import { showToast } from '@/lib/utils';
@@ -18,10 +18,9 @@ import { z } from "zod";
 const AuthLogin = () => {
   const { rw, rh, rpm, rf } = useResposiveScale();
   const { colors } = useTheme();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const { setAuth, allOrgs} = useAuthStore();
   const [togglePass, setTogglePass] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const allOrgs = useOrgStore((s) => s.allOrgs);
 
   const optOrg = allOrgs.map((org) => ({
     label: `${org.key} - ${org.name}`,
@@ -51,9 +50,12 @@ const AuthLogin = () => {
   const fatchData = async (data: RegFormData) => {
     try {
       setIsLoading(true);
-      const createReq = await LoginApi<UserAuthData>(data.username, data.password, data.organization);
+      const findOrg = allOrgs.find(x => x.key === data.organization);
+      if(!findOrg) throw new Error("Organization data is not found!");
+
+      const createReq = await LoginApi<UserAuthData>(data.username, data.password, data.organization, findOrg.url);
       const res = createReq.Data;
-      if (res) {
+      if (res && findOrg) {
         await setAuth(res);
         showToast({
           type: "success",
@@ -176,7 +178,7 @@ const AuthLogin = () => {
         />
         {/* <Button onPress={async () => {
 
-          // ClearAllStorage();
+          //  ClearAllStorage();
           // CheckAllStorage();
 
         }} title='Test' className='mb-10' /> */}
