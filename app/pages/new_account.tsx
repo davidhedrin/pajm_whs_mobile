@@ -8,6 +8,7 @@ import { clearRecentItems } from '@/hooks/recently-halper';
 import useTheme from '@/hooks/use-theme';
 import { LoginApi, useAuthStore } from '@/hooks/zustand';
 import { UserAuthData } from '@/lib/model-type';
+import { getDeviceToken, UpdateUsersTokenDevice } from '@/lib/notif-service';
 import { useResposiveScale } from '@/lib/resposive';
 import { ExecuteMinDelay, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,6 +66,11 @@ const NewAccount = () => {
       if (res && findOrg) {
         await clearRecentItems();
         await setAuth(res);
+
+        getDeviceToken().then((token) => {
+          if(token) UpdateUsersTokenDevice(token, null);
+        });
+
         router.back();
         showToast({
           type: "success",
@@ -103,10 +109,11 @@ const NewAccount = () => {
         >
           <Ionicons name='arrow-back' size={rf(21)} color={colors.text} />
         </TouchableOpacity>
+
         <View className='flex-1 justify-center items-center'
           style={{
             paddingHorizontal: rpm(16),
-            marginTop: rpm(-35)
+            marginTop: rpm(-40)
           }}
         >
           <Image

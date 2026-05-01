@@ -301,6 +301,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   addOrg: async (org) => {
     try {
       const { allOrgs } = get();
+
+      const isDuplicate = allOrgs.some((x) => x.key === org.key);
+      if (isDuplicate) {
+        throw new Error(
+          "Cannot save organization with code already registered!",
+        );
+      }
+
       const filtered = allOrgs.filter((a) => a.key !== org.key);
 
       const newOrgs = [...filtered, org];

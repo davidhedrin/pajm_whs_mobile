@@ -8,8 +8,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GlobalConfirmModal } from "@/components/confirm-alert";
 import LoadingOverlay from "@/components/loading";
 import { useAuthStore } from "@/hooks/zustand";
+import { registerForPushNotification } from "@/lib/notif-permission";
+import { UpdateUsersTokenDevice } from "@/lib/notif-service";
 import { useResposiveScale } from "@/lib/resposive";
 import { toastConfigs } from "@/lib/toast-config";
+import * as Notifications from "expo-notifications";
 import Toast from 'react-native-toast-message';
 import "../global.css";
 
@@ -17,8 +20,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const scales = useResposiveScale();
-  const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
   const segments = useSegments();
+  const { isAuthenticated, loadAuth, isAuthLoaded } = useAuthStore();
   const router = useRouter();
 
   const [isReady, setIsReady] = useState(false);
@@ -48,7 +51,7 @@ export default function RootLayout() {
       const inAuthGroup = segments[0] === "(auth)";
 
       if (!isAuthenticated && !inAuthGroup) {
-        router.replace("/(auth)/login");
+        router.replace("/(auth)");
       } else if (isAuthenticated && inAuthGroup) {
         router.replace("/(tabs)");
       }
@@ -59,6 +62,71 @@ export default function RootLayout() {
 
     prepare();
   }, [isAuthLoaded, fontsLoaded, isAuthenticated, segments]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    let notificationListener: any;
+
+    async function initNotification() {
+      const result = await registerForPushNotification();
+
+      if (result && isAuthenticated) {
+        await UpdateUsersTokenDevice(result.new_token, result.old_token);
+      }
+    };
+    initNotification();
+
+    async function checkInitialNotification() {
+      const response = await Notifications.getLastNotificationResponseAsync();
+
+      if (response) {
+        const data: any = response.notification.request.content.data;
+        if (data?.screen) {
+          router.push({
+            pathname: data.screen,
+            params: data.parameter ?? {}
+          });
+        }
+      }
+    }
+    checkInitialNotification();
+
+    notificationListener = Notifications.addNotificationResponseReceivedListener(res => {
+      const data: any = res.notification.request.content.data;
+      if (data?.screen) {
+        router.push({
+          pathname: data.screen,
+          params: data.parameter ?? {}
+        });
+      }
+    });
+
+    //   tokenListener = Notifications.addPushTokenListener(async token => {
+    //     try {
+    //       const newToken = token.data;
+    //       const existToken = await getDeviceToken();
+
+    //       if (!existToken) {
+    //         await saveDeviceToken(newToken);
+    //         await UpdateUsersTokenDevice(newToken);
+    //       } else if (existToken !== newToken) {
+    //         saveDeviceToken(newToken);
+    //         await UpdateUsersTokenDevice(newToken, existToken);
+    //       }
+    //     } catch (error) {
+    //       showToast({
+    //         type: "info",
+    //         title: "Notify Token",
+    //         message: "Update notif token failed"
+    //       });
+    //     }
+    //   });
+
+    return () => {
+      notificationListener?.remove();
+      // tokenListener?.remove();
+    };
+  }, [isReady, isAuthenticated]);
 
   if (!isReady) return null;
 

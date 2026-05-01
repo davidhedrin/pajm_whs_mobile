@@ -1,5 +1,4 @@
 import { LoginApi, useAuthStore } from "@/hooks/zustand";
-import Configs from "./config";
 import { ApiResponse, UserAuthData } from "./model-type";
 
 type CallApiOptions = {
@@ -43,14 +42,14 @@ export async function callApi<T>({
         );
 
         if (createReq.Data) {
-          finalHeaders["Cookie"] =
-            `${Configs.COOKIE_PREFIX}=${createReq.Data.Token}`;
+          // finalHeaders["Cookie"] =
+          //   `${Configs.COOKIE_PREFIX}=${createReq.Data.Token}`;
           setAuth(createReq.Data);
         } else {
           logout(authData);
         }
       } else {
-        finalHeaders["Cookie"] = `${Configs.COOKIE_PREFIX}=${authData.Token}`;
+        // finalHeaders["Cookie"] = `${Configs.COOKIE_PREFIX}=${authData.Token}`;
       }
 
       params = { ...params, username: authData.Username };

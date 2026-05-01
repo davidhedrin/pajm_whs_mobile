@@ -1,4 +1,5 @@
 export type SistemOrg = {
+  id: number;
   key: string;
   name: string;
   url: string;
@@ -138,5 +139,4 @@ export type PrPoActionProps = {
   doc_id: number;
   level: number;
   remark: string;
-  send_email: boolean;
 };

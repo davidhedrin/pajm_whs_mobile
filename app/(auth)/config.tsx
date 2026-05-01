@@ -128,7 +128,9 @@ const LoginConfig = () => {
       const success: boolean = rawData["Success"];
       if (success === false) throw new Error(rawData["Message"] ?? "Something gone wrong. Please wait a moment!");
 
+      const orgRaw = rawData["Data"];
       await addOrg({
+        id: orgRaw["Id"],
         key: data.key,
         name: data.name,
         url: normalizeUrl

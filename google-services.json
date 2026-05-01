@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "222224742550",
+    "project_id": "pajm-whs",
+    "storage_bucket": "pajm-whs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:222224742550:android:5b85d6efa2d7c7c9a1eab7",
+        "android_client_info": {
+          "package_name": "com.cips111299.pajm_whs_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWq2Ms98G6HkCH0HCy9Lbc0jF4OxC9dKA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

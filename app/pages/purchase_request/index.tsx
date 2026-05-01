@@ -22,6 +22,7 @@ import { saveRecentItem } from '@/hooks/recently-halper';
 import { useScaleAnimation } from '@/hooks/scale-animation';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
+import { getDeviceToken } from '@/lib/notif-service';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Router, useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
@@ -201,7 +202,7 @@ const PurchaseRequest = () => {
     );
   };
 
-  const handlePrAction = useCallback(async ({ action, doc_id, level, remark, doc_num, send_email }: { doc_num: string } & PrPoActionProps) => {
+  const handlePrAction = useCallback(async ({ action, doc_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
     const confirmed = await showConfirm({
       title: `Confirm ${action === 'APPROVED' ? "Approving" : "Rejecting"}!`,
       message: `Are you sure you want to ${action === 'APPROVED' ? "Aprove" : "Reject"} application "${doc_num}"?`,
@@ -213,7 +214,7 @@ const PurchaseRequest = () => {
 
     loadingPage.show();
     try {
-      const reqDelay = await PrAction({ action, doc_id, level, remark, send_email });
+      const reqDelay = await PrAction({ action, doc_id, level, remark });
       const prData = MappingPr(reqDelay.Data, authData?.BpUserId);
       handleUpdateItem(prData);
       showToast({
@@ -598,7 +599,7 @@ type ItemRowProps = {
   scales: ResponsiveScale;
   closeAllSwipe: () => void;
   toggleExpand: (id: number) => void;
-  handlePrAction: ({ action, doc_id, level, remark, doc_num, send_email }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
+  handlePrAction: ({ action, doc_id, level, remark, doc_num }: { doc_num: string; } & PrPoActionProps) => Promise<void>;
 };
 
 const ItemRowFlatList = React.memo(({
@@ -787,8 +788,7 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PrNo,
-                send_email: true
+                doc_num: item.PrNo
               });
             }}
           >
@@ -820,8 +820,7 @@ const ItemRowFlatList = React.memo(({
                 level: getCurAprLevel.Level,
                 doc_id: item.Id,
                 remark: "",
-                doc_num: item.PrNo,
-                send_email: true
+                doc_num: item.PrNo
               });
             }}
           >
@@ -945,7 +944,8 @@ export function CheckPrUserLevel(data: PrProps, curLevel?: ApproverLevel): Check
   } else return { show: false, msg: "However, you are currently not assigned to this application, Thank you!" };
 };
 
-export async function PrAction({ action, doc_id, level, remark, send_email }: PrPoActionProps) {
+export async function PrAction({ action, doc_id, level, remark }: PrPoActionProps) {
+  const existToken = await getDeviceToken();
   const createReq = await callApi<any>({
     endpoint: "ApproveRejectPr",
     params: {
@@ -953,7 +953,7 @@ export async function PrAction({ action, doc_id, level, remark, send_email }: Pr
       pr_id: doc_id,
       level: level - 1,
       remark,
-      send_email
+      s_token: existToken ?? ""
     }
   });
 

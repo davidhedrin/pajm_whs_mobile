@@ -46,3 +46,4 @@ app-example
 /.vscode
 
 package-lock.json
+pajm-whs-firebase-sdk.json
