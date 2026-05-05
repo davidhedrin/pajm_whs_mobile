@@ -8,6 +8,7 @@ import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
 import { ResponsiveScale, SistemOrg, UserAuthData } from '@/lib/model-type';
+import { RemoveUserTokenDevice } from '@/lib/notif-service';
 import { useResposiveScale } from '@/lib/resposive';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -46,8 +47,8 @@ const SettingScreen = () => {
     });
 
     if (confirmed) {
-      if (isLogout === true) { await logout(); }
-      else { await logout(authData ?? undefined); }
+      await RemoveUserTokenDevice(isLogout === true ? undefined : (authData ?? undefined));
+      await logout(isLogout === true ? undefined : (authData ?? undefined));
 
       await clearRecentItems();
     }

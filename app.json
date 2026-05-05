@@ -14,7 +14,8 @@
           "NSAllowsArbitraryLoads": true
         }
       },
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pajm_dev.pajm_whs_mobile"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,8 +25,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.cips111299.pajm_whs_mobile",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "package": "com.pajm_dev.pajm_whs_mobile"
     },
     "web": {
       "output": "static",
@@ -66,7 +67,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "ed069159-116f-4a8c-ae82-36656506d11c"
+        "projectId": "1bb187f4-60aa-4237-a73d-dde01cfdef9e"
       }
     }
   }

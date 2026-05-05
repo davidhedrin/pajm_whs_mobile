@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/hooks/zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UserAuthData } from "./model-type";
 
 interface SendPushNotificationParams {
   targetToken: string | string[];
@@ -114,6 +115,83 @@ export async function UpdateUsersTokenDevice(
     .catch((err) => {
       // console.log("Some request failed:", err);
     });
+}
+
+export async function RemoveUserTokenDevice(auth?: UserAuthData) {
+  const token = await getDeviceToken();
+
+  if (!auth) {
+    const userList = filterAccountForToken();
+
+    const mapUserList = new Map();
+    userList.forEach((item) => {
+      if (!mapUserList.has(item.url)) {
+        mapUserList.set(item.url, {
+          url: item.url,
+          usernames: [],
+        });
+      }
+
+      mapUserList.get(item.url).usernames.push(item.username);
+    });
+    const userGroup: GroupingUserTokenProps[] = Array.from(
+      mapUserList.values(),
+    ).map((item) => ({
+      url: item.url,
+      usernames: item.usernames,
+    }));
+
+    Promise.all(
+      userGroup.map((x) =>
+        fetch(
+          `${x.url}/WebServicesNoCred/MobileJsonWebService.asmx/RemoveNotifToken`,
+          {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              token: token,
+              usernames: x.usernames,
+            }),
+          },
+        ),
+      ),
+    )
+      .then(() => {
+        // console.log("All requests sent successfully");
+      })
+      .catch((err) => {
+        // console.log("Some request failed:", err);
+      });
+
+    return;
+  }
+
+  const { allOrgs } = useAuthStore.getState();
+  const findOrg = allOrgs.find((x) => x.key === auth.Org);
+  if (findOrg)
+    await fetch(
+      `${findOrg.url}/WebServicesNoCred/MobileJsonWebService.asmx/RemoveNotifToken`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token,
+          usernames: [auth.Username],
+        }),
+      },
+    )
+      .then(() => {
+        // console.log("All requests sent successfully");
+      })
+      .catch((err) => {
+        // console.log("Some request failed:", err);
+      });
 }
 
 export async function saveDeviceToken(token: string | null) {
