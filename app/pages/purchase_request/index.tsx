@@ -21,9 +21,10 @@ import CustomDropdown from '@/components/dropdown';
 import { saveRecentItem } from '@/hooks/recently-halper';
 import { useScaleAnimation } from '@/hooks/scale-animation';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
-import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore, useLoadingStore, useTempPrPoStore } from '@/hooks/zustand';
 import { getDeviceToken } from '@/lib/notif-service';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useIsFocused } from '@react-navigation/native';
 import { Router, useRouter } from 'expo-router';
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 
@@ -58,6 +59,7 @@ const PurchaseRequest = () => {
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
   const { dataStPr, fetchStatistic } = useStatisticStore();
+  const dataTempPrPo = useTempPrPoStore((x) => x.dataTempPrPo);
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = useCallback(() => {
@@ -195,6 +197,14 @@ const PurchaseRequest = () => {
     };
     firstInit();
   }, []);
+
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (isFocused && dataTempPrPo !== null) {
+      const mapData = MappingPr(dataTempPrPo, authData?.BpUserId);
+      handleUpdateItem(mapData);
+    }
+  }, [isFocused, dataTempPrPo]);
 
   const handleUpdateItem = (updatedItem: PrProps) => {
     setData(
@@ -643,6 +653,7 @@ const ItemRowFlatList = React.memo(({
           params: {
             id: item.Id.toString(),
             doc_num: item.PrNo,
+            from_list: item.PrNo
           } as PrPoDetailPageProps
         });
       }}
@@ -760,7 +771,7 @@ const ItemRowFlatList = React.memo(({
     </TouchableOpacity>
   );
 
-  if (checkAprLevel.show) return <View className='border-b border-gray-300'
+  if (item.DtmSubmit !== null && checkAprLevel.show) return <View className='border-b border-gray-300'
     style={{
       borderEndWidth: rpm(4),
       borderEndColor: colors.primary

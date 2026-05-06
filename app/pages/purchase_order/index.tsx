@@ -7,7 +7,7 @@ import { CText } from '@/components/text';
 import { saveRecentItem } from '@/hooks/recently-halper';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme, { ColorScheme } from '@/hooks/use-theme';
-import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore, useLoadingStore, useTempPrPoStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
 import { ApproverLevel, CheckAprLevelProps, PoProps, PrPoActionProps, PrPoDetailPageProps, ResponsiveScale, SortFilterProps } from '@/lib/model-type';
 import { getDeviceToken } from '@/lib/notif-service';
@@ -15,6 +15,7 @@ import { useResposiveScale } from '@/lib/resposive';
 import { formatDate, showToast, useDefaultState } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useIsFocused } from '@react-navigation/native';
 import { Router, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, LayoutAnimation, Platform, Pressable, TouchableOpacity, View } from 'react-native';
@@ -32,6 +33,7 @@ const PurchaseOrder = () => {
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
   const { dataStPo, fetchStatistic } = useStatisticStore();
+  const dataTempPrPo = useTempPrPoStore((x) => x.dataTempPrPo);
 
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
   const closeAllSwipe = useCallback(() => {
@@ -169,6 +171,14 @@ const PurchaseOrder = () => {
     };
     firstInit();
   }, []);
+
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (isFocused && dataTempPrPo !== null) {
+      const mapData = MappingPo(dataTempPrPo, authData?.BpUserId);
+      handleUpdateItem(mapData);
+    }
+  }, [isFocused, dataTempPrPo]);
 
   const handleUpdateItem = (updatedItem: PoProps) => {
     setData(
@@ -618,6 +628,7 @@ const ItemRowFlatList = React.memo(({
           params: {
             id: item.Id.toString(),
             doc_num: item.PoNo,
+            from_list: item.PoNo
           } as PrPoDetailPageProps
         });
       }}
@@ -735,7 +746,7 @@ const ItemRowFlatList = React.memo(({
     </TouchableOpacity>
   );
 
-  if (checkAprLevel.show) return <View className='border-b border-gray-300'
+  if (item.SubmitDtm !== null && checkAprLevel.show) return <View className='border-b border-gray-300'
     style={{
       borderEndWidth: rpm(4),
       borderEndColor: colors.primary

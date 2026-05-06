@@ -4,17 +4,6 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { getDeviceToken, saveDeviceToken } from "./notif-service";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: false,
-    shouldShowList: false,
-    priority: Notifications.AndroidNotificationPriority.HIGH,
-  }),
-});
-
 type RegisterTokenRespon = {
   new_token: string;
   old_token: string | null;

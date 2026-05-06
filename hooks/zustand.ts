@@ -430,3 +430,14 @@ export const useLoadingStore = create<LoadingStore>((set) => ({
   show: () => set({ visible: true }),
   hide: () => set({ visible: false }),
 }));
+
+type TempPrPoStore = {
+  dataTempPrPo: any | null;
+  setDataTempPrPo: (data: any | null) => void;
+  clearDataTempPrPo: () => void;
+};
+export const useTempPrPoStore = create<TempPrPoStore>((set) => ({
+  dataTempPrPo: null,
+  setDataTempPrPo: (data) => set({ dataTempPrPo: data }),
+  clearDataTempPrPo: () => set({ dataTempPrPo: null }),
+}));

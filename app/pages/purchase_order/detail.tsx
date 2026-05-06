@@ -4,7 +4,7 @@ import ScreenWrapper from '@/components/screen-wrapper';
 import { CText } from '@/components/text';
 import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme from '@/hooks/use-theme';
-import { useAuthStore, useConfirmStore, useLoadingStore } from '@/hooks/zustand';
+import { useAuthStore, useConfirmStore, useLoadingStore, useTempPrPoStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
 import { ApproverLevel, CheckAprLevelProps, PoProps, PrPoActionProps, PrPoDetailPageProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
@@ -24,6 +24,7 @@ const PoDetail = () => {
   const { showConfirm } = useConfirmStore();
   const loadingPage = useLoadingStore.getState();
   const { fetchStatistic } = useStatisticStore();
+  const { setDataTempPrPo, clearDataTempPrPo } = useTempPrPoStore();
 
   const [loading, setLoading] = useState(true);
   const [dataPo, setDataPo] = useState<PoProps | null>(null);
@@ -71,6 +72,7 @@ const PoDetail = () => {
   };
 
   useEffect(() => {
+    clearDataTempPrPo();
     fatchDatas(params.id);
   }, []);
 
@@ -87,6 +89,8 @@ const PoDetail = () => {
     loadingPage.show();
     try {
       const reqDelay = await PoAction({ action, doc_id, level, remark });
+      if(params.from_list !== undefined) setDataTempPrPo(reqDelay.Data ?? null);
+
       await fatchDatas(doc_id.toString());
       showToast({
         type: "success",
@@ -265,7 +269,7 @@ const PoDetail = () => {
 
           {
             resCheckAprLevel && (
-              resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
+              dataPo.SubmitDtm !== null && resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
                 <View className='items-center' style={{ marginBottom: rpm(6) }}>
                   <CText className='font-medium-i text-center'>
                     You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPo.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!

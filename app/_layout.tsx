@@ -16,6 +16,17 @@ import * as Notifications from "expo-notifications";
 import Toast from 'react-native-toast-message';
 import "../global.css";
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
+    priority: Notifications.AndroidNotificationPriority.HIGH,
+  }),
+});
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -65,7 +76,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!isReady) return;
-    let notificationListener: any;
+    let notifResponseListener: any;
 
     async function initNotification() {
       const result = await registerForPushNotification();
@@ -91,7 +102,13 @@ export default function RootLayout() {
     // }
     // checkInitialNotification();
 
-    notificationListener = Notifications.addNotificationResponseReceivedListener(res => {
+    // notifListener = Notifications.addNotificationReceivedListener(
+    //   (notification) => {
+    //     const data: any = notification.request.content.data;
+    //   },
+    // );
+
+    notifResponseListener = Notifications.addNotificationResponseReceivedListener(res => {
       const data: any = res.notification.request.content.data;
       if (data?.screen) {
         router.push({
@@ -123,7 +140,8 @@ export default function RootLayout() {
     //   });
 
     return () => {
-      notificationListener?.remove();
+      // notifListener?.remove();
+      notifResponseListener?.remove();
       // tokenListener?.remove();
     };
   }, [isReady, isAuthenticated]);

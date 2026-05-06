@@ -132,6 +132,7 @@ export type CheckAprLevelProps = {
 export type PrPoDetailPageProps = {
   id: string;
   doc_num: string;
+  from_list?: string;
 };
 
 export type PrPoActionProps = {
