@@ -268,8 +268,8 @@ const PoDetail = () => {
           </View>
 
           {
-            resCheckAprLevel && (
-              dataPo.SubmitDtm !== null && resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
+            (dataPo.SubmitDtm !== null && resCheckAprLevel) && (
+              resCheckAprLevel.show ? <View style={{ marginBottom: rpm(14) }}>
                 <View className='items-center' style={{ marginBottom: rpm(6) }}>
                   <CText className='font-medium-i text-center'>
                     You are assigned as the <CText className='font-bolds-i'>Approval - {(dataPo.AssignLevel ?? 2) - 1}</CText> user who approves this application. Please confirm your response below!
