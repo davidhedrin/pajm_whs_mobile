@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import { CheckPrUserLevel, getStatusStyle, MappingPr, PrAction } from '.';
+import { CheckPrUserLevel, getStatusStyle, MappingPr, PrAction, StatusStyleProps } from '.';
 
 const PRDetail = () => {
   const { authData } = useAuthStore();
@@ -30,6 +30,7 @@ const PRDetail = () => {
   const [curAprLevel, setCurAprLevel] = useState<ApproverLevel | null>(null);
   const [remark, setRemark] = useState("");
   const [resCheckAprLevel, setResCheckAprLevel] = useState<CheckAprLevelProps | null>(null);
+  const [styleStatus, setStyleStatus] = useState<StatusStyleProps | null>(null);
 
   const [grandTotalItems, setGrandTotalItems] = useState(0);
 
@@ -46,16 +47,22 @@ const PRDetail = () => {
       if (createReq.Data !== undefined && createReq.Data !== null) {
         const prData = MappingPr(createReq.Data.Header, authData?.BpUserId, createReq.Data.Items);
         const getCurAprLevel = prData.Approvers.find(x => x.Level === prData.AssignLevel);
-        setDataPr(prData);
-        setCurAprLevel(getCurAprLevel ?? null);
 
         const grandTotalItems = prData.ItemDetails?.reduce((total, item) => {
           return total + item.Quantity * item.UnitPrice;
         }, 0);
         setGrandTotalItems(grandTotalItems ?? 0);
 
-        const checkAprLevel = CheckPrUserLevel(prData, getCurAprLevel);
+        const checkAprLevel = CheckPrUserLevel(prData.Approvers, getCurAprLevel);
         setResCheckAprLevel(checkAprLevel);
+
+        const isWaiting = (prData.DtmSubmit !== null && checkAprLevel.show);
+        if (isWaiting) prData.Status = 'WAITING';
+
+        setDataPr(prData);
+        setCurAprLevel(getCurAprLevel ?? null);
+
+        setStyleStatus(getStatusStyle(prData.Status, colors));
       };
     } catch (error: any) {
       showToast({
@@ -85,7 +92,7 @@ const PRDetail = () => {
     loadingPage.show();
     try {
       const reqDelay = await PrAction({ action, doc_id, level, remark });
-      if(params.from_list !== undefined) setDataTempPrPo(reqDelay.Data ?? null);
+      if (params.from_list !== undefined) setDataTempPrPo(reqDelay.Data ?? null);
 
       await fatchDatas(doc_id.toString());
       showToast({
@@ -128,7 +135,7 @@ const PRDetail = () => {
       {
         dataPr ? <View style={{ paddingTop: rpm(16), paddingHorizontal: rpm(12) }}>
           {
-            dataPr.Status !== "" && (
+            (dataPr.Status !== "" && dataPr.Status !== "WAITING") && (
               <View style={{ marginBottom: rpm(16) }}>
                 <Alert
                   type={dataPr.Status === 'APPROVED' ? "success" : "danger"}
@@ -159,16 +166,17 @@ const PRDetail = () => {
                 <CText>PR Number: </CText>
                 <View
                   className="flex-row items-center rounded-full font-regular leading-none"
-                  style={[
-                    {
-                      paddingHorizontal: rpm(6),
-                      paddingVertical: rpm(5),
-                    },
-                    getStatusStyle(dataPr.Status, colors)
-                  ]}
+                  style={{
+                    paddingHorizontal: rpm(6),
+                    paddingVertical: rpm(5),
+                    backgroundColor: styleStatus ? styleStatus.backgroundColor : colors.bg_shadow,
+                  }}
                 >
-                  <Ionicons name={dataPr.Status === 'APPROVED' ? "checkmark-done-outline" : dataPr.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-                  <CText className='leading-none' style={{ fontSize: rf(12), marginStart: rpm(3) }}>
+                  <Ionicons
+                    name={styleStatus ? styleStatus.icon : "time-outline"}
+                    color={styleStatus ? styleStatus.color : colors.text}
+                  />
+                  <CText className='leading-none' style={{ fontSize: rf(12), marginStart: rpm(3), color: styleStatus ? styleStatus.color : colors.text }}>
                     {dataPr.Status === '' ? "ON PROGRESS" : dataPr.Status}
                   </CText>
                 </View>

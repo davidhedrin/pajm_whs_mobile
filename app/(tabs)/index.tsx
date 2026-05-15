@@ -335,7 +335,7 @@ export default function Index() {
                       On Progress
                     </CText>
                     <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
-                      {dataStPo?.TotalData ?? 0}
+                      {dataStPo?.OnProgress ?? 0}
                     </CText>
                   </View>
 
@@ -347,7 +347,7 @@ export default function Index() {
                       Finish
                     </CText>
                     <CText className="font-medium" style={{ fontSize: rf(13), lineHeight: rpm(18) }}>
-                      {dataStPo?.TotalData ?? 0}
+                      {dataStPo?.Finish ?? 0}
                     </CText>
                   </View>
                 </View>
@@ -604,7 +604,7 @@ export default function Index() {
           onPress={() => router.push({
             pathname: "/pages/new_account",
             params: {
-              org: activeOrg?.key
+              org: activeTabOrg?.key
             }
           })}
           title='Add Account' prefixIcon="add" className="w-full" style={{ marginBottom: rpm(10) }}

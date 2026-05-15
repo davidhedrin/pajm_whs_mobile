@@ -6,15 +6,18 @@ import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore, useTempPrPoStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, CheckAprLevelProps, PoProps, PrPoActionProps, PrPoDetailPageProps } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PoProps, PrPoActionProps, PrPoDetailPageProps, QtPoFileType, QuotationPoProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { formatDate, formatMoney, showToast } from '@/lib/utils';
+import { formatDate, formatMoney, getFileTypePo, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
+import { File, Paths } from 'expo-file-system';
 import { useLocalSearchParams } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, TouchableOpacity, View } from 'react-native';
+import ImageViewing from "react-native-image-viewing";
 import { CheckPoUserLevel, MappingPo, PoAction } from '.';
-import { getStatusStyle } from '../purchase_request';
+import { getStatusStyle, StatusStyleProps } from '../purchase_request';
 
 const PoDetail = () => {
   const { authData } = useAuthStore();
@@ -31,6 +34,7 @@ const PoDetail = () => {
   const [curAprLevel, setCurAprLevel] = useState<ApproverLevel | null>(null);
   const [remark, setRemark] = useState("");
   const [resCheckAprLevel, setResCheckAprLevel] = useState<CheckAprLevelProps | null>(null);
+  const [styleStatus, setStyleStatus] = useState<StatusStyleProps | null>(null);
 
   const [grandTotalItems, setGrandTotalItems] = useState(0);
   const [showMoreInfo, setShowMoreInfo] = useState(false);
@@ -45,20 +49,26 @@ const PoDetail = () => {
         }
       });
 
-
       if (createReq.Data !== undefined && createReq.Data !== null) {
         const poData = MappingPo(createReq.Data.Header, authData?.BpUserId, createReq.Data.Items);
         const getCurAprLevel = poData.Approvers.find(x => x.Level === poData.AssignLevel);
-        setDataPo(poData);
-        setCurAprLevel(getCurAprLevel ?? null);
 
         const grandTotalItems = poData.ItemDetails?.reduce((total, item) => {
           return total + item.Quantity * item.UnitPrice;
         }, 0);
         setGrandTotalItems(grandTotalItems ?? 0);
 
-        const checkAprLevel = CheckPoUserLevel(poData, getCurAprLevel);
+        const checkAprLevel = CheckPoUserLevel(poData.Approvers, getCurAprLevel);
         setResCheckAprLevel(checkAprLevel);
+
+        const isWaiting = (poData.SubmitDtm !== null && checkAprLevel.show);
+        if (isWaiting) poData.Status = 'WAITING';
+
+        setDataPo(poData);
+        setCurAprLevel(getCurAprLevel ?? null);
+        if (poData.QuotationFiles != undefined) setQuotationType(getFileTypePo(poData.QuotationFiles));
+
+        setStyleStatus(getStatusStyle(poData.Status, colors));
       };
 
     } catch (error: any) {
@@ -89,7 +99,7 @@ const PoDetail = () => {
     loadingPage.show();
     try {
       const reqDelay = await PoAction({ action, doc_id, level, remark });
-      if(params.from_list !== undefined) setDataTempPrPo(reqDelay.Data ?? null);
+      if (params.from_list !== undefined) setDataTempPrPo(reqDelay.Data ?? null);
 
       await fatchDatas(doc_id.toString());
       showToast({
@@ -100,6 +110,48 @@ const PoDetail = () => {
 
       fetchStatistic(authData?.BpUserId ?? 0);
     } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Request Failed",
+        message: error.message
+      });
+    }
+    loadingPage.hide();
+  };
+
+  const [quotationData, setQuotationData] = useState<QuotationPoProps | null>(null);
+  const [quotationType, setQuotationType] = useState<QtPoFileType | null>(null);
+  const [openModalQuotationImg, setOpenModaQuotationImg] = useState(false);
+  const handleQuotationAction = async (po_id: number) => {
+    loadingPage.show();
+    try {
+      const createReq = await callApi<QuotationPoProps>({
+        endpoint: "GetQuotationPo",
+        params: {
+          po_id,
+        }
+      });
+
+      if (createReq.Data !== undefined && createReq.Data !== null) {
+        const qtData = createReq.Data;
+        setQuotationData(qtData);
+
+        if (qtData.Extensione === 'DOC') {
+          const encodedUrl = encodeURI(qtData.Url);
+          const newFile = new File(Paths.cache, qtData.Filename);
+          const result = await File.downloadFileAsync(encodedUrl, newFile);
+
+          loadingPage.hide();
+          await Sharing.shareAsync(result.uri);
+          return;
+        } else if (qtData.Extensione === "IMG") {
+          loadingPage.hide();
+          if(qtData.Url) setOpenModaQuotationImg(true);
+          return;
+        }
+      }
+    } catch (error: any) {
+      loadingPage.hide();
       showToast({
         type: "error",
         title: "Request Failed",
@@ -129,10 +181,33 @@ const PoDetail = () => {
         await fatchDatas(params.id);
       }}
     >
+      <ImageViewing
+        images={[{ uri: encodeURI(quotationData ? quotationData.Url : "") }]}
+        imageIndex={0}
+        visible={openModalQuotationImg}
+        onRequestClose={() => setOpenModaQuotationImg(false)}
+        swipeToCloseEnabled={true}
+        HeaderComponent={({ imageIndex }) => (
+          <View
+            style={{
+              position: "absolute",
+              top: rpm(40),
+              right: rpm(20),
+              flexDirection: "row",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Pressable onPress={() => setOpenModaQuotationImg(false)} hitSlop={10}>
+              <CText style={{ color: "white", fontSize: rf(18) }}>✕</CText>
+            </Pressable>
+          </View>
+        )}
+      />
+
       {
         dataPo ? <View style={{ paddingTop: rpm(16), paddingHorizontal: rpm(12) }}>
           {
-            dataPo.Status !== "" && (
+            (dataPo.Status !== "" && dataPo.Status !== "WAITING") && (
               <View style={{ marginBottom: rpm(16) }}>
                 <Alert
                   type={dataPo.Status === 'APPROVED' ? "success" : "danger"}
@@ -166,16 +241,17 @@ const PoDetail = () => {
                   <CText>PO Number: </CText>
                   <View
                     className="flex-row items-center rounded-full font-regular leading-none"
-                    style={[
-                      {
-                        paddingHorizontal: rpm(6),
-                        paddingVertical: rpm(5),
-                      },
-                      getStatusStyle(dataPo.Status, colors)
-                    ]}
+                    style={{
+                      paddingHorizontal: rpm(6),
+                      paddingVertical: rpm(5),
+                      backgroundColor: styleStatus ? styleStatus.backgroundColor : colors.bg_shadow,
+                    }}
                   >
-                    <Ionicons name={dataPo.Status === 'APPROVED' ? "checkmark-done-outline" : dataPo.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-                    <CText className='leading-none' style={{ fontSize: rf(12), marginStart: rpm(3) }}>
+                    <Ionicons
+                      name={styleStatus ? styleStatus.icon : "time-outline"}
+                      color={styleStatus ? styleStatus.color : colors.text}
+                    />
+                    <CText className='leading-none' style={{ fontSize: rf(12), marginStart: rpm(3), color: styleStatus ? styleStatus.color : colors.text }}>
                       {dataPo.Status === '' ? "ON PROGRESS" : dataPo.Status}
                     </CText>
                   </View>
@@ -215,18 +291,27 @@ const PoDetail = () => {
 
             <View className="bg-gray-300" style={{ height: rh(2) }} />
 
-
             <View
               style={{
                 padding: rpm(8),
               }}
             >
+              <TouchableOpacity style={{ marginVertical: rpm(2) }} onPress={() => setShowMoreInfo(prev => !prev)} className='flex-row justify-between items-center'>
+                <CText className="font-semibold" style={{ fontSize: rf(13), color: colors.primary }}>
+                  More Info...
+                </CText>
+
+                <Ionicons name={showMoreInfo ? 'chevron-up' : 'chevron-down'} size={rf(16)} color={colors.primary} />
+              </TouchableOpacity>
+
               {
                 showMoreInfo && <>
-                  <View style={{ marginBottom: rpm(4) }}>
+                  {/* <View className="bg-gray-300" style={{ height: rh(1) }} /> */}
+
+                  <View style={{ marginBottom: rpm(4), marginTop: rpm(4) }}>
                     <View className='flex-row justify-between items-center'>
-                      <CText>Supplier: </CText>
-                      <CText>Delivery Time: </CText>
+                      <CText>Supplier:</CText>
+                      <CText>Delivery Time:</CText>
 
                     </View>
                     <View className='flex-row justify-between items-center'>
@@ -236,34 +321,38 @@ const PoDetail = () => {
                   </View>
 
                   <View style={{ marginBottom: rpm(4) }}>
-                    <CText>Shipping To: </CText>
+                    <CText>Shipping To:</CText>
                     <CText className='font-semibold' style={{ fontSize: rf(13) }}>{dataPo.ShipToName ?? "-"}</CText>
                   </View>
 
                   <View style={{ marginBottom: rpm(4) }}>
-                    <CText>Cost Center: </CText>
+                    <CText>Cost Center:</CText>
                     <CText className='font-semibold' style={{ fontSize: rf(13) }}>{dataPo.CostCenterName ?? "-"}</CText>
                   </View>
 
                   <View style={{ marginBottom: rpm(4) }}>
-                    <CText>Sub Cost Center: </CText>
+                    <CText>Sub Cost Center:</CText>
                     <CText className='font-semibold' style={{ fontSize: rf(13) }}>{dataPo.SubCostCenterName ?? "-"}</CText>
                   </View>
 
                   <View style={{ marginBottom: rpm(4) }}>
-                    <CText>PR Referen: </CText>
+                    <CText>PR Referen:</CText>
                     <CText className='font-semibold' style={{ fontSize: rf(13) }}>{dataPo.PrNo}</CText>
+                  </View>
+
+                  <View>
+                    <CText>PO Quotation:</CText>
+                    <Pressable onPress={() => handleQuotationAction(dataPo.Id)}>
+                      <View className='flex-row items-end'>
+                        <View style={{ marginEnd: rpm(5) }}>
+                          <CText className='font-semibold underline' style={{ fontSize: rf(13), color: colors.primary }}>{dataPo.QuotationFiles ?? "-"}</CText>
+                        </View>
+                        <Ionicons name={quotationType === 'DOC' ? "cloud-download-outline" : "image-outline"} size={rf(18)} color={colors.primary} />
+                      </View>
+                    </Pressable>
                   </View>
                 </>
               }
-
-              <TouchableOpacity onPress={() => setShowMoreInfo(prev => !prev)} className='flex-row justify-between items-center'>
-                <CText className="font-semibold" style={{ fontSize: rf(13), color: colors.primary }}>
-                  More Info...
-                </CText>
-
-                <Ionicons name={showMoreInfo ? 'chevron-up' : 'chevron-down'} size={rf(16)} color={colors.primary} />
-              </TouchableOpacity>
             </View>
           </View>
 

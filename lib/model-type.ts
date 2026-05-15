@@ -47,7 +47,7 @@ export type StatisticProps = {
   Finish: number;
 };
 
-export type StatusPrPo = "" | "APPROVED" | "REJECTED";
+export type StatusPrPo = "" | "APPROVED" | "REJECTED" | "WAITING";
 
 export type ApproverLevel = {
   Level: number;
@@ -108,6 +108,8 @@ export type PoProps = {
   Approvers: ApproverLevel[];
   AssignLevel?: number;
   ItemDetails?: PoDetailProps[];
+
+  QuotationFiles?: string;
 };
 
 export type PoDetailProps = {
@@ -140,4 +142,13 @@ export type PrPoActionProps = {
   doc_id: number;
   level: number;
   remark: string;
+};
+
+export type QtPoFileType = "DOC" | "IMG";
+export type QuotationPoProps = {
+  QtNomber: string;
+  Supplier: string;
+  Filename: string;
+  Extensione: QtPoFileType;
+  Url: string;
 };

@@ -51,9 +51,10 @@ const PurchaseOrder = () => {
   const statusOptions: OptionProps[] = [
     // { label: "All Data", value: DEFAULT_STATUS_FILTER },
     // { label: "On Progress", value: "ShowNotRespondedOnly" },
-    // { label: "Finish Approval", value: "ShowRespondedOnly" },
+    // { label: "Waiting", value: "ShowWaitingOnly" },
     { label: "Not Submitted", value: "ShowNotSubmittedOnly" },
     { label: "Submitted", value: "ShowSubmittedOnly" },
+    { label: "Finish Approval", value: "ShowRespondedOnly" },
     { label: "Rejected", value: "ShowRejectedOnly" },
   ];
   const [inputSearchFilter, setInputSearchFilter] = useState("");
@@ -271,14 +272,14 @@ const PurchaseOrder = () => {
                     />
                   )}
                 </View>
-                <CText style={{ fontSize: rf(13) }}>{item.label}</CText>
+                <CText style={{ fontSize: rf(13), paddingTop: rpm(3) }}>{item.label}</CText>
               </Pressable>
             );
           })}
         </View>
 
         <CText className="font-medium" style={{ fontSize: rf(13), marginBottom: rpm(4), marginTop: rpm(10) }}>Date Range</CText>
-        <View className="flex-row">
+        <View className="flex-row" style={{ marginBottom: rpm(14) }}>
           <TouchableOpacity className="flex-1 border border-gray-300"
             style={{
               borderRadius: rpm(8),
@@ -397,7 +398,7 @@ const PurchaseOrder = () => {
         </View>
 
         <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
-          <SummaryCard
+          {/* <SummaryCard
             title="Total Data"
             count={dataStPo?.TotalData ?? 0}
             color={colors.bg_primary}
@@ -409,6 +410,22 @@ const PurchaseOrder = () => {
               fatchDatas(true, DEFAULT_STATUS_FILTER);
             }}
             isActice={statusFilter === DEFAULT_STATUS_FILTER}
+          /> */}
+          <SummaryCard
+            title="Waiting"
+            count={dataStPo?.Waiting ?? 0}
+            color={colors.bg_primary}
+            icon="warning-outline"
+            color_scheme={colors}
+            scales={scales}
+            onPress={() => {
+              let toAction = DEFAULT_STATUS_FILTER;
+              if (statusFilter !== "ShowWaitingOnly") toAction = "ShowWaitingOnly";
+
+              setStatusFilter(toAction);
+              fatchDatas(true, toAction);
+            }}
+            isActice={statusFilter === "ShowWaitingOnly"}
           />
           <SummaryCard
             title="On Progress"
@@ -418,12 +435,15 @@ const PurchaseOrder = () => {
             color_scheme={colors}
             scales={scales}
             onPress={() => {
-              setStatusFilter("ShowNotRespondedOnly");
-              fatchDatas(true, "ShowNotRespondedOnly");
+              let toAction = DEFAULT_STATUS_FILTER;
+              if (statusFilter !== "ShowNotRespondedOnly") toAction = "ShowNotRespondedOnly";
+
+              setStatusFilter(toAction);
+              fatchDatas(true, toAction);
             }}
             isActice={statusFilter === "ShowNotRespondedOnly"}
           />
-          <SummaryCard
+          {/* <SummaryCard
             title="Finish"
             count={dataStPo?.Finish ?? 0}
             color={colors.bg_success}
@@ -435,7 +455,7 @@ const PurchaseOrder = () => {
               fatchDatas(true, "ShowRespondedOnly");
             }}
             isActice={statusFilter === "ShowRespondedOnly"}
-          />
+          /> */}
         </View>
 
         <View className="flex-row justify-between mb-3" style={{ marginBottom: rpm(10) }}>
@@ -602,7 +622,12 @@ const ItemRowFlatList = React.memo(({
   const { rw, rh, rpm, rf } = scales;
   const isExpanded = expandedId === item.Id;
   const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
-  const checkAprLevel = CheckPoUserLevel(item, getCurAprLevel);
+  const checkAprLevel = CheckPoUserLevel(item.Approvers, getCurAprLevel);
+
+  const isWaiting = (item.SubmitDtm !== null && checkAprLevel.show);
+  if (isWaiting) item.Status = 'WAITING';
+
+  const styleStatus = getStatusStyle(item.Status, colors);
 
   const content = (
     <TouchableOpacity className="shadow-sm"
@@ -640,16 +665,14 @@ const ItemRowFlatList = React.memo(({
 
         <View
           className="flex-row items-center rounded-full font-regular leading-none"
-          style={[
-            {
-              paddingHorizontal: rpm(6),
-              paddingVertical: rpm(5),
-            },
-            getStatusStyle(item.Status, colors)
-          ]}
+          style={{
+            paddingHorizontal: rpm(6),
+            paddingVertical: rpm(5),
+            backgroundColor: styleStatus.backgroundColor,
+          }}
         >
-          <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-          <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
+          <Ionicons name={styleStatus.icon} color={styleStatus.color} />
+          <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3), color: styleStatus.color }}>
             {item.Status === '' ? "ON PROGRESS" : item.Status}
           </CText>
         </View>
@@ -746,7 +769,7 @@ const ItemRowFlatList = React.memo(({
     </TouchableOpacity>
   );
 
-  if (item.SubmitDtm !== null && checkAprLevel.show) return <View className='border-b border-gray-300'
+  if (isWaiting) return <View className='border-b border-gray-300'
     style={{
       borderEndWidth: rpm(4),
       borderEndColor: colors.primary
@@ -857,7 +880,8 @@ export function MappingPo(raw: any, bp_id?: number, items?: any): PoProps {
 
     Approvers: apprLevel,
     AssignLevel: asgLevel ? asgLevel.Level : undefined,
-    ItemDetails: items
+    ItemDetails: items,
+    QuotationFiles: raw.QuotationFiles,
   };
 };
 
@@ -885,9 +909,9 @@ export function MapApproversPo({ raw, start_idx = 1 }: { raw: any; start_idx: nu
   return result;
 };
 
-export function CheckPoUserLevel(data: PoProps, curLevel?: ApproverLevel): CheckAprLevelProps {
+export function CheckPoUserLevel(approvers: ApproverLevel[], curLevel?: ApproverLevel): CheckAprLevelProps {
   if (curLevel !== undefined) {
-    const allApproval = data.Approvers;
+    const allApproval = approvers;
 
     const curLevelVal = curLevel.Level;
     const curResponse = curLevel.UserResponse;

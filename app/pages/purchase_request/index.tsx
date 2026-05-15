@@ -30,20 +30,34 @@ import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler"
 
 type DateRangePicker = "start" | "end";
 
-export function getStatusStyle(status: string, colors: ColorScheme) {
+export type StatusStyleProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  backgroundColor: string;
+  color: string;
+};
+export function getStatusStyle(status: string, colors: ColorScheme): StatusStyleProps {
   switch (status) {
     case "APPROVED":
       return {
+        icon: 'checkmark-done-outline',
         backgroundColor: colors.bg_success,
         color: colors.success,
       };
     case "REJECTED":
       return {
+        icon: 'close-circle-outline',
         backgroundColor: colors.bg_danger,
         color: colors.danger,
       };
+    case "WAITING":
+      return {
+        icon: 'warning-outline',
+        backgroundColor: colors.bg_primary,
+        color: colors.primary,
+      };
     default:
       return {
+        icon: 'time-outline',
         backgroundColor: colors.bg_shadow,
         color: colors.text,
       };
@@ -77,9 +91,10 @@ const PurchaseRequest = () => {
   const statusOptions: OptionProps[] = [
     // { label: "All Data", value: DEFAULT_STATUS_FILTER },
     // { label: "On Progress", value: "ShowNotRespondedOnly" },
-    // { label: "Finish Approval", value: "ShowRespondedOnly" },
+    // { label: "Waiting", value: "ShowWaitingOnly" },
     { label: "Not Submitted", value: "ShowNotSubmittedOnly" },
     { label: "Submitted", value: "ShowSubmittedOnly" },
+    { label: "Finish Approval", value: "ShowRespondedOnly" },
     { label: "Rejected", value: "ShowRejectedOnly" },
   ];
   const [inputSearchFilter, setInputSearchFilter] = useState("");
@@ -297,14 +312,14 @@ const PurchaseRequest = () => {
                     />
                   )}
                 </View>
-                <CText style={{ fontSize: rf(13) }}>{item.label}</CText>
+                <CText style={{ fontSize: rf(13), paddingTop: rpm(3) }}>{item.label}</CText>
               </Pressable>
             );
           })}
         </View>
 
         <CText className="font-medium" style={{ fontSize: rf(13), marginBottom: rpm(4), marginTop: rpm(10) }}>Date Range</CText>
-        <View className="flex-row">
+        <View className="flex-row" style={{ marginBottom: rpm(14) }}>
           <TouchableOpacity className="flex-1 border border-gray-300"
             style={{
               borderRadius: rpm(8),
@@ -422,7 +437,7 @@ const PurchaseRequest = () => {
           </CText>
         </View>
         <View className="flex-row flex-wrap justify-between" style={{ marginBottom: rpm(6) }}>
-          <SummaryCard
+          {/* <SummaryCard
             title="Total Data"
             count={dataStPr?.TotalData ?? 0}
             color={colors.bg_primary}
@@ -434,6 +449,22 @@ const PurchaseRequest = () => {
               fatchDatas(true, DEFAULT_STATUS_FILTER);
             }}
             isActice={statusFilter === DEFAULT_STATUS_FILTER}
+          /> */}
+          <SummaryCard
+            title="Waiting"
+            count={dataStPr?.Waiting ?? 0}
+            color={colors.bg_primary}
+            icon="warning-outline"
+            color_scheme={colors}
+            scales={scales}
+            onPress={() => {
+              let toAction = DEFAULT_STATUS_FILTER;
+              if (statusFilter !== "ShowWaitingOnly") toAction = "ShowWaitingOnly";
+
+              setStatusFilter(toAction);
+              fatchDatas(true, toAction);
+            }}
+            isActice={statusFilter === "ShowWaitingOnly"}
           />
           <SummaryCard
             title="On Progress"
@@ -443,12 +474,15 @@ const PurchaseRequest = () => {
             color_scheme={colors}
             scales={scales}
             onPress={() => {
-              setStatusFilter("ShowNotRespondedOnly");
-              fatchDatas(true, "ShowNotRespondedOnly");
+              let toAction = DEFAULT_STATUS_FILTER;
+              if (statusFilter !== "ShowNotRespondedOnly") toAction = "ShowNotRespondedOnly";
+
+              setStatusFilter(toAction);
+              fatchDatas(true, toAction);
             }}
             isActice={statusFilter === "ShowNotRespondedOnly"}
           />
-          <SummaryCard
+          {/* <SummaryCard
             title="Finish"
             count={dataStPr?.Finish ?? 0}
             color={colors.bg_success}
@@ -460,7 +494,7 @@ const PurchaseRequest = () => {
               fatchDatas(true, "ShowRespondedOnly");
             }}
             isActice={statusFilter === "ShowRespondedOnly"}
-          />
+          /> */}
         </View>
 
         <View className="flex-row justify-between mb-3" style={{ marginBottom: rpm(10) }}>
@@ -627,7 +661,12 @@ const ItemRowFlatList = React.memo(({
   const { rw, rh, rpm, rf } = scales;
   const isExpanded = expandedId === item.Id;
   const getCurAprLevel = item.Approvers.find(x => x.Level === item.AssignLevel);
-  const checkAprLevel = CheckPrUserLevel(item, getCurAprLevel);
+  const checkAprLevel = CheckPrUserLevel(item.Approvers, getCurAprLevel);
+
+  const isWaiting = (item.DtmSubmit !== null && checkAprLevel.show);
+  if (isWaiting) item.Status = 'WAITING';
+
+  const styleStatus = getStatusStyle(item.Status, colors);
 
   const content = (
     <TouchableOpacity className="shadow-sm"
@@ -665,16 +704,14 @@ const ItemRowFlatList = React.memo(({
 
         <View
           className="flex-row items-center rounded-full font-regular leading-none"
-          style={[
-            {
-              paddingHorizontal: rpm(6),
-              paddingVertical: rpm(5),
-            },
-            getStatusStyle(item.Status, colors)
-          ]}
+          style={{
+            paddingHorizontal: rpm(6),
+            paddingVertical: rpm(5),
+            backgroundColor: styleStatus.backgroundColor,
+          }}
         >
-          <Ionicons name={item.Status === 'APPROVED' ? "checkmark-done-outline" : item.Status === 'REJECTED' ? "close-circle-outline" : "time-outline"} color={colors.text} />
-          <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3) }}>
+          <Ionicons name={styleStatus.icon} color={styleStatus.color} />
+          <CText className='leading-none' style={{ fontSize: rf(11), marginStart: rpm(3), color: styleStatus.color }}>
             {item.Status === '' ? "ON PROGRESS" : item.Status}
           </CText>
         </View>
@@ -771,7 +808,7 @@ const ItemRowFlatList = React.memo(({
     </TouchableOpacity>
   );
 
-  if (item.DtmSubmit !== null && checkAprLevel.show) return <View className='border-b border-gray-300'
+  if (isWaiting) return <View className='border-b border-gray-300'
     style={{
       borderEndWidth: rpm(4),
       borderEndColor: colors.primary
@@ -903,9 +940,9 @@ export function MapApproversPr({ raw, start_idx = 1 }: { raw: any; start_idx: nu
   return result;
 };
 
-export function CheckPrUserLevel(data: PrProps, curLevel?: ApproverLevel): CheckAprLevelProps {
+export function CheckPrUserLevel(approvers: ApproverLevel[], curLevel?: ApproverLevel): CheckAprLevelProps {
   if (curLevel !== undefined) {
-    const allApproval = data.Approvers;
+    const allApproval = approvers;
 
     const curLevelVal = curLevel.Level;
     const curResponse = curLevel.UserResponse;
@@ -991,9 +1028,9 @@ export function SummaryCard({ title, count, color, icon, color_scheme, scales, o
     <Pressable
       onPressIn={onPressIn} onPressOut={onPressOut}
       onPress={onPress}
-      className="w-[31.5%] mb-[3%]"
+      className="w-[48%] mb-[3%]"
     >
-      <Animated.View className="flex-row justify-between items-center"
+      <Animated.View
         style={{
           transform: [{ scale }],
           borderRadius: rpm(10),
@@ -1002,19 +1039,19 @@ export function SummaryCard({ title, count, color, icon, color_scheme, scales, o
           backgroundColor: color,
         }}
       >
-        {activeSelect && (
-          <Ionicons
-            className='absolute -top-1.5 -start-1.5'
-            name="checkmark-circle"
-            size={rf(17)} color={color_scheme.primary}
-          />
-        )}
+        <View className="flex-row justify-between items-center">
+          <View className='flex-row items-center justify-end'>
+            <Ionicons name={icon} size={rf(13)} color={color_scheme.textMuted} />
+            <CText className="font-medium" style={{ fontSize: rf(12), marginTop: rpm(3), marginStart: rpm(2), color: color_scheme.textMuted }}>{title}</CText>
+          </View>
 
-        <Ionicons name={icon} size={rf(24)} color={color_scheme.text} />
-        <View className='items-end'>
-          <CText className="font-medium" style={{ fontSize: rf(12) }}>{title}</CText>
-          <CText className="font-bold" style={{ fontSize: rf(14) }}>{count}</CText>
+          <Ionicons
+            name={activeSelect ? "checkmark-circle" : "ellipse-outline"}
+            size={rf(17)} color={activeSelect ? color_scheme.primary : color_scheme.textMuted}
+          />
         </View>
+
+        <CText style={{ fontSize: rf(13) }}>{count} Application</CText>
       </Animated.View>
 
     </Pressable>

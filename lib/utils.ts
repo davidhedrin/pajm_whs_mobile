@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import Toast, { ToastType } from "react-native-toast-message";
+import { QtPoFileType } from "./model-type";
 
 export async function CheckAllStorage() {
   const keys = await AsyncStorage.getAllKeys();
@@ -87,3 +88,10 @@ export function formatMoney(value: number) {
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+export const getFileTypePo = (fileName: string): QtPoFileType => {
+  const extension = fileName.split("?")[0].split(".").pop()?.toLowerCase();
+  const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+  if (imageExtensions.includes(extension || "")) return "IMG";
+  return "DOC";
+};
