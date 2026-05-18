@@ -48,10 +48,11 @@ const PurchaseOrder = () => {
 
   const [openModalFilter, setOpenModalFilter] = useState(false);
   const DEFAULT_STATUS_FILTER = "ShowAllData";
+  const WAITING_STATUS_FILTER = "ShowWaitingOnly";
   const statusOptions: OptionProps[] = [
     // { label: "All Data", value: DEFAULT_STATUS_FILTER },
     // { label: "On Progress", value: "ShowNotRespondedOnly" },
-    // { label: "Waiting", value: "ShowWaitingOnly" },
+    // { label: "Waiting", value: WAITING_STATUS_FILTER },
     { label: "Not Submitted", value: "ShowNotSubmittedOnly" },
     { label: "Submitted", value: "ShowSubmittedOnly" },
     { label: "Finish Approval", value: "ShowRespondedOnly" },
@@ -126,6 +127,10 @@ const PurchaseOrder = () => {
     if (isNewSearch == true) {
       resetOnEndReCalled();
       setData([]);
+    }
+    if(dataStPo && dataStPo.Waiting > 0) {
+      filterStatus = WAITING_STATUS_FILTER;
+      setStatusFilter(WAITING_STATUS_FILTER);
     }
     const currentStart = isNewSearch === true ? 0 : startData;
     setLoadingData(true);
@@ -420,12 +425,12 @@ const PurchaseOrder = () => {
             scales={scales}
             onPress={() => {
               let toAction = DEFAULT_STATUS_FILTER;
-              if (statusFilter !== "ShowWaitingOnly") toAction = "ShowWaitingOnly";
+              if (statusFilter !== WAITING_STATUS_FILTER) toAction = WAITING_STATUS_FILTER;
 
               setStatusFilter(toAction);
               fatchDatas(true, toAction);
             }}
-            isActice={statusFilter === "ShowWaitingOnly"}
+            isActice={statusFilter === WAITING_STATUS_FILTER}
           />
           <SummaryCard
             title="On Progress"
