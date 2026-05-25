@@ -168,10 +168,6 @@ const PurchaseRequest = () => {
       resetOnEndReCalled();
       setData([]);
     }
-    if(dataStPr && dataStPr.Waiting > 0) {
-      filterStatus = WAITING_STATUS_FILTER;
-      setStatusFilter(WAITING_STATUS_FILTER);
-    }
     const currentStart = isNewSearch === true ? 0 : startData;
     setLoadingData(true);
 
@@ -212,7 +208,13 @@ const PurchaseRequest = () => {
   const [isFirstRender, setIsFirstRender] = useState(true);
   useEffect(() => {
     const firstInit = async () => {
-      await fatchDatas(true);
+      if (dataStPr && dataStPr.Waiting > 0) {
+        setStatusFilter(WAITING_STATUS_FILTER);
+        await fatchDatas(true, WAITING_STATUS_FILTER);
+      } else {
+        await fatchDatas(true);
+      }
+
       setIsFirstRender(false);
     };
     firstInit();
@@ -223,6 +225,11 @@ const PurchaseRequest = () => {
     if (isFocused && dataTempPrPo !== null) {
       const mapData = MappingPr(dataTempPrPo, authData?.BpUserId);
       handleUpdateItem(mapData);
+      // if (statusFilter === WAITING_STATUS_FILTER) {
+      //   if (mapData.Status !== 'WAITING') handleDeleteItem(mapData.Id);
+      // } else {
+      //   handleUpdateItem(mapData);
+      // }
     }
   }, [isFocused, dataTempPrPo]);
 
@@ -230,6 +237,9 @@ const PurchaseRequest = () => {
     setData(
       prev => prev.map(item => item.Id === updatedItem.Id ? { ...item, ...updatedItem } : item)
     );
+  };
+  const handleDeleteItem = (id: number) => {
+    setData(prev => prev.filter(item => item.Id !== id));
   };
 
   const handlePrAction = useCallback(async ({ action, doc_id, level, remark, doc_num }: { doc_num: string } & PrPoActionProps) => {
