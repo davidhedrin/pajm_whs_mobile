@@ -87,20 +87,20 @@ export default function RootLayout() {
     };
     initNotification();
 
-    // async function checkInitialNotification() {
-    //   const response = await Notifications.getLastNotificationResponseAsync();
+    async function checkInitialNotification() {
+      const response = await Notifications.getLastNotificationResponseAsync();
 
-    //   if (response) {
-    //     const data: any = response.notification.request.content.data;
-    //     if (data?.screen) {
-    //       router.push({
-    //         pathname: data.screen,
-    //         params: data.parameter ?? {}
-    //       });
-    //     }
-    //   }
-    // }
-    // checkInitialNotification();
+      if (response) {
+        const data: any = response.notification.request.content.data;
+        if (data?.screen) {
+          router.push({
+            pathname: data.screen,
+            params: data.parameter ?? {}
+          });
+        }
+      }
+    }
+    checkInitialNotification();
 
     // notifListener = Notifications.addNotificationReceivedListener(
     //   (notification) => {

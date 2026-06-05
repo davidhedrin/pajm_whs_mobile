@@ -102,7 +102,7 @@ const PurchaseRequest = () => {
   const [statusFilter, setStatusFilter, resetStatusFilter] = useDefaultState<string>(DEFAULT_STATUS_FILTER);
 
   const [openModalSortFilter, setOpenModaSortlFilter] = useState(false);
-  const [sortFilter, setSortFilter, resetSortFilter] = useDefaultState<SortFilterProps[]>([{ key: "Id", dir: "DESC" }]);
+  const [sortFilter, setSortFilter, resetSortFilter] = useDefaultState<SortFilterProps[]>([{ key: "Id", dir: "ASC" }]);
   const listSortKey = [
     { label: "ID", value: "Id" },
     { label: "Doc. Number", value: "PrNo" },

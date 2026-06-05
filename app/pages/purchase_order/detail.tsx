@@ -6,9 +6,9 @@ import { useStatisticStore } from '@/hooks/statistic-zustand';
 import useTheme from '@/hooks/use-theme';
 import { useAuthStore, useConfirmStore, useLoadingStore, useTempPrPoStore } from '@/hooks/zustand';
 import { callApi } from '@/lib/api-fatch';
-import { ApproverLevel, CheckAprLevelProps, PoProps, PrPoActionProps, PrPoDetailPageProps, QtPoFileType, QuotationPoProps } from '@/lib/model-type';
+import { ApproverLevel, CheckAprLevelProps, PoProps, PrPoActionProps, PrPoDetailPageProps, QuotationPoShowProps } from '@/lib/model-type';
 import { useResposiveScale } from '@/lib/resposive';
-import { formatDate, formatMoney, getFileTypePo, showToast } from '@/lib/utils';
+import { formatDate, formatMoney, showToast } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { File, Paths } from 'expo-file-system';
 import { useLocalSearchParams } from 'expo-router';
@@ -50,7 +50,7 @@ const PoDetail = () => {
       });
 
       if (createReq.Data !== undefined && createReq.Data !== null) {
-        const poData = MappingPo(createReq.Data.Header, authData?.BpUserId, createReq.Data.Items);
+        const poData = MappingPo(createReq.Data.Header, authData?.BpUserId, createReq.Data.Items, createReq.Data.Quotations);
         const getCurAprLevel = poData.Approvers.find(x => x.Level === poData.AssignLevel);
 
         const grandTotalItems = poData.ItemDetails?.reduce((total, item) => {
@@ -66,7 +66,6 @@ const PoDetail = () => {
 
         setDataPo(poData);
         setCurAprLevel(getCurAprLevel ?? null);
-        if (poData.QuotationFiles != undefined) setQuotationType(getFileTypePo(poData.QuotationFiles));
 
         setStyleStatus(getStatusStyle(poData.Status, colors));
       };
@@ -119,34 +118,36 @@ const PoDetail = () => {
     loadingPage.hide();
   };
 
-  const [quotationData, setQuotationData] = useState<QuotationPoProps | null>(null);
-  const [quotationType, setQuotationType] = useState<QtPoFileType | null>(null);
   const [openModalQuotationImg, setOpenModaQuotationImg] = useState(false);
-  const handleQuotationAction = async (po_id: number) => {
+  const [quotationDataShow, setQuotationDataShow] = useState<QuotationPoShowProps | null>(null);
+  const handleQuotationAction = async (id: number) => {
     loadingPage.show();
     try {
-      const createReq = await callApi<QuotationPoProps>({
+      const createReq = await callApi<QuotationPoShowProps>({
         endpoint: "GetQuotationPo",
-        params: {
-          po_id,
-        }
+        params: { id, }
       });
 
       if (createReq.Data !== undefined && createReq.Data !== null) {
         const qtData = createReq.Data;
-        setQuotationData(qtData);
+        setQuotationDataShow(qtData);
 
         if (qtData.Extensione === 'DOC') {
+          let resUri = "";
           const encodedUrl = encodeURI(qtData.Url);
           const newFile = new File(Paths.cache, qtData.Filename);
-          const result = await File.downloadFileAsync(encodedUrl, newFile);
+          if (newFile.exists) resUri = newFile.uri;
+          else {
+            const result = await File.downloadFileAsync(encodedUrl, newFile);
+            resUri = result.uri;
+          }
 
           loadingPage.hide();
-          await Sharing.shareAsync(result.uri);
+          await Sharing.shareAsync(resUri);
           return;
         } else if (qtData.Extensione === "IMG") {
           loadingPage.hide();
-          if(qtData.Url) setOpenModaQuotationImg(true);
+          if (qtData.Url) setOpenModaQuotationImg(true);
           return;
         }
       }
@@ -182,7 +183,7 @@ const PoDetail = () => {
       }}
     >
       <ImageViewing
-        images={[{ uri: encodeURI(quotationData ? quotationData.Url : "") }]}
+        images={[{ uri: encodeURI(quotationDataShow ? quotationDataShow.Url : "") }]}
         imageIndex={0}
         visible={openModalQuotationImg}
         onRequestClose={() => setOpenModaQuotationImg(false)}
@@ -336,20 +337,29 @@ const PoDetail = () => {
                   </View>
 
                   <View style={{ marginBottom: rpm(4) }}>
-                    <CText>PR Referen:</CText>
+                    <CText>PR Reference:</CText>
                     <CText className='font-semibold' style={{ fontSize: rf(13) }}>{dataPo.PrNo}</CText>
                   </View>
 
                   <View>
-                    <CText>PO Quotation:</CText>
-                    <Pressable onPress={() => handleQuotationAction(dataPo.Id)}>
-                      <View className='flex-row items-end'>
-                        <View style={{ marginEnd: rpm(5) }}>
-                          <CText className='font-semibold underline' style={{ fontSize: rf(13), color: colors.primary }}>{dataPo.QuotationFiles ?? "-"}</CText>
-                        </View>
-                        <Ionicons name={quotationType === 'DOC' ? "cloud-download-outline" : "image-outline"} size={rf(18)} color={colors.primary} />
-                      </View>
-                    </Pressable>
+                    <CText>Attachment:</CText>
+                    {
+                      dataPo.Quotations !== undefined && dataPo.Quotations.map((x, i) => (
+                        <Pressable
+                          key={i}
+                          onPress={() => handleQuotationAction(x.Id)}
+                        >
+                          <View className='flex-row items-end'>
+                            <Ionicons name="attach-outline" size={rf(18)} color={colors.primary} />
+                            <View style={{ marginStart: rpm(5) }}>
+                              <CText className='font-semibold underline' style={{ fontSize: rf(13), color: colors.primary }}>
+                                {x.Filename}
+                              </CText>
+                            </View>
+                          </View>
+                        </Pressable>
+                      ))
+                    }
                   </View>
                 </>
               }

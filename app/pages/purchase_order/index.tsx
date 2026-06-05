@@ -62,7 +62,7 @@ const PurchaseOrder = () => {
   const [statusFilter, setStatusFilter, resetStatusFilter] = useDefaultState<string>(DEFAULT_STATUS_FILTER);
 
   const [openModalSortFilter, setOpenModaSortlFilter] = useState(false);
-  const [sortFilter, setSortFilter, resetSortFilter] = useDefaultState<SortFilterProps[]>([{ key: "Id", dir: "DESC" }]);
+  const [sortFilter, setSortFilter, resetSortFilter] = useDefaultState<SortFilterProps[]>([{ key: "Id", dir: "ASC" }]);
   const listSortKey = [
     { label: "ID", value: "Id" },
     { label: "Doc. Number", value: "PoNo" },
@@ -873,7 +873,7 @@ const ItemRowFlatList = React.memo(({
   </View>
 });
 
-export function MappingPo(raw: any, bp_id?: number, items?: any): PoProps {
+export function MappingPo(raw: any, bp_id?: number, items?: any, quotations?: any): PoProps {
   const apprLevel = MapApproversPo({ raw, start_idx: 2 });
   const asgLevel = apprLevel.find(x => x.UserId == bp_id);
   const status = [raw.User2Response.trim(), raw.User3Response.trim()];
@@ -896,7 +896,7 @@ export function MappingPo(raw: any, bp_id?: number, items?: any): PoProps {
     Approvers: apprLevel,
     AssignLevel: asgLevel ? asgLevel.Level : undefined,
     ItemDetails: items,
-    QuotationFiles: raw.QuotationFiles,
+    Quotations: quotations ?? undefined
   };
 };
 

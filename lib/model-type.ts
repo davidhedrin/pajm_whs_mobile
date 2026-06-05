@@ -109,7 +109,7 @@ export type PoProps = {
   AssignLevel?: number;
   ItemDetails?: PoDetailProps[];
 
-  QuotationFiles?: string;
+  Quotations?: QuotationPoProps[];
 };
 
 export type PoDetailProps = {
@@ -146,8 +146,13 @@ export type PrPoActionProps = {
 
 export type QtPoFileType = "DOC" | "IMG";
 export type QuotationPoProps = {
-  QtNomber: string;
+  Id: number;
+  QuotationNo: string;
   Supplier: string;
+  Filename: string;
+};
+
+export type QuotationPoShowProps = {
   Filename: string;
   Extensione: QtPoFileType;
   Url: string;
